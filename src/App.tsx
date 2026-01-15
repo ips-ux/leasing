@@ -14,7 +14,7 @@ import { Layout, ProtectedRoute } from './components/layout';
 
 function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename={import.meta.env.BASE_URL}>
       <Toaster
         position="top-right"
         toastOptions={{
