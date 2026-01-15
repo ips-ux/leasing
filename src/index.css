@@ -1,0 +1,149 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Space+Mono:wght@400;700&display=swap');
+@import "tailwindcss";
+
+/* Custom utility classes for Neo-Brutal theme */
+@layer utilities {
+  .bg-lavender {
+    background-color: #C8B6FF;
+  }
+
+  .bg-mint {
+    background-color: #B4F8C8;
+  }
+
+  .bg-peach {
+    background-color: #FFB4B4;
+  }
+
+  .bg-soft-yellow {
+    background-color: #FFF4B4;
+  }
+
+  .bg-pale-blue {
+    background-color: #B4D4FF;
+  }
+
+  .border-lavender {
+    border-color: #C8B6FF;
+  }
+
+  .border-mint {
+    border-color: #B4F8C8;
+  }
+
+  .border-peach {
+    border-color: #FFB4B4;
+  }
+
+  .border-soft-yellow {
+    border-color: #FFF4B4;
+  }
+
+  .border-pale-blue {
+    border-color: #B4D4FF;
+  }
+
+  .shadow-brutal {
+    box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.8);
+  }
+
+  .shadow-brutal-hover {
+    box-shadow: 6px 6px 0px rgba(0, 0, 0, 0.8);
+  }
+
+  .shadow-brutal-active {
+    box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.8);
+  }
+
+  .shadow-brutal-lg {
+    box-shadow: 12px 12px 0px rgba(0, 0, 0, 0.9);
+  }
+
+  .animate-pulse-glow {
+    animation: pulse-glow 2s infinite;
+  }
+
+  .animate-pulse-urgent {
+    animation: pulse-urgent 1.5s infinite;
+  }
+}
+
+@keyframes pulse-glow {
+
+  0%,
+  100% {
+    box-shadow: 0 0 20px rgba(255, 180, 180, 0.4);
+  }
+
+  50% {
+    box-shadow: 0 0 30px rgba(255, 180, 180, 0.6);
+  }
+}
+
+@keyframes pulse-urgent {
+
+  0%,
+  100% {
+    box-shadow: 0 0 20px rgba(255, 180, 180, 0.4);
+  }
+
+  50% {
+    box-shadow: 0 0 30px rgba(255, 180, 180, 0.6);
+  }
+}
+
+:root {
+  /* Gradient wave background colors - will be updated dynamically */
+  --hue-start: 12;
+  --saturation-start: 30;
+  --lightness-start: 67;
+  --hue-end: 216;
+  --saturation-end: 100;
+  --lightness-end: 50;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  color: #000;
+  position: relative;
+  overflow-x: hidden;
+  background: url(https://github.com/supahfunk/gradientwaves-svg/blob/master/dist/img/bg-gradient-wave.png?raw=true) repeat center / cover;
+}
+
+svg {
+  width: 100vw;
+  height: 100vh;
+
+  &.path {
+
+    path {
+      stroke: none;
+    }
+  }
+
+  &.stroke {
+
+    path {
+      fill: none;
+      stroke-width: 1px;
+    }
+  }
+
+  .circle {
+    fill: #fff;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

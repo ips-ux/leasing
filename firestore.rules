@@ -1,0 +1,40 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Base check: User must be authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Optional: If you add custom claims or an 'admins' collection later
+    // function isAdmin() {
+    //   return isAuthenticated() && request.auth.token.admin == true;
+    // }
+
+    // Applicants Collection
+    match /applicants/{applicantId} {
+      allow read, write: if isAuthenticated();
+      
+      // Allow access to all subcollections
+      match /{document=**} {
+        allow read, write: if isAuthenticated();
+      }
+    }
+
+    // Inquiries Collection
+    match /inquiries/{inquiryId} {
+      allow read, write: if isAuthenticated();
+    }
+
+    // Users Collection (for user profiles)
+    match /users/{userId} {
+      // Users can read/write their own profile
+      allow read, write: if isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Default deny all other access
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

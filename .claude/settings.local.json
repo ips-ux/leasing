@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir:*)",
+      "Bash(tree:*)",
+      "Bash(npm create:*)",
+      "Bash(npm install:*)",
+      "Bash(npx tailwindcss:*)",
+      "Bash(node_modules/.bin/tailwindcss:*)",
+      "Bash(cat:*)",
+      "Bash(npm run dev:*)",
+      "Bash(npm run build:*)",
+      "Bash(node -c:*)",
+      "Bash(mkdir:*)",
+      "Bash(npm uninstall:*)",
+      "Bash(echo \"Please create the Firestore index by visiting this URL in your browser:\n\nhttps://console.firebase.google.com/v1/r/project/b85-leasing-tool/firestore/indexes?create_composite=ClJwcm9qZWN0cy9iODUtbGVhc2luZy10b29sL2RhdGFiYXNlcy8oZGVmYXVsdCkvY29sbGVjdGlvbkdyb3Vwcy9pbnF1aXJpZXMvaW5kZXhlcy9fEAEaCQoFbW9udGgQARoNCgljcmVhdGVkQXQQAhoMCghfX25hbWVfXxAC\n\nThis will create the required composite index for:\n- Collection: inquiries\n- Fields: month \\(Ascending\\), createdAt \\(Descending\\)\n\nAfter clicking ''Create Index'', it may take a few minutes to build.\")"
+    ]
+  }
+}
