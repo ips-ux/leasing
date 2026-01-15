@@ -1,7 +1,10 @@
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import { useApplicants } from '../hooks/useApplicants';
+import { useInquiries } from '../hooks/useInquiries';
 import { Card, Badge } from '../components/ui';
+import { formatDistanceToNow } from 'date-fns';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -25,6 +28,65 @@ const itemVariants = {
 export const Dashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+
+  // Fetch all applicants
+  const { applicants, loading: applicantsLoading } = useApplicants();
+
+  // Fetch inquiries for current month (default behavior of useInquiries without args is actually ALL if we don't pass month, 
+  // but let's check the hook implementation. 
+  // Ah, the hook takes an optional month. If undefined, it passes empty constraints, so it fetches ALL inquiries.
+  // That's perfect for the dashboard summary.)
+  const { inquiries, loading: inquiriesLoading } = useInquiries();
+
+  // Calculate Metrics
+  const activeApplicants = applicants.filter(a => a['2_Tracking'].status !== 'completed').length;
+  const inProgressApplicants = applicants.filter(a => a['2_Tracking'].status === 'in_progress').length;
+
+  const highPriorityInquiries = inquiries.filter(i =>
+    i.status !== 'completed' && i.priority === 'high'
+  ).length;
+
+  const currentMonth = new Date().getMonth();
+  const currentYear = new Date().getFullYear();
+
+  const completedApplicantsThisMonth = applicants.filter(a => {
+    if (a['2_Tracking'].status !== 'completed' || !a['2_Tracking'].leaseCompletedTime) return false;
+    const date = a['2_Tracking'].leaseCompletedTime.toDate();
+    return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
+  }).length;
+
+  const completedInquiriesThisMonth = inquiries.filter(i => {
+    if (i.status !== 'completed' || !i.completedAt) return false;
+    const date = i.completedAt.toDate();
+    return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
+  }).length;
+
+  const totalCompletedThisMonth = completedApplicantsThisMonth + completedInquiriesThisMonth;
+
+  // Recent Activity
+  // Combine applicants and inquiries, sort by updatedAt, take top 5
+  const recentActivity = [
+    ...applicants.map(a => ({
+      id: a.id,
+      type: 'applicant',
+      title: a['1_Profile'].name,
+      status: a['2_Tracking'].status,
+      updatedAt: a['2_Tracking'].updatedAt?.toDate() || new Date(0),
+      link: `/applicants/${a.id}`
+    })),
+    ...inquiries.map(i => ({
+      id: i.id,
+      type: 'inquiry',
+      title: i.title,
+      status: i.status,
+      updatedAt: i.updatedAt?.toDate() || new Date(0),
+      link: `/inquiries/${i.id}`
+    }))
+  ]
+    .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime())
+    .slice(0, 5);
+
+  const loading = applicantsLoading || inquiriesLoading;
 
   return (
     <motion.div
@@ -65,8 +127,10 @@ export const Dashboard = () => {
           <Card>
             <div className="space-y-2">
               <div className="text-sm font-semibold text-black/60">Total Active Applicants</div>
-              <div className="text-3xl font-bold font-mono">0</div>
-              <Badge variant="info">Coming Soon</Badge>
+              <div className="text-3xl font-bold font-mono">
+                {loading ? '-' : activeApplicants}
+              </div>
+              <Badge variant="info">Active</Badge>
             </div>
           </Card>
         </motion.div>
@@ -75,8 +139,10 @@ export const Dashboard = () => {
           <Card>
             <div className="space-y-2">
               <div className="text-sm font-semibold text-black/60">In Progress</div>
-              <div className="text-3xl font-bold font-mono">0</div>
-              <Badge variant="medium">Coming Soon</Badge>
+              <div className="text-3xl font-bold font-mono">
+                {loading ? '-' : inProgressApplicants}
+              </div>
+              <Badge variant="medium">Processing</Badge>
             </div>
           </Card>
         </motion.div>
@@ -85,8 +151,10 @@ export const Dashboard = () => {
           <Card>
             <div className="space-y-2">
               <div className="text-sm font-semibold text-black/60">High Priority Inquiries</div>
-              <div className="text-3xl font-bold font-mono">0</div>
-              <Badge variant="high">Coming Soon</Badge>
+              <div className="text-3xl font-bold font-mono">
+                {loading ? '-' : highPriorityInquiries}
+              </div>
+              <Badge variant="high">Action Needed</Badge>
             </div>
           </Card>
         </motion.div>
@@ -95,8 +163,10 @@ export const Dashboard = () => {
           <Card>
             <div className="space-y-2">
               <div className="text-sm font-semibold text-black/60">Completed This Month</div>
-              <div className="text-3xl font-bold font-mono">0</div>
-              <Badge variant="success">Coming Soon</Badge>
+              <div className="text-3xl font-bold font-mono">
+                {loading ? '-' : totalCompletedThisMonth}
+              </div>
+              <Badge variant="success">Success</Badge>
             </div>
           </Card>
         </motion.div>
@@ -105,9 +175,35 @@ export const Dashboard = () => {
       <motion.div variants={itemVariants}>
         <Card>
           <h2 className="text-2xl font-semibold mb-4">Recent Activity</h2>
-          <div className="text-black/60 text-center py-8">
-            No recent activity to display
-          </div>
+          {loading ? (
+            <div className="text-center py-8">Loading activity...</div>
+          ) : recentActivity.length === 0 ? (
+            <div className="text-black/60 text-center py-8">
+              No recent activity to display
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {recentActivity.map((item) => (
+                <div
+                  key={`${item.type}-${item.id}`}
+                  onClick={() => navigate(item.link)}
+                  className="flex items-center justify-between p-3 border-b-2 border-black/10 hover:bg-black/5 cursor-pointer transition-colors"
+                >
+                  <div>
+                    <div className="font-semibold">
+                      {item.type === 'applicant' ? 'Applicant Update' : 'Inquiry Update'}
+                    </div>
+                    <div className="text-sm text-black/60">
+                      {item.title} - <span className="capitalize">{item.status.replace('_', ' ')}</span>
+                    </div>
+                  </div>
+                  <div className="text-xs text-black/40 font-mono">
+                    {formatDistanceToNow(item.updatedAt, { addSuffix: true })}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </Card>
       </motion.div>
     </motion.div>
