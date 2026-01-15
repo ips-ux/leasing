@@ -25,7 +25,7 @@ export const WorkflowStep = ({
     onSubStepDateChange,
     onNotesChange,
 }: WorkflowStepProps) => {
-    const [showNotes, setShowNotes] = useState(false);
+    const [showNotes, setShowNotes] = useState(!!stepData.notes);
     const [localNotes, setLocalNotes] = useState(stepData.notes || '');
     const [isExpanded, setIsExpanded] = useState(true);
 

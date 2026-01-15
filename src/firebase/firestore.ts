@@ -369,6 +369,7 @@ export const syncUserToFirestore = async (user: User): Promise<void> => {
     email: user.email,
     displayName: user.displayName || extractFirstName(user.email),
     lastLogin: serverTimestamp(),
+    lastActive: serverTimestamp(),
     updatedAt: serverTimestamp(),
   };
 
@@ -378,11 +379,41 @@ export const syncUserToFirestore = async (user: User): Promise<void> => {
       createdAt: serverTimestamp(),
     });
   } else {
-    await updateDoc(userRef, userData);
+    // Only update fields that might have changed or need refreshing
+    await updateDoc(userRef, {
+      email: userData.email,
+      displayName: userData.displayName,
+      lastActive: userData.lastActive,
+      updatedAt: userData.updatedAt,
+    });
   }
 };
 
-export const getUsers = async (): Promise<User[]> => {
-  const querySnapshot = await getDocs(collection(db, 'users'));
-  return querySnapshot.docs.map(doc => doc.data() as User);
+export const getUsers = async (onlyActive: boolean = false): Promise<User[]> => {
+  const usersRef = collection(db, 'users');
+  let q = query(usersRef, orderBy('displayName', 'asc'));
+
+  const querySnapshot = await getDocs(q);
+  const users = querySnapshot.docs.map(doc => doc.data() as User);
+
+  if (onlyActive) {
+    // Filter users active in the last 30 days
+    const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
+    return users.filter(u => {
+      const lastActive = u.lastActive instanceof Timestamp ? u.lastActive.toMillis() :
+        u.lastActive instanceof Date ? u.lastActive.getTime() : 0;
+      return lastActive > thirtyDaysAgo;
+    });
+  }
+
+  return users;
+};
+
+/**
+ * Manually remove a user record from Firestore.
+ * This is useful if a user was deleted from Auth and needs to be cleaned up.
+ */
+export const deleteUserRecord = async (uid: string): Promise<void> => {
+  const userRef = doc(db, 'users', uid);
+  await deleteDoc(userRef);
 };

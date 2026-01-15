@@ -46,8 +46,7 @@ export const WORKFLOW_STEPS: WorkflowStepConfig[] = [
       { id: '3a', label: 'Parking', type: 'textbox', required: true, showOnCard: true },
       { id: '3b', label: 'Storage', type: 'textbox', required: true, showOnCard: true },
       { id: '3c', label: 'Pets', type: 'textbox', required: true, showOnCard: true },
-      { id: '3d', label: 'ESA', type: 'textbox', required: true, showOnCard: true },
-      { id: '3e', label: 'Reasonable Acc.', type: 'textbox', required: true, showOnCard: true },
+      { id: '3e', label: 'Reasonable Acc. Requested', type: 'textbox', required: true, showOnCard: true },
     ],
   },
   {

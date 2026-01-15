@@ -17,6 +17,24 @@ export const useAuth = () => {
     };
   }, [initialize]);
 
+  // Periodic sync logic
+  useEffect(() => {
+    if (!user || !initialized) return;
+
+    const SYNC_INTERVAL = 4 * 60 * 60 * 1000; // 4 hours
+    const lastSync = localStorage.getItem(`last_sync_${user.uid}`);
+    const now = Date.now();
+
+    if (!lastSync || now - parseInt(lastSync) > SYNC_INTERVAL) {
+      console.log('Performing periodic user sync...');
+      syncUserToFirestore(user).then(() => {
+        localStorage.setItem(`last_sync_${user.uid}`, now.toString());
+      }).catch(err => {
+        console.error('Failed to perform periodic sync:', err);
+      });
+    }
+  }, [user, initialized]);
+
   const signIn = async (email: string, password: string): Promise<User | null> => {
     try {
       setLoading(true);

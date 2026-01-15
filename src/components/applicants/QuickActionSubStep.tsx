@@ -77,7 +77,7 @@ export const QuickActionSubStep = ({ applicant }: QuickActionSubStepProps) => {
         if (!current || isUpdating) return;
         let finalValue = textValue.trim();
 
-        // Handle special multi-input for parking/storage
+        // Handle special multi-input for parking/storage/pets
         if (current?.config.id === '3a' || current?.config.id === '3b') {
             const parts = Object.entries(multiValues)
                 .filter(([_, val]) => val.trim() !== '' && val.trim() !== '0')
@@ -85,9 +85,20 @@ export const QuickActionSubStep = ({ applicant }: QuickActionSubStepProps) => {
 
             if (parts.length === 0) return;
             finalValue = parts.join(', ');
+        } else if (current?.config.id === '3c') {
+            const parts = Object.entries(multiValues)
+                .filter(([key, val]) => val.trim() !== '' && val.trim() !== '0' && key !== 'ESA' && key !== 'ESA_count')
+                .map(([type, val]) => `${val}x${type}`);
+
+            if (multiValues['ESA']) {
+                parts.push(`ESA:${multiValues['ESA_count'] || '1'}`);
+            }
+
+            if (parts.length === 0) return;
+            finalValue = parts.join(', ');
         }
 
-        if (!finalValue) return;
+        if (!finalValue && current?.config.id !== '3e') return;
 
         setIsUpdating(true);
         try {
@@ -172,21 +183,6 @@ export const QuickActionSubStep = ({ applicant }: QuickActionSubStepProps) => {
             <div className="flex items-center gap-4" id="apps-quickstep-container">
                 {/* Buttons and info go here */}
                 <div className="flex-shrink-0 flex items-center gap-2">
-                    {/* Skip Option - only for textbox and checkbox-na */}
-                    {(current.config.type === 'textbox' || current.config.type === 'checkbox-na') && (
-                        <Button
-                            variant="secondary"
-                            onClick={(e) => {
-                                e?.stopPropagation();
-                                handleSkip();
-                            }}
-                            disabled={isUpdating}
-                            className="!py-1 !px-2 !text-[10px] bg-peach/10 hover:bg-peach/20 border-peach/40 text-black/60 uppercase font-bold"
-                        >
-                            Skip
-                        </Button>
-                    )}
-
                     {current.config.type === 'textbox' ? (
                         <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                             {current.config.id === '3a' ? (
@@ -219,6 +215,71 @@ export const QuickActionSubStep = ({ applicant }: QuickActionSubStepProps) => {
                                         </div>
                                     ))}
                                 </div>
+                            ) : current.config.id === '3c' ? (
+                                <div className="flex items-center gap-3">
+                                    {['Dog', 'Cat', 'Other'].map(type => (
+                                        <div key={type} className="flex items-center gap-1">
+                                            <input
+                                                type="text"
+                                                value={multiValues[type] || ''}
+                                                onChange={(e) => setMultiValues(prev => ({ ...prev, [type]: e.target.value }))}
+                                                className="w-7 h-7 text-center text-xs border-2 border-black bg-white/50 focus:outline-none focus:ring-2 focus:ring-lavender"
+                                                placeholder="0"
+                                            />
+                                            <span className="text-[10px] font-bold text-black/60">{type}(s)</span>
+                                        </div>
+                                    ))}
+                                    <div className="flex items-center gap-1 border-l border-black/20 pl-2">
+                                        <label className="flex items-center gap-1 text-[10px] font-bold text-black/60 cursor-pointer">
+                                            <input
+                                                type="checkbox"
+                                                checked={!!multiValues['ESA']}
+                                                onChange={(e) => setMultiValues(prev => ({ ...prev, ESA: e.target.checked ? '1' : '' }))}
+                                                className="w-3 h-3 border-black"
+                                            />
+                                            ESA?
+                                        </label>
+                                        {multiValues['ESA'] && (
+                                            <input
+                                                type="text"
+                                                value={multiValues['ESA_count'] || '1'}
+                                                onChange={(e) => setMultiValues(prev => ({ ...prev, ESA_count: e.target.value }))}
+                                                className="w-7 h-7 text-center text-xs border-2 border-black bg-white/50 focus:outline-none focus:ring-2 focus:ring-lavender"
+                                                placeholder="1"
+                                            />
+                                        )}
+                                    </div>
+                                </div>
+                            ) : current.config.id === '3e' ? (
+                                <div className="flex items-center gap-2">
+                                    {['Yes', 'No'].map(val => (
+                                        <button
+                                            key={val}
+                                            type="button"
+                                            onClick={async () => {
+                                                setIsUpdating(true);
+                                                try {
+                                                    await updateSubStep(applicant.id, current.stepNumber, current.config.id, {
+                                                        isCompleted: true,
+                                                        textValue: val
+                                                    });
+                                                    toast.success('Step updated');
+                                                } catch (err) {
+                                                    toast.error('Failed to update');
+                                                } finally {
+                                                    setIsUpdating(false);
+                                                }
+                                            }}
+                                            disabled={isUpdating}
+                                            className={`
+                                                px-3 py-1 text-xs font-bold border-2 border-black transition-colors
+                                                ${textValue === val ? 'bg-lavender text-black' : 'bg-white/50 text-black/60 hover:bg-white/70'}
+                                            `}
+                                        >
+                                            {val}
+                                        </button>
+                                    ))}
+                                </div>
                             ) : (
                                 <input
                                     type="text"
@@ -229,30 +290,69 @@ export const QuickActionSubStep = ({ applicant }: QuickActionSubStepProps) => {
                                 />
                             )}
 
-                            <Button
-                                variant="primary"
-                                onClick={(e) => {
-                                    e?.stopPropagation();
-                                    handleSaveText();
-                                }}
-                                disabled={isUpdating || (current.config.id !== '3a' && current.config.id !== '3b' && !textValue.trim())}
-                                className="!py-1 !px-3 !text-xs"
-                            >
-                                Save
-                            </Button>
+                            {current.config.id !== '3e' && (
+                                <Button
+                                    variant="primary"
+                                    onClick={(e) => {
+                                        e?.stopPropagation();
+                                        handleSaveText();
+                                    }}
+                                    disabled={isUpdating || (
+                                        current.config.id !== '3a' &&
+                                        current.config.id !== '3b' &&
+                                        current.config.id !== '3c' &&
+                                        !textValue.trim()
+                                    )}
+                                    className="!py-1 !px-3 !text-xs"
+                                >
+                                    Save
+                                </Button>
+                            )}
+
+                            {/* N/A Option (formerly Skip) */}
+                            {(current.config.type === 'textbox' || current.config.type === 'checkbox-na') && (
+                                <Button
+                                    variant="secondary"
+                                    onClick={(e) => {
+                                        e?.stopPropagation();
+                                        handleSkip();
+                                    }}
+                                    disabled={isUpdating}
+                                    className="!py-1 !px-2 !text-[10px] bg-peach/10 hover:bg-peach/20 border-peach/40 text-black/60 uppercase font-bold"
+                                >
+                                    N/A
+                                </Button>
+                            )}
                         </div>
                     ) : (
-                        <Button
-                            variant="secondary"
-                            onClick={(e) => {
-                                e?.stopPropagation();
-                                handleToggleCheckbox();
-                            }}
-                            disabled={isUpdating}
-                            className="!py-1 !px-3 !text-xs bg-lavender/20 hover:bg-lavender/40 border-lavender/50"
-                        >
-                            Mark Complete
-                        </Button>
+                        <div className="flex items-center gap-2">
+                            <Button
+                                variant="secondary"
+                                onClick={(e) => {
+                                    e?.stopPropagation();
+                                    handleToggleCheckbox();
+                                }}
+                                disabled={isUpdating}
+                                className="!py-1 !px-3 !text-xs bg-lavender/20 hover:bg-lavender/40 border-lavender/50"
+                            >
+                                Mark Complete
+                            </Button>
+
+                            {/* N/A Option for checkbox-na */}
+                            {current.config.type === 'checkbox-na' && (
+                                <Button
+                                    variant="secondary"
+                                    onClick={(e) => {
+                                        e?.stopPropagation();
+                                        handleSkip();
+                                    }}
+                                    disabled={isUpdating}
+                                    className="!py-1 !px-2 !text-[10px] bg-peach/10 hover:bg-peach/20 border-peach/40 text-black/60 uppercase font-bold"
+                                >
+                                    N/A
+                                </Button>
+                            )}
+                        </div>
                     )}
                 </div>
 

@@ -182,7 +182,7 @@ export const SubStepItem = ({
                                                             .filter(p => p && !p.includes(`$${price}`));
 
                                                         let newValue = otherParts.join(', ');
-                                                        if (newCount && newCount !== '0') {
+                                                        if (newCount && newCount !== '0' && newCount !== '') {
                                                             const newPart = `${newCount}x$${price}`;
                                                             newValue = newValue ? `${newValue}, ${newPart}` : newPart;
                                                         }
@@ -201,6 +201,126 @@ export const SubStepItem = ({
                                             </div>
                                         );
                                     })}
+                                </div>
+                            ) : config.id === '3c' ? (
+                                <div className="flex-1 flex items-center gap-4 flex-wrap">
+                                    {['Dog', 'Cat', 'Other'].map(type => {
+                                        const regex = new RegExp(`(\\d+)x${type}`);
+                                        const match = data.textValue?.match(regex);
+                                        const count = match ? match[1] : '';
+
+                                        return (
+                                            <div key={type} className="flex items-center gap-1">
+                                                <input
+                                                    type="text"
+                                                    value={count}
+                                                    onChange={(e) => {
+                                                        const newCount = e.target.value;
+                                                        const otherParts = (data.textValue || '')
+                                                            .split(', ')
+                                                            .filter(p => p && !p.includes(`x${type}`));
+
+                                                        let newValue = otherParts.join(', ');
+                                                        if (newCount && newCount !== '0' && newCount !== '') {
+                                                            const newPart = `${newCount}x${type}`;
+                                                            newValue = newValue ? `${newValue}, ${newPart}` : newPart;
+                                                        }
+
+                                                        onUpdate({
+                                                            textValue: newValue,
+                                                            isCompleted: newValue.trim() !== '',
+                                                            completedAt: newValue.trim() !== '' ? new Date() : null,
+                                                        });
+                                                    }}
+                                                    disabled={!isEnabled || data.isNA}
+                                                    placeholder="0"
+                                                    className="w-8 h-8 text-center text-sm border-[2px] border-black bg-white/10 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-lavender/40 disabled:opacity-50"
+                                                />
+                                                <span className="text-[10px] font-bold text-black/60">{type}(s)</span>
+                                            </div>
+                                        );
+                                    })}
+
+                                    <div className="flex items-center gap-2 border-l border-black/20 pl-4">
+                                        <label className="flex items-center gap-1 text-[10px] font-bold text-black/60 cursor-pointer">
+                                            <input
+                                                type="checkbox"
+                                                checked={data.textValue?.includes('ESA:')}
+                                                onChange={(e) => {
+                                                    const isChecked = e.target.checked;
+                                                    const otherParts = (data.textValue || '')
+                                                        .split(', ')
+                                                        .filter(p => p && !p.startsWith('ESA:'));
+
+                                                    let newValue = otherParts.join(', ');
+                                                    if (isChecked) {
+                                                        newValue = newValue ? `${newValue}, ESA:1` : 'ESA:1';
+                                                    }
+
+                                                    onUpdate({
+                                                        textValue: newValue,
+                                                        isCompleted: newValue.trim() !== '',
+                                                        completedAt: newValue.trim() !== '' ? new Date() : null,
+                                                    });
+                                                }}
+                                                disabled={!isEnabled || data.isNA}
+                                                className="w-3 h-3 border-black"
+                                            />
+                                            ESA?
+                                        </label>
+
+                                        {data.textValue?.includes('ESA:') && (
+                                            <div className="flex items-center gap-1">
+                                                <span className="text-[10px] font-bold text-black/60"># of ESA</span>
+                                                <input
+                                                    type="text"
+                                                    value={data.textValue.match(/ESA:(\d+)/)?.[1] || '1'}
+                                                    onChange={(e) => {
+                                                        const newCount = e.target.value;
+                                                        const otherParts = (data.textValue || '')
+                                                            .split(', ')
+                                                            .filter(p => p && !p.startsWith('ESA:'));
+
+                                                        let newValue = otherParts.join(', ');
+                                                        const newPart = `ESA:${newCount || '0'}`;
+                                                        newValue = newValue ? `${newValue}, ${newPart}` : newPart;
+
+                                                        onUpdate({
+                                                            textValue: newValue,
+                                                            isCompleted: newValue.trim() !== '',
+                                                            completedAt: newValue.trim() !== '' ? new Date() : null,
+                                                        });
+                                                    }}
+                                                    disabled={!isEnabled || data.isNA}
+                                                    className="w-8 h-8 text-center text-sm border-[2px] border-black bg-white/10 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-lavender/40"
+                                                />
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            ) : config.id === '3e' ? (
+                                <div className="flex items-center gap-2">
+                                    {['Yes', 'No'].map(val => (
+                                        <button
+                                            key={val}
+                                            type="button"
+                                            onClick={() => {
+                                                onUpdate({
+                                                    textValue: val,
+                                                    isCompleted: true,
+                                                    completedAt: new Date(),
+                                                });
+                                            }}
+                                            disabled={!isEnabled || data.isNA}
+                                            className={`
+                                                px-3 py-1 text-xs font-bold border-[2px] border-black transition-colors
+                                                ${data.textValue === val ? 'bg-lavender text-black' : 'bg-white/10 text-black/60 hover:bg-white/20'}
+                                                disabled:opacity-50
+                                            `}
+                                        >
+                                            {val}
+                                        </button>
+                                    ))}
                                 </div>
                             ) : (
                                 <input
