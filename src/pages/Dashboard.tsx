@@ -5,6 +5,7 @@ import { useApplicants } from '../hooks/useApplicants';
 import { useInquiries } from '../hooks/useInquiries';
 import { Card, Badge } from '../components/ui';
 import { formatDistanceToNow } from 'date-fns';
+import { extractFirstName } from '../utils/user';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -97,7 +98,7 @@ export const Dashboard = () => {
     >
       <motion.div variants={itemVariants}>
         <h1 className="text-4xl font-bold mb-2">Dashboard</h1>
-        <p className="text-black/60">Welcome back, {user?.displayName || user?.email}!</p>
+        <p className="text-black/60">Welcome back, {extractFirstName(user?.email)}!</p>
       </motion.div>
 
       <motion.div variants={itemVariants}>

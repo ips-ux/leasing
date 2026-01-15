@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useAuthStore } from '../store/authStore';
 import { signIn as firebaseSignIn, signUp as firebaseSignUp, signOut as firebaseSignOut } from '../firebase/auth';
+import { syncUserToFirestore } from '../firebase/firestore';
 import toast from 'react-hot-toast';
 import type { User } from '../types/user';
 import { toAppUser } from '../types/user';
@@ -20,8 +21,15 @@ export const useAuth = () => {
     try {
       setLoading(true);
       const firebaseUser = await firebaseSignIn(email, password);
+      const appUser = toAppUser(firebaseUser);
+
+      // Sync user profile to Firestore
+      if (appUser) {
+        await syncUserToFirestore(appUser);
+      }
+
       toast.success('Signed in successfully!');
-      return toAppUser(firebaseUser);
+      return appUser;
     } catch (error: any) {
       const errorMessage = error?.message || 'Failed to sign in';
       toast.error(errorMessage);
@@ -35,8 +43,15 @@ export const useAuth = () => {
     try {
       setLoading(true);
       const firebaseUser = await firebaseSignUp(email, password, displayName);
+      const appUser = toAppUser(firebaseUser);
+
+      // Sync user profile to Firestore
+      if (appUser) {
+        await syncUserToFirestore(appUser);
+      }
+
       toast.success('Account created successfully!');
-      return toAppUser(firebaseUser);
+      return appUser;
     } catch (error: any) {
       const errorMessage = error?.message || 'Failed to create account';
       toast.error(errorMessage);

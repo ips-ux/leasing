@@ -5,6 +5,8 @@ import {
   updateDoc,
   deleteDoc,
   getDoc,
+  setDoc,
+  getDocs,
   query,
   orderBy,
   serverTimestamp,
@@ -15,7 +17,9 @@ import { db } from './config';
 import { getCurrentUser } from './auth';
 import type { Applicant, ApplicantFormData, SubStepData } from '../types/applicant';
 import type { Inquiry, InquiryFormData } from '../types/inquiry';
+import type { User } from '../types/user';
 import { initializeWorkflow, WORKFLOW_STEPS, isStepComplete, getApplicantTags } from '../lib/workflow-steps';
+import { extractFirstName } from '../utils/user';
 
 // ==================== HELPER FUNCTIONS ====================
 
@@ -352,4 +356,33 @@ export const updateInquiry = async (id: string, data: Partial<Inquiry>): Promise
 export const deleteInquiry = async (id: string): Promise<void> => {
   const docRef = doc(db, 'inquiries', id);
   await deleteDoc(docRef);
+};
+
+// ==================== USERS ====================
+
+export const syncUserToFirestore = async (user: User): Promise<void> => {
+  const userRef = doc(db, 'users', user.uid);
+  const userSnap = await getDoc(userRef);
+
+  const userData = {
+    uid: user.uid,
+    email: user.email,
+    displayName: user.displayName || extractFirstName(user.email),
+    lastLogin: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  };
+
+  if (!userSnap.exists()) {
+    await setDoc(userRef, {
+      ...userData,
+      createdAt: serverTimestamp(),
+    });
+  } else {
+    await updateDoc(userRef, userData);
+  }
+};
+
+export const getUsers = async (): Promise<User[]> => {
+  const querySnapshot = await getDocs(collection(db, 'users'));
+  return querySnapshot.docs.map(doc => doc.data() as User);
 };

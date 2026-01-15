@@ -1,12 +1,15 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button, Input, DatePicker, Card } from '../ui';
+import { Button, Input, DatePicker, Card, Select } from '../ui';
 import { useApplicants } from '../../hooks/useApplicants';
+import { useUsers } from '../../hooks/useUsers';
+import { extractFirstName } from '../../utils/user';
 import type { ApplicantFormData } from '../../types/applicant';
 
 export const ApplicantForm = () => {
   const navigate = useNavigate();
   const { createApplicant } = useApplicants();
+  const { users, loading: usersLoading } = useUsers();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [formData, setFormData] = useState<ApplicantFormData>({
@@ -18,8 +21,30 @@ export const ApplicantForm = () => {
     leasingProfessional: '',
   });
 
+  const agentOptions = useMemo(() => {
+    const userOptions = users.map((u) => {
+      const name = u.displayName || extractFirstName(u.email);
+      return {
+        label: name,
+        value: name,
+      };
+    });
+
+    return [
+      { label: 'House', value: 'House' },
+      ...userOptions,
+    ];
+  }, [users]);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleSelectChange = (name: string) => (value: string) => {
     setFormData((prev) => ({
       ...prev,
       [name]: value,
@@ -50,7 +75,7 @@ export const ApplicantForm = () => {
   return (
     <form onSubmit={handleSubmit}>
       <Card>
-        <h2 className="text-2xl font-bold mb-6 transition-all duration-200 cursor-pointer">New Applicant</h2>
+        <h2 className="text-2xl font-bold mb-6 ">New Applicant</h2>
 
         <div className="space-y-4">
           <Input
@@ -98,13 +123,12 @@ export const ApplicantForm = () => {
             onChange={handleChange}
           />
 
-          <Input
+          <Select
             label="Leasing Professional"
-            name="leasingProfessional"
-            type="text"
-            placeholder="Leasing Professional Name"
+            options={agentOptions}
             value={formData.leasingProfessional}
-            onChange={handleChange}
+            onChange={handleSelectChange('leasingProfessional')}
+            placeholder={usersLoading ? 'Loading agents...' : 'Select Agent'}
             required
           />
         </div>
