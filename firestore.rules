@@ -28,8 +28,9 @@ service cloud.firestore {
 
     // Users Collection (for user profiles)
     match /users/{userId} {
-      // Users can read/write their own profile
-      allow read, write: if isAuthenticated() && request.auth.uid == userId;
+      // Users can read all profiles (needed for dropdowns), but only write their own
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() && request.auth.uid == userId;
     }
 
     // Default deny all other access

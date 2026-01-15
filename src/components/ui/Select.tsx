@@ -49,19 +49,22 @@ export const Select = ({
                 <button
                     type="button"
                     onClick={() => setIsOpen(!isOpen)}
-                    className={`w-full text-left px-4 py-2 border-[3px] border-black bg-white/10 backdrop-blur-sm font-sans focus:outline-none focus:ring-4 focus:ring-lavender/40 transition-all duration-100 flex justify-between items-center ${isOpen ? 'shadow-brutal-active translate-x-[2px] translate-y-[2px]' : ''
+                    className={`w-full text-left px-4 py-2 border-[3px] border-black bg-white/10 backdrop-blur-sm font-sans focus:outline-none focus:ring-4 focus:ring-lavender/40 transition-all duration-100 flex justify-between items-center min-h-[48px] ${isOpen ? 'shadow-brutal-active translate-x-[2px] translate-y-[2px]' : ''
                         }`}
                 >
-                    <span className={!selectedOption ? 'text-black/40' : ''}>
+                    <span className={`truncate ${!selectedOption ? 'text-black/40' : ''}`}>
                         {selectedOption ? selectedOption.label : placeholder}
                     </span>
                     <svg
-                        className={`w-5 h-5 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
+                        className={`w-5 h-5 flex-shrink-0 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
+                        width="20"
+                        height="20"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg"
                     >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
                     </svg>
                 </button>
 
