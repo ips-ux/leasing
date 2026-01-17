@@ -3,6 +3,8 @@ import type { Applicant } from '../../types/applicant';
 import { getLeaseInfoForCard, WORKFLOW_STEPS } from '../../lib/workflow-steps';
 import type { Timestamp } from 'firebase/firestore';
 import { QuickActionSubStep } from './QuickActionSubStep';
+import { useUsers } from '../../hooks/useUsers';
+import { extractFirstName } from '../../utils/user';
 
 // Format date by extracting UTC components to avoid timezone issues
 const formatDateUTC = (timestamp: Timestamp | null): string => {
@@ -20,6 +22,8 @@ interface ApplicantCardProps {
 }
 
 export const ApplicantCard = ({ applicant, onClick }: ApplicantCardProps) => {
+  const { users } = useUsers();
+
   const getStatusVariant = (status: string) => {
     switch (status) {
       case 'in_progress':
@@ -80,7 +84,14 @@ export const ApplicantCard = ({ applicant, onClick }: ApplicantCardProps) => {
               )}
             </div>
             <div className="text-xs text-black/50 font-mono mt-1">
-              Agent: <span className="text-black/80 font-bold uppercase">{tracking.assignedTo || 'N/A'}</span>
+              Agent: <span className="text-black/80 font-bold uppercase">
+                {(() => {
+                  const agentId = tracking.assignedTo;
+                  if (!agentId) return 'N/A';
+                  const agent = users.find(u => u.uid === agentId);
+                  return agent ? extractFirstName(agent.email) : 'Unknown';
+                })()}
+              </span>
             </div>
           </div>
 

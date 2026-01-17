@@ -19,16 +19,29 @@ export const Reports = () => {
   const currentMonth25th = endOfDay(setDate(today, 25));
   const prevMonth25th = startOfDay(setDate(subMonths(today, 1), 25));
 
-  const filteredApplicants = applicants.filter(app => {
-    if (!app['1_Profile'].moveInDate) return false;
+  const filteredApplicants = applicants
+    .filter(app => {
+      // Exclude cancelled applicants
+      if (app['2_Tracking'].status === 'cancelled') return false;
+      if (!app['1_Profile'].moveInDate) return false;
 
-    const moveInDate = app['1_Profile'].moveInDate instanceof Timestamp
-      ? app['1_Profile'].moveInDate.toDate()
-      : new Date(app['1_Profile'].moveInDate);
+      const moveInDate = app['1_Profile'].moveInDate instanceof Timestamp
+        ? app['1_Profile'].moveInDate.toDate()
+        : new Date(app['1_Profile'].moveInDate);
 
-    return (isAfter(moveInDate, prevMonth25th) || isEqual(moveInDate, prevMonth25th)) &&
-      (isBefore(moveInDate, currentMonth25th) || isEqual(moveInDate, currentMonth25th));
-  });
+      return (isAfter(moveInDate, prevMonth25th) || isEqual(moveInDate, prevMonth25th)) &&
+        (isBefore(moveInDate, currentMonth25th) || isEqual(moveInDate, currentMonth25th));
+    })
+    .sort((a, b) => {
+      const dateA = a['1_Profile'].moveInDate instanceof Timestamp
+        ? a['1_Profile'].moveInDate.toDate()
+        : new Date(a['1_Profile'].moveInDate);
+      const dateB = b['1_Profile'].moveInDate instanceof Timestamp
+        ? b['1_Profile'].moveInDate.toDate()
+        : new Date(b['1_Profile'].moveInDate);
+
+      return dateA.getTime() - dateB.getTime(); // Earliest first
+    });
 
   return (
     <div className="space-y-6">

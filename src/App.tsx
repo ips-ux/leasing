@@ -6,7 +6,6 @@ import {
   ApplicantsList,
   ApplicantDetail,
   InquiriesList,
-  InquiryDetail,
   Reports,
 } from './pages';
 import { Layout, ProtectedRoute } from './components/layout';
@@ -81,17 +80,6 @@ function App() {
             <ProtectedRoute>
               <Layout>
                 <InquiriesList />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/inquiries/:id"
-          element={
-            <ProtectedRoute>
-              <Layout>
-                <InquiryDetail />
               </Layout>
             </ProtectedRoute>
           }

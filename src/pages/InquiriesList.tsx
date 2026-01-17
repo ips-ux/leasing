@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Card, Button, Badge } from '../components/ui';
 import { useInquiries } from '../hooks/useInquiries';
 import { NewInquiryModal } from '../components/inquiries/NewInquiryModal';
+import { EditInquiryModal } from '../components/inquiries/EditInquiryModal';
 import type { Inquiry, InquiryPriority, InquiryStatus } from '../types/inquiry';
 
 // Helper to format month display
@@ -32,12 +32,12 @@ const getPriorityBadge = (priority: InquiryPriority): 'high' | 'medium' | 'low' 
 };
 
 export const InquiriesList = () => {
-  const navigate = useNavigate();
   const months = generateMonths();
   const currentMonth = months[0];
   const [selectedMonth, setSelectedMonth] = useState(currentMonth);
   const [draggedInquiry, setDraggedInquiry] = useState<Inquiry | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isNewModalOpen, setIsNewModalOpen] = useState(false);
+  const [selectedInquiry, setSelectedInquiry] = useState<Inquiry | null>(null);
 
   const { inquiries, loading, updateInquiry } = useInquiries(selectedMonth);
 
@@ -81,7 +81,7 @@ export const InquiriesList = () => {
             Resident Inquiries
           </motion.h1>
 
-          <Button variant="primary" onClick={() => setIsModalOpen(true)}>
+          <Button variant="primary" onClick={() => setIsNewModalOpen(true)}>
             + New Inquiry
           </Button>
         </div>
@@ -152,7 +152,7 @@ export const InquiriesList = () => {
                   <InquiryCard
                     key={inquiry.id}
                     inquiry={inquiry}
-                    onClick={() => navigate(`/inquiries/${inquiry.id}`)}
+                    onClick={() => setSelectedInquiry(inquiry)}
                     onDragStart={handleDragStart}
                     onDragEnd={handleDragEnd}
                     isDragging={draggedInquiry?.id === inquiry.id}
@@ -192,7 +192,7 @@ export const InquiriesList = () => {
                   <InquiryCard
                     key={inquiry.id}
                     inquiry={inquiry}
-                    onClick={() => navigate(`/inquiries/${inquiry.id}`)}
+                    onClick={() => setSelectedInquiry(inquiry)}
                     onDragStart={handleDragStart}
                     onDragEnd={handleDragEnd}
                     isDragging={draggedInquiry?.id === inquiry.id}
@@ -232,7 +232,7 @@ export const InquiriesList = () => {
                   <InquiryCard
                     key={inquiry.id}
                     inquiry={inquiry}
-                    onClick={() => navigate(`/inquiries/${inquiry.id}`)}
+                    onClick={() => setSelectedInquiry(inquiry)}
                     onDragStart={handleDragStart}
                     onDragEnd={handleDragEnd}
                     isDragging={draggedInquiry?.id === inquiry.id}
@@ -246,8 +246,15 @@ export const InquiriesList = () => {
       </div>
 
       <NewInquiryModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        isOpen={isNewModalOpen}
+        onClose={() => setIsNewModalOpen(false)}
+      />
+
+      <EditInquiryModal
+        isOpen={!!selectedInquiry}
+        onClose={() => setSelectedInquiry(null)}
+        inquiry={selectedInquiry}
+        onSuccess={() => setSelectedInquiry(null)}
       />
     </>
   );

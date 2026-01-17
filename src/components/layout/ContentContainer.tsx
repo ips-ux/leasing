@@ -7,9 +7,9 @@ interface ContentContainerProps {
 
 export const ContentContainer = ({ children, className = '' }: ContentContainerProps) => {
   return (
-    <div className="min-h-screen p-8 flex items-start justify-center">
+    <div className="min-h-screen flex items-start justify-center">
       <div
-        className={`w-full max-w-7xl p-8 backdrop-blur-xl border-4 border-black/20 ${className}`}
+        className={`w-full min-h-screen p-4 backdrop-blur-xl ${className}`}
         style={{
           background: 'rgba(180, 212, 255, 0.15)'
         }}

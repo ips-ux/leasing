@@ -1,20 +1,14 @@
-import { useState } from 'react';
 import { Card, Button } from '../ui';
 import { ToDoApplicantCard } from './ToDoApplicantCard';
 import type { Applicant } from '../../types/applicant';
 
 interface DashboardToDoColumnProps {
-  myApplicants: Applicant[];
-  allApplicants: Applicant[];
+  applicants: Applicant[];
   loading: boolean;
   onNewApplicant: () => void;
 }
 
-export const DashboardToDoColumn = ({ myApplicants, allApplicants, loading, onNewApplicant }: DashboardToDoColumnProps) => {
-  const [showMineOnly, setShowMineOnly] = useState(true);
-
-  // Use filtered list based on toggle
-  const applicants = showMineOnly ? myApplicants : allApplicants;
+export const DashboardToDoColumn = ({ applicants, loading, onNewApplicant }: DashboardToDoColumnProps) => {
   // Filter upcoming move-ins: all steps complete + future move-in date
   const upcomingMoveIns = applicants.filter(a => {
     const allStepsComplete = Object.values(a.workflow).every(step => step.isCompleted);
@@ -49,39 +43,10 @@ export const DashboardToDoColumn = ({ myApplicants, allApplicants, loading, onNe
     <Card>
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-2xl font-semibold">Applicants</h2>
-
-        {/* Toggle Switch */}
-        <div className="flex border-2 border-black bg-white/10">
-          <button
-            onClick={() => setShowMineOnly(true)}
-            className={`px-3 py-1 text-xs font-bold transition-colors ${
-              showMineOnly
-                ? 'bg-lavender text-black'
-                : 'bg-white/10 text-black/60 hover:bg-white/20'
-            }`}
-          >
-            Mine
-          </button>
-          <div className="w-[2px] bg-black" />
-          <button
-            onClick={() => setShowMineOnly(false)}
-            className={`px-3 py-1 text-xs font-bold transition-colors ${
-              !showMineOnly
-                ? 'bg-lavender text-black'
-                : 'bg-white/10 text-black/60 hover:bg-white/20'
-            }`}
-          >
-            Everyone
-          </button>
-        </div>
       </div>
 
       {/* New Applicant Button */}
-      <Button
-        variant="primary"
-        onClick={onNewApplicant}
-        className="w-full mb-4"
-      >
+      <Button variant="primary" onClick={onNewApplicant} className="w-full mb-4">
         + New Applicant
       </Button>
 

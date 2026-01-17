@@ -7,3 +7,4 @@ export { Modal } from './Modal';
 export { GradientBackground } from './GradientBackground';
 export { ErrorBoundary } from './ErrorBoundary';
 export { Select } from './Select';
+export { Checkbox } from './Checkbox';

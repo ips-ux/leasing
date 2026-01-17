@@ -6,11 +6,13 @@ import { useApplicants } from '../hooks/useApplicants';
 import { useInquiries } from '../hooks/useInquiries';
 import { extractFirstName } from '../utils/user';
 import { DashboardToDoColumn } from '../components/dashboard/DashboardToDoColumn';
-import { DashboardCenterColumn } from '../components/dashboard/DashboardCenterColumn';
 import { DashboardActivityColumn } from '../components/dashboard/DashboardActivityColumn';
+import { DashboardMetrics } from '../components/dashboard/DashboardMetrics';
 import { DashboardRecentActivity } from '../components/dashboard/DashboardRecentActivity';
 import { NewApplicantModal } from '../components/applicants/NewApplicantModal';
 import { NewInquiryModal } from '../components/inquiries/NewInquiryModal';
+import { EditInquiryModal } from '../components/inquiries/EditInquiryModal';
+import type { Inquiry } from '../types/inquiry';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -36,28 +38,32 @@ export const Dashboard = () => {
   const navigate = useNavigate();
   const [isApplicantModalOpen, setIsApplicantModalOpen] = useState(false);
   const [isInquiryModalOpen, setIsInquiryModalOpen] = useState(false);
+  const [selectedInquiry, setSelectedInquiry] = useState<Inquiry | null>(null);
+  const [showMineOnly, setShowMineOnly] = useState(true);
 
   // Fetch all applicants and inquiries
   const { applicants, loading: applicantsLoading } = useApplicants();
   const { inquiries, loading: inquiriesLoading } = useInquiries();
 
-  // Filter applicants assigned to current user
-  const myApplicants = applicants.filter(a => {
+  // Filter applicants based on toggle
+  const filteredApplicants = applicants.filter(a => {
+    if (!showMineOnly) return true;
     const tracking = a['2_Tracking'];
-    // If assignedTo exists, use it. Otherwise fall back to createdBy for backward compatibility
     return tracking.assignedTo === user?.uid ||
       (!tracking.assignedTo && tracking.createdBy === user?.uid);
   });
 
-  // Filter inquiries assigned to current user
-  const myInquiries = inquiries.filter(i => {
-    // If assignedTo exists, use it. Otherwise fall back to createdBy for backward compatibility
+  // Filter inquiries based on toggle
+  const filteredInquiries = inquiries.filter(i => {
+    if (!showMineOnly) return true;
     return i.assignedTo === user?.uid ||
       (!i.assignedTo && i.createdBy === user?.uid);
   });
 
-  // Calculate Metrics
-  const activeApplicants = applicants.filter(a => a['2_Tracking'].status !== 'completed').length;
+  // Calculate Metrics (always based on all data for global overview)
+  const activeApplicants = applicants.filter(a =>
+    a['2_Tracking'].status !== 'completed' && a['2_Tracking'].status !== 'cancelled'
+  ).length;
   const inProgressApplicants = applicants.filter(a => a['2_Tracking'].status === 'in_progress').length;
 
   const highPriorityInquiries = inquiries.filter(i =>
@@ -108,6 +114,7 @@ export const Dashboard = () => {
 
   const handleOpenApplicantModal = () => setIsApplicantModalOpen(true);
   const handleOpenInquiryModal = () => setIsInquiryModalOpen(true);
+  const handleInquiryClick = (inquiry: Inquiry) => setSelectedInquiry(inquiry);
 
   return (
     <>
@@ -118,43 +125,65 @@ export const Dashboard = () => {
         animate="visible"
       >
         <motion.div variants={itemVariants}>
-          <h1 className="text-4xl font-bold mb-2">Dashboard</h1>
-          <p className="text-black/60">Welcome back, {extractFirstName(user?.email)}!</p>
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+            <div>
+              <h1 className="text-4xl font-bold mb-2">Dashboard</h1>
+              <p className="text-black/60">Welcome back, {extractFirstName(user?.email)}!</p>
+            </div>
+
+            {/* Mine/Everyone Selector */}
+            <div className="flex border-[3px] border-black bg-white/10 w-fit">
+              <button
+                onClick={() => setShowMineOnly(true)}
+                className={`px-6 py-2 font-bold transition-all ${showMineOnly
+                  ? 'bg-lavender text-black shadow-brutal-sm'
+                  : 'bg-white/10 text-black/60 hover:bg-white/20'
+                  }`}
+              >
+                Mine
+              </button>
+              <div className="w-[3px] bg-black" />
+              <button
+                onClick={() => setShowMineOnly(false)}
+                className={`px-6 py-2 font-bold transition-all ${!showMineOnly
+                  ? 'bg-lavender text-black shadow-brutal-sm'
+                  : 'bg-white/10 text-black/60 hover:bg-white/20'
+                  }`}
+              >
+                Everyone
+              </button>
+            </div>
+          </div>
         </motion.div>
 
-        {/* 3-Column Grid: 3fr 4fr 3fr */}
+        {/* Full-Width Metrics */}
         <motion.div variants={itemVariants}>
-          <div className="grid grid-cols-1 lg:grid-cols-10 gap-6">
-            {/* Left Column - To Do (30% / 3fr) */}
-            <div className="lg:col-span-3">
-              <DashboardToDoColumn
-                myApplicants={myApplicants}
-                allApplicants={applicants}
-                loading={applicantsLoading || inquiriesLoading}
-                onNewApplicant={handleOpenApplicantModal}
-              />
-            </div>
+          <DashboardMetrics
+            activeApplicants={activeApplicants}
+            inProgressApplicants={inProgressApplicants}
+            highPriorityInquiries={highPriorityInquiries}
+            totalCompletedThisMonth={totalCompletedThisMonth}
+            loading={loading}
+          />
+        </motion.div>
 
-            {/* Center Column - Quick Actions + Stats (40% / 4fr) */}
-            <div className="lg:col-span-4 space-y-6">
-              <DashboardCenterColumn
-                activeApplicants={activeApplicants}
-                inProgressApplicants={inProgressApplicants}
-                highPriorityInquiries={highPriorityInquiries}
-                totalCompletedThisMonth={totalCompletedThisMonth}
-                loading={loading}
-                onNavigate={handleOpenApplicantModal}
-                onNavigateInquiry={handleOpenInquiryModal}
-              />
-            </div>
+        {/* 2-Column Grid: Applicants and Inquiries */}
+        <motion.div variants={itemVariants}>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Left Column - Applicants */}
+            <DashboardToDoColumn
+              applicants={filteredApplicants}
+              loading={loading}
+              onNewApplicant={handleOpenApplicantModal}
+            />
 
-            {/* Right Column - Inquiries (30% / 3fr) */}
-            <div className="lg:col-span-3">
-              <DashboardActivityColumn
-                inquiries={myInquiries}
-                loading={loading}
-              />
-            </div>
+            {/* Right Column - Inquiries */}
+            <DashboardActivityColumn
+              inquiries={filteredInquiries}
+              loading={loading}
+              onNewInquiry={handleOpenInquiryModal}
+              onInquiryClick={handleInquiryClick}
+            />
           </div>
         </motion.div>
 
@@ -176,6 +205,12 @@ export const Dashboard = () => {
       <NewInquiryModal
         isOpen={isInquiryModalOpen}
         onClose={() => setIsInquiryModalOpen(false)}
+      />
+      <EditInquiryModal
+        isOpen={!!selectedInquiry}
+        onClose={() => setSelectedInquiry(null)}
+        inquiry={selectedInquiry}
+        onSuccess={() => setSelectedInquiry(null)}
       />
     </>
   );

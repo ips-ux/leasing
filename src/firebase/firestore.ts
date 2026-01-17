@@ -43,13 +43,29 @@ export const createApplicant = async (formData: ApplicantFormData): Promise<stri
   const currentUser = getCurrentUser();
   if (!currentUser) throw new Error('User not authenticated');
 
+  // Initialize workflow
+  const workflow = initializeWorkflow();
+
+  // Handle Transfer checkbox - set substep 1c
+  if (formData.isTransfer) {
+    workflow['1'].subSteps['1c'] = {
+      isCompleted: true,
+      isNA: false,
+      completedAt: serverTimestamp(),
+      completedBy: currentUser.uid,
+    };
+  }
+
+  // Calculate initial tags
+  const initialTags = formData.isTransfer ? ['x-fer'] : [];
+
   const applicantData = {
     "1_Profile": {
       name: formData.name,
       unit: formData.unit,
       dateApplied: dateToMidnightUTC(formData.dateApplied),
       moveInDate: dateToMidnightUTC(formData.moveInDate),
-      concessionApplied: formData.concessionApplied,
+      concessionApplied: formData.isConcession ? formData.concessionApplied : 'N/A',
     },
     "2_Tracking": {
       currentStep: 1,
@@ -62,8 +78,8 @@ export const createApplicant = async (formData: ApplicantFormData): Promise<stri
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     },
-    workflow: initializeWorkflow(),
-    tags: [],
+    workflow,
+    tags: initialTags,
     rentables: [],
     documents: {},
   };

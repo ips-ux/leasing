@@ -1,9 +1,9 @@
-import { useNavigate } from 'react-router-dom';
 import { Badge } from '../ui';
 import type { Inquiry } from '../../types/inquiry';
 
 interface ToDoInquiryCardProps {
   inquiry: Inquiry;
+  onClick?: () => void;
 }
 
 const getPriorityVariant = (priority: string): 'high' | 'medium' | 'low' => {
@@ -19,12 +19,10 @@ const getStatusVariant = (status: string): 'high' | 'medium' | 'success' | 'info
   return 'medium';
 };
 
-export const ToDoInquiryCard = ({ inquiry }: ToDoInquiryCardProps) => {
-  const navigate = useNavigate();
-
+export const ToDoInquiryCard = ({ inquiry, onClick }: ToDoInquiryCardProps) => {
   return (
     <div
-      onClick={() => navigate(`/inquiries/${inquiry.id}`)}
+      onClick={onClick}
       className="border-2 border-black p-2 hover:bg-black/5 transition-colors cursor-pointer"
     >
       <div className="flex items-center justify-between">

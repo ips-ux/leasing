@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Button, Input, DatePicker, Select, Modal } from '../ui';
+import { Button, Input, DatePicker, Select, Modal, Checkbox } from '../ui';
 import { useApplicants } from '../../hooks/useApplicants';
 import { useUsers } from '../../hooks/useUsers';
 import { useAuth } from '../../hooks/useAuth';
@@ -23,6 +23,8 @@ export const NewApplicantModal = ({ isOpen, onClose, onSuccess }: NewApplicantMo
     unit: '',
     dateApplied: new Date(),
     moveInDate: new Date(),
+    isTransfer: false,
+    isConcession: false,
     concessionApplied: '',
     assignedTo: user?.uid || '',
   });
@@ -49,6 +51,14 @@ export const NewApplicantModal = ({ isOpen, onClose, onSuccess }: NewApplicantMo
     }));
   };
 
+  const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, checked } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: checked,
+    }));
+  };
+
   const handleDateChange = (name: string) => (date: Date) => {
     setFormData((prev) => ({
       ...prev,
@@ -69,6 +79,8 @@ export const NewApplicantModal = ({ isOpen, onClose, onSuccess }: NewApplicantMo
           unit: '',
           dateApplied: new Date(),
           moveInDate: new Date(),
+          isTransfer: false,
+          isConcession: false,
           concessionApplied: '',
           assignedTo: user?.uid || '',
         });
@@ -84,50 +96,81 @@ export const NewApplicantModal = ({ isOpen, onClose, onSuccess }: NewApplicantMo
     <Modal isOpen={isOpen} onClose={onClose} title="New Applicant">
       <form onSubmit={handleSubmit}>
         <div className="space-y-4">
-          <Input
-            label="Applicant Name"
-            name="name"
-            type="text"
-            placeholder="Applicant Name"
-            value={formData.name}
-            onChange={handleChange}
-            required
-          />
+          {/* Primary Name and Unit Number in line */}
+          <div className="grid grid-cols-2 gap-4">
+            <Input
+              label="Primary Name"
+              name="name"
+              type="text"
+              placeholder="Primary Name"
+              value={formData.name}
+              onChange={handleChange}
+              required
+            />
 
-          <Input
-            label="Unit Number"
-            name="unit"
-            type="text"
-            placeholder="Unit Number"
-            value={formData.unit}
-            onChange={handleChange}
-            required
-          />
+            <Input
+              label="Unit Number"
+              name="unit"
+              type="text"
+              placeholder="Unit Number"
+              value={formData.unit}
+              onChange={handleChange}
+              required
+            />
+          </div>
 
-          <DatePicker
-            label="Date Applied"
-            name="dateApplied"
-            value={formData.dateApplied}
-            onChange={handleDateChange('dateApplied')}
-            required
-          />
+          {/* Date Applied and Move-In Date in line */}
+          <div className="grid grid-cols-2 gap-4">
+            <DatePicker
+              label="Date Applied"
+              name="dateApplied"
+              value={formData.dateApplied}
+              onChange={handleDateChange('dateApplied')}
+              required
+            />
 
-          <DatePicker
-            label="Move-In Date"
-            name="moveInDate"
-            value={formData.moveInDate}
-            onChange={handleDateChange('moveInDate')}
-            required
-          />
+            <DatePicker
+              label="Move-In Date"
+              name="moveInDate"
+              value={formData.moveInDate}
+              onChange={handleDateChange('moveInDate')}
+              required
+            />
+          </div>
 
-          <Input
-            label="Concession Applied"
-            name="concessionApplied"
-            type="text"
-            placeholder="None, 1 month free, etc."
-            value={formData.concessionApplied}
-            onChange={handleChange}
-          />
+          {/* Transfer and Concession checkboxes in line */}
+          <div className="grid grid-cols-2 gap-4 overflow-hidden">
+            <div className="overflow-hidden">
+              <Checkbox
+                label="Transfer?"
+                name="isTransfer"
+                checked={formData.isTransfer}
+                onChange={handleCheckboxChange}
+              />
+            </div>
+
+            <div className="overflow-hidden">
+              <Checkbox
+                label="Concession?"
+                name="isConcession"
+                checked={formData.isConcession}
+                onChange={handleCheckboxChange}
+              />
+            </div>
+          </div>
+
+          {/* Concession field - only show if checkbox is checked */}
+          <div className={formData.isConcession ? 'block' : 'hidden'}>
+            <Input
+              label="Concession Applied"
+              name="concessionApplied"
+              type="text"
+              placeholder="e.g., 6 weeks + $250, 1 month free, etc."
+              value={formData.concessionApplied}
+              onChange={handleChange}
+              required={formData.isConcession}
+            />
+          </div>
 
           <Select
             label="Assigned To"

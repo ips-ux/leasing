@@ -85,6 +85,8 @@ export interface ApplicantFormData {
   unit: string;
   dateApplied: Date;
   moveInDate: Date;
+  isTransfer: boolean;
+  isConcession: boolean;
   concessionApplied: string;
   assignedTo: string;
 }
