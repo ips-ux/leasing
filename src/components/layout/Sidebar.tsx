@@ -35,11 +35,9 @@ const NavLinkItem = ({ to, children, disabled = false }: NavLinkItemProps) => {
 
 export const Sidebar = () => {
   const { user, signOut } = useAuth();
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const handleSignOut = () => {
     signOut();
-    setIsMenuOpen(false);
   };
 
   return (

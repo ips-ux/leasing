@@ -19,6 +19,8 @@ export const ApplicantForm = () => {
     unit: '',
     dateApplied: new Date(),
     moveInDate: new Date(),
+    isTransfer: false,
+    isConcession: false,
     concessionApplied: '',
     assignedTo: user?.uid || '',
   });
