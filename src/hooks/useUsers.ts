@@ -11,6 +11,7 @@ export const useUsers = () => {
         const fetchUsers = async () => {
             try {
                 const usersData = await getUsers(true);
+                console.log('📊 Users fetched:', usersData.length, usersData);
                 setUsers(usersData);
             } catch (err: any) {
                 console.error('Error fetching users:', err);

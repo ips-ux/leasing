@@ -1,11 +1,12 @@
-import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
 import { useApplicants } from '../hooks/useApplicants';
 import { ApplicantList } from '../components/applicants/ApplicantList';
 import { Button, Card } from '../components/ui';
+import { NewApplicantModal } from '../components/applicants/NewApplicantModal';
 
 export const ApplicantsList = () => {
-  const navigate = useNavigate();
   const { applicants, loading, error } = useApplicants();
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   if (loading) {
     return (
@@ -34,19 +35,26 @@ export const ApplicantsList = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-4xl font-bold mb-2">Applicants</h1>
-          <p className="text-black/60">Manage and track applicant processing</p>
+    <>
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-4xl font-bold mb-2">Applicants</h1>
+            <p className="text-black/60">Manage and track applicant processing</p>
+          </div>
+
+          <Button variant="primary" onClick={() => setIsModalOpen(true)}>
+            + New Applicant
+          </Button>
         </div>
 
-        <Button variant="primary" onClick={() => navigate('/applicants/new')}>
-          + New Applicant
-        </Button>
+        <ApplicantList applicants={applicants} loading={loading} />
       </div>
 
-      <ApplicantList applicants={applicants} loading={loading} />
-    </div>
+      <NewApplicantModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+      />
+    </>
   );
 };

@@ -57,9 +57,17 @@ export const Navbar = () => {
               >
                 Inquiries
               </NavLink>
-              <span className="text-sm font-semibold text-black/30 cursor-not-allowed">
-                Activity Log
-              </span>
+              <NavLink
+                to="/reports"
+                className={({ isActive }) =>
+                  `text-sm font-semibold transition-colors duration-100 ${isActive
+                    ? 'text-black border-b-3 border-lavender pb-1'
+                    : 'text-black/60 hover:text-black'
+                  }`
+                }
+              >
+                Reports
+              </NavLink>
             </div>
           </div>
 

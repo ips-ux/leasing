@@ -1,14 +1,18 @@
 import { useState, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Button, Input, DatePicker, Card, Select } from '../ui';
+import { Button, Input, DatePicker, Select, Modal } from '../ui';
 import { useApplicants } from '../../hooks/useApplicants';
 import { useUsers } from '../../hooks/useUsers';
 import { useAuth } from '../../hooks/useAuth';
 import { extractFirstName } from '../../utils/user';
 import type { ApplicantFormData } from '../../types/applicant';
 
-export const ApplicantForm = () => {
-  const navigate = useNavigate();
+interface NewApplicantModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSuccess?: () => void;
+}
+
+export const NewApplicantModal = ({ isOpen, onClose, onSuccess }: NewApplicantModalProps) => {
   const { user } = useAuth();
   const { createApplicant } = useApplicants();
   const { users, loading: usersLoading } = useUsers();
@@ -59,7 +63,17 @@ export const ApplicantForm = () => {
     try {
       const id = await createApplicant(formData);
       if (id) {
-        navigate('/applicants');
+        // Reset form
+        setFormData({
+          name: '',
+          unit: '',
+          dateApplied: new Date(),
+          moveInDate: new Date(),
+          concessionApplied: '',
+          assignedTo: user?.uid || '',
+        });
+        onSuccess?.();
+        onClose();
       }
     } finally {
       setIsSubmitting(false);
@@ -67,10 +81,8 @@ export const ApplicantForm = () => {
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <Card>
-        <h2 className="text-2xl font-bold mb-6 ">New Applicant</h2>
-
+    <Modal isOpen={isOpen} onClose={onClose} title="New Applicant">
+      <form onSubmit={handleSubmit}>
         <div className="space-y-4">
           <Input
             label="Applicant Name"
@@ -138,13 +150,13 @@ export const ApplicantForm = () => {
           <Button
             type="button"
             variant="secondary"
-            onClick={() => navigate('/applicants')}
+            onClick={onClose}
             disabled={isSubmitting}
           >
             Cancel
           </Button>
         </div>
-      </Card>
-    </form>
+      </form>
+    </Modal>
   );
 };

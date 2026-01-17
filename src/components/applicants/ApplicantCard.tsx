@@ -80,7 +80,7 @@ export const ApplicantCard = ({ applicant, onClick }: ApplicantCardProps) => {
               )}
             </div>
             <div className="text-xs text-black/50 font-mono mt-1">
-              Agent: <span className="text-black/80 font-bold uppercase">{profile.leasingProfessional || 'N/A'}</span>
+              Agent: <span className="text-black/80 font-bold uppercase">{tracking.assignedTo || 'N/A'}</span>
             </div>
           </div>
 

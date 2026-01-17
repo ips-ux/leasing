@@ -19,10 +19,9 @@ const NavLinkItem = ({ to, children, disabled = false }: NavLinkItemProps) => {
     <NavLink
       to={to}
       className={({ isActive }) =>
-        `block px-4 py-3 border-l-4 transition-all duration-100 ${
-          isActive
-            ? 'border-lavender bg-lavender/10 font-semibold'
-            : 'border-transparent hover:bg-black/5 hover:border-black/20'
+        `block px-4 py-3 border-l-4 transition-all duration-100 ${isActive
+          ? 'border-lavender bg-lavender/10 font-semibold'
+          : 'border-transparent hover:bg-black/5 hover:border-black/20'
         }`
       }
     >
@@ -39,7 +38,7 @@ export const Sidebar = () => {
           <NavLinkItem to="/dashboard">Dashboard</NavLinkItem>
           <NavLinkItem to="/applicants">Applicants</NavLinkItem>
           <NavLinkItem to="/inquiries">Inquiries</NavLinkItem>
-          <NavLinkItem to="/activity" disabled>Activity Log</NavLinkItem>
+          <NavLinkItem to="/reports">Reports</NavLinkItem>
         </div>
 
         <div className="mt-8 px-4">

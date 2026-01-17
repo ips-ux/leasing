@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Card, Button, Badge } from '../components/ui';
 import { useInquiries } from '../hooks/useInquiries';
+import { NewInquiryModal } from '../components/inquiries/NewInquiryModal';
 import type { Inquiry, InquiryPriority, InquiryStatus } from '../types/inquiry';
 
 // Helper to format month display
@@ -36,6 +37,7 @@ export const InquiriesList = () => {
   const currentMonth = months[0];
   const [selectedMonth, setSelectedMonth] = useState(currentMonth);
   const [draggedInquiry, setDraggedInquiry] = useState<Inquiry | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const { inquiries, loading, updateInquiry } = useInquiries(selectedMonth);
 
@@ -66,22 +68,23 @@ export const InquiriesList = () => {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center flex-wrap gap-4">
-        <motion.h1
-          className="text-4xl font-bold"
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.3 }}
-        >
-          Resident Inquiries
-        </motion.h1>
+    <>
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex justify-between items-center flex-wrap gap-4">
+          <motion.h1
+            className="text-4xl font-bold"
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            Resident Inquiries
+          </motion.h1>
 
-        <Button variant="primary" onClick={() => navigate('/inquiries/new')}>
-          + New Inquiry
-        </Button>
-      </div>
+          <Button variant="primary" onClick={() => setIsModalOpen(true)}>
+            + New Inquiry
+          </Button>
+        </div>
 
       {/* Month Tabs */}
       <motion.div
@@ -240,7 +243,13 @@ export const InquiriesList = () => {
           </motion.div>
         </div>
       )}
-    </div>
+      </div>
+
+      <NewInquiryModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+      />
+    </>
   );
 };
 

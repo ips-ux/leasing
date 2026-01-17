@@ -1,10 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Card, Button, Badge, Input, DatePicker, Modal } from '../components/ui';
+import { Card, Button, Badge, Input, DatePicker, Modal, Select } from '../components/ui';
 import { WorkflowChecklist } from '../components/applicants/WorkflowChecklist';
 import { useApplicant } from '../hooks/useApplicant';
 import { useApplicants } from '../hooks/useApplicants';
+import { useUsers } from '../hooks/useUsers';
+import { extractFirstName } from '../utils/user';
 import { getLeaseInfoForCard } from '../lib/workflow-steps';
 import type { Timestamp } from 'firebase/firestore';
 
@@ -42,6 +44,14 @@ export const ApplicantDetail = () => {
     updateStepNotes,
   } = useApplicant(id);
   const { updateApplicant, deleteApplicant } = useApplicants();
+  const { users, loading: usersLoading } = useUsers();
+
+  const agentOptions = useMemo(() => {
+    return users.map((u) => ({
+      label: u.displayName || extractFirstName(u.email),
+      value: u.uid,
+    }));
+  }, [users]);
 
   // Edit mode state
   const [isEditing, setIsEditing] = useState(false);
@@ -51,7 +61,7 @@ export const ApplicantDetail = () => {
     dateApplied: new Date(),
     moveInDate: new Date(),
     concessionApplied: '',
-    leasingProfessional: '',
+    assignedTo: '',
   });
 
   // Cancellation modals state
@@ -83,7 +93,7 @@ export const ApplicantDetail = () => {
         moveInDateUTC.getUTCDate()
       ),
       concessionApplied: profile.concessionApplied,
-      leasingProfessional: profile.leasingProfessional,
+      assignedTo: applicant['2_Tracking'].assignedTo || '',
     });
   };
 
@@ -119,7 +129,7 @@ export const ApplicantDetail = () => {
       dateApplied: editData.dateApplied as any,
       moveInDate: editData.moveInDate as any,
       concessionApplied: editData.concessionApplied,
-      leasingProfessional: editData.leasingProfessional,
+      assignedTo: editData.assignedTo,
     });
 
     if (success) {
@@ -342,23 +352,25 @@ export const ApplicantDetail = () => {
                 onChange={handleEditChange}
               />
 
-              <Input
-                label="Leasing Professional"
-                name="leasingProfessional"
-                type="text"
-                value={editData.leasingProfessional}
-                onChange={handleEditChange}
+              <Select
+                label="Assigned To"
+                options={agentOptions}
+                value={editData.assignedTo}
+                onChange={(value) => setEditData((prev) => ({ ...prev, assignedTo: value }))}
+                placeholder={usersLoading ? 'Loading agents...' : 'Select Agent'}
                 required
               />
             </div>
           ) : (
             // View Mode
             <>
-              {/* Leasing Professional - Prominent Display */}
+              {/* Assigned Agent - Prominent Display */}
               <div className="mb-4 pb-4 border-b-2 border-black/20">
-                <p className="text-xs font-mono text-black/50 uppercase mb-1">Leasing Professional</p>
+                <p className="text-xs font-mono text-black/50 uppercase mb-1">Assigned To</p>
                 <p className="text-lg font-bold text-lavender">
-                  {profile.leasingProfessional || 'Not Set'}
+                  {users.find(u => u.uid === tracking.assignedTo)?.displayName ||
+                    extractFirstName(users.find(u => u.uid === tracking.assignedTo)?.email) ||
+                    'Not Set'}
                 </p>
               </div>
 

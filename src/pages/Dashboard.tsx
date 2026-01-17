@@ -1,11 +1,16 @@
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useApplicants } from '../hooks/useApplicants';
 import { useInquiries } from '../hooks/useInquiries';
-import { Card, Badge } from '../components/ui';
-import { formatDistanceToNow } from 'date-fns';
 import { extractFirstName } from '../utils/user';
+import { DashboardToDoColumn } from '../components/dashboard/DashboardToDoColumn';
+import { DashboardCenterColumn } from '../components/dashboard/DashboardCenterColumn';
+import { DashboardActivityColumn } from '../components/dashboard/DashboardActivityColumn';
+import { DashboardRecentActivity } from '../components/dashboard/DashboardRecentActivity';
+import { NewApplicantModal } from '../components/applicants/NewApplicantModal';
+import { NewInquiryModal } from '../components/inquiries/NewInquiryModal';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -29,15 +34,27 @@ const itemVariants = {
 export const Dashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [isApplicantModalOpen, setIsApplicantModalOpen] = useState(false);
+  const [isInquiryModalOpen, setIsInquiryModalOpen] = useState(false);
 
-  // Fetch all applicants
+  // Fetch all applicants and inquiries
   const { applicants, loading: applicantsLoading } = useApplicants();
-
-  // Fetch inquiries for current month (default behavior of useInquiries without args is actually ALL if we don't pass month, 
-  // but let's check the hook implementation. 
-  // Ah, the hook takes an optional month. If undefined, it passes empty constraints, so it fetches ALL inquiries.
-  // That's perfect for the dashboard summary.)
   const { inquiries, loading: inquiriesLoading } = useInquiries();
+
+  // Filter applicants assigned to current user
+  const myApplicants = applicants.filter(a => {
+    const tracking = a['2_Tracking'];
+    // If assignedTo exists, use it. Otherwise fall back to createdBy for backward compatibility
+    return tracking.assignedTo === user?.uid ||
+      (!tracking.assignedTo && tracking.createdBy === user?.uid);
+  });
+
+  // Filter inquiries assigned to current user
+  const myInquiries = inquiries.filter(i => {
+    // If assignedTo exists, use it. Otherwise fall back to createdBy for backward compatibility
+    return i.assignedTo === user?.uid ||
+      (!i.assignedTo && i.createdBy === user?.uid);
+  });
 
   // Calculate Metrics
   const activeApplicants = applicants.filter(a => a['2_Tracking'].status !== 'completed').length;
@@ -69,7 +86,7 @@ export const Dashboard = () => {
   const recentActivity = [
     ...applicants.map(a => ({
       id: a.id,
-      type: 'applicant',
+      type: 'applicant' as const,
       title: a['1_Profile'].name,
       status: a['2_Tracking'].status,
       updatedAt: a['2_Tracking'].updatedAt?.toDate() || new Date(0),
@@ -77,7 +94,7 @@ export const Dashboard = () => {
     })),
     ...inquiries.map(i => ({
       id: i.id,
-      type: 'inquiry',
+      type: 'inquiry' as const,
       title: i.title,
       status: i.status,
       updatedAt: i.updatedAt?.toDate() || new Date(0),
@@ -89,124 +106,77 @@ export const Dashboard = () => {
 
   const loading = applicantsLoading || inquiriesLoading;
 
-  return (
-    <motion.div
-      className="space-y-8"
-      variants={containerVariants}
-      initial="hidden"
-      animate="visible"
-    >
-      <motion.div variants={itemVariants}>
-        <h1 className="text-4xl font-bold mb-2">Dashboard</h1>
-        <p className="text-black/60">Welcome back, {extractFirstName(user?.email)}!</p>
-      </motion.div>
+  const handleOpenApplicantModal = () => setIsApplicantModalOpen(true);
+  const handleOpenInquiryModal = () => setIsInquiryModalOpen(true);
 
-      <motion.div variants={itemVariants}>
-        <Card>
-          <h2 className="text-2xl font-semibold mb-4">Quick Actions</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div
-              onClick={() => navigate('/applicants/new')}
-              className="border-3 border-black p-4 hover:bg-black/5 transition-colors duration-100 cursor-pointer"
-            >
-              <div className="font-semibold mb-1">New Applicant</div>
-              <div className="text-sm text-black/60">Start processing a new application</div>
+  return (
+    <>
+      <motion.div
+        className="space-y-8"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
+        <motion.div variants={itemVariants}>
+          <h1 className="text-4xl font-bold mb-2">Dashboard</h1>
+          <p className="text-black/60">Welcome back, {extractFirstName(user?.email)}!</p>
+        </motion.div>
+
+        {/* 3-Column Grid: 3fr 4fr 3fr */}
+        <motion.div variants={itemVariants}>
+          <div className="grid grid-cols-1 lg:grid-cols-10 gap-6">
+            {/* Left Column - To Do (30% / 3fr) */}
+            <div className="lg:col-span-3">
+              <DashboardToDoColumn
+                myApplicants={myApplicants}
+                allApplicants={applicants}
+                loading={applicantsLoading || inquiriesLoading}
+                onNewApplicant={handleOpenApplicantModal}
+              />
             </div>
-            <div
-              onClick={() => navigate('/inquiries/new')}
-              className="border-3 border-black p-4 hover:bg-black/5 transition-colors duration-100 cursor-pointer"
-            >
-              <div className="font-semibold mb-1">New Inquiry</div>
-              <div className="text-sm text-black/60">Log a new resident inquiry</div>
+
+            {/* Center Column - Quick Actions + Stats (40% / 4fr) */}
+            <div className="lg:col-span-4 space-y-6">
+              <DashboardCenterColumn
+                activeApplicants={activeApplicants}
+                inProgressApplicants={inProgressApplicants}
+                highPriorityInquiries={highPriorityInquiries}
+                totalCompletedThisMonth={totalCompletedThisMonth}
+                loading={loading}
+                onNavigate={handleOpenApplicantModal}
+                onNavigateInquiry={handleOpenInquiryModal}
+              />
+            </div>
+
+            {/* Right Column - Inquiries (30% / 3fr) */}
+            <div className="lg:col-span-3">
+              <DashboardActivityColumn
+                inquiries={myInquiries}
+                loading={loading}
+              />
             </div>
           </div>
-        </Card>
+        </motion.div>
+
+        {/* Full-Width Recent Activity */}
+        <motion.div variants={itemVariants}>
+          <DashboardRecentActivity
+            recentActivity={recentActivity}
+            loading={loading}
+            onNavigate={navigate}
+          />
+        </motion.div>
       </motion.div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <motion.div variants={itemVariants}>
-          <Card>
-            <div className="space-y-2">
-              <div className="text-sm font-semibold text-black/60">Total Active Applicants</div>
-              <div className="text-3xl font-bold font-mono">
-                {loading ? '-' : activeApplicants}
-              </div>
-              <Badge variant="info">Active</Badge>
-            </div>
-          </Card>
-        </motion.div>
-
-        <motion.div variants={itemVariants}>
-          <Card>
-            <div className="space-y-2">
-              <div className="text-sm font-semibold text-black/60">In Progress</div>
-              <div className="text-3xl font-bold font-mono">
-                {loading ? '-' : inProgressApplicants}
-              </div>
-              <Badge variant="medium">Processing</Badge>
-            </div>
-          </Card>
-        </motion.div>
-
-        <motion.div variants={itemVariants}>
-          <Card>
-            <div className="space-y-2">
-              <div className="text-sm font-semibold text-black/60">High Priority Inquiries</div>
-              <div className="text-3xl font-bold font-mono">
-                {loading ? '-' : highPriorityInquiries}
-              </div>
-              <Badge variant="high">Action Needed</Badge>
-            </div>
-          </Card>
-        </motion.div>
-
-        <motion.div variants={itemVariants}>
-          <Card>
-            <div className="space-y-2">
-              <div className="text-sm font-semibold text-black/60">Completed This Month</div>
-              <div className="text-3xl font-bold font-mono">
-                {loading ? '-' : totalCompletedThisMonth}
-              </div>
-              <Badge variant="success">Success</Badge>
-            </div>
-          </Card>
-        </motion.div>
-      </div>
-
-      <motion.div variants={itemVariants}>
-        <Card>
-          <h2 className="text-2xl font-semibold mb-4">Recent Activity</h2>
-          {loading ? (
-            <div className="text-center py-8">Loading activity...</div>
-          ) : recentActivity.length === 0 ? (
-            <div className="text-black/60 text-center py-8">
-              No recent activity to display
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {recentActivity.map((item) => (
-                <div
-                  key={`${item.type}-${item.id}`}
-                  onClick={() => navigate(item.link)}
-                  className="flex items-center justify-between p-3 border-b-2 border-black/10 hover:bg-black/5 cursor-pointer transition-colors"
-                >
-                  <div>
-                    <div className="font-semibold">
-                      {item.type === 'applicant' ? 'Applicant Update' : 'Inquiry Update'}
-                    </div>
-                    <div className="text-sm text-black/60">
-                      {item.title} - <span className="capitalize">{item.status.replace('_', ' ')}</span>
-                    </div>
-                  </div>
-                  <div className="text-xs text-black/40 font-mono">
-                    {formatDistanceToNow(item.updatedAt, { addSuffix: true })}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </Card>
-      </motion.div>
-    </motion.div>
+      {/* Modals */}
+      <NewApplicantModal
+        isOpen={isApplicantModalOpen}
+        onClose={() => setIsApplicantModalOpen(false)}
+      />
+      <NewInquiryModal
+        isOpen={isInquiryModalOpen}
+        onClose={() => setIsInquiryModalOpen(false)}
+      />
+    </>
   );
 };

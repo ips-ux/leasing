@@ -16,6 +16,7 @@ export interface Inquiry {
   // Tracking
   createdAt: Timestamp;
   createdBy: string;
+  assignedTo: string;
   updatedAt: Timestamp;
   completedAt?: Timestamp | null;
 
@@ -33,4 +34,5 @@ export interface InquiryFormData {
   status: InquiryStatus;
   unitNumber?: string;
   notes?: string;
+  assignedTo?: string;
 }

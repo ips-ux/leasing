@@ -4,11 +4,10 @@ import {
   Login,
   Dashboard,
   ApplicantsList,
-  NewApplicant,
   ApplicantDetail,
   InquiriesList,
-  NewInquiry,
   InquiryDetail,
+  Reports,
 } from './pages';
 import { Layout, ProtectedRoute } from './components/layout';
 
@@ -66,17 +65,6 @@ function App() {
         />
 
         <Route
-          path="/applicants/new"
-          element={
-            <ProtectedRoute>
-              <Layout>
-                <NewApplicant />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
           path="/applicants/:id"
           element={
             <ProtectedRoute>
@@ -99,22 +87,22 @@ function App() {
         />
 
         <Route
-          path="/inquiries/new"
+          path="/inquiries/:id"
           element={
             <ProtectedRoute>
               <Layout>
-                <NewInquiry />
+                <InquiryDetail />
               </Layout>
             </ProtectedRoute>
           }
         />
 
         <Route
-          path="/inquiries/:id"
+          path="/reports"
           element={
             <ProtectedRoute>
               <Layout>
-                <InquiryDetail />
+                <Reports />
               </Layout>
             </ProtectedRoute>
           }

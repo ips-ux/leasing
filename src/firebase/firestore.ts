@@ -50,7 +50,6 @@ export const createApplicant = async (formData: ApplicantFormData): Promise<stri
       dateApplied: dateToMidnightUTC(formData.dateApplied),
       moveInDate: dateToMidnightUTC(formData.moveInDate),
       concessionApplied: formData.concessionApplied,
-      leasingProfessional: formData.leasingProfessional,
     },
     "2_Tracking": {
       currentStep: 1,
@@ -59,6 +58,7 @@ export const createApplicant = async (formData: ApplicantFormData): Promise<stri
       promotedToResidentAt: null,
       leaseCompletedTime: null,
       createdBy: currentUser.uid,
+      assignedTo: formData.assignedTo || currentUser.uid,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     },
@@ -101,8 +101,8 @@ export const updateApplicant = async (id: string, data: any): Promise<void> => {
       processedData[key] = value;
     } else {
       // Legacy or convenience: if field is in Profile or Tracking, use dot notation
-      const profileFields = ['name', 'unit', 'dateApplied', 'moveInDate', 'concessionApplied', 'leasingProfessional'];
-      const trackingFields = ['status', 'currentStep', 'promotedToResident', 'promotedToResidentAt', 'leaseCompletedTime', 'createdAt', 'createdBy', 'updatedAt', 'cancellationReason', 'cancelledAt', 'cancelledBy'];
+      const profileFields = ['name', 'unit', 'dateApplied', 'moveInDate', 'concessionApplied'];
+      const trackingFields = ['status', 'currentStep', 'promotedToResident', 'promotedToResidentAt', 'leaseCompletedTime', 'createdAt', 'createdBy', 'assignedTo', 'updatedAt', 'cancellationReason', 'cancelledAt', 'cancelledBy'];
 
       if (profileFields.includes(key)) {
         let val = value;
@@ -313,6 +313,7 @@ export const createInquiry = async (formData: InquiryFormData): Promise<string> 
     notes: formData.notes || '',
     month,
     createdBy: currentUser.uid,
+    assignedTo: formData.assignedTo || currentUser.uid,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
     completedAt: null,
@@ -400,8 +401,15 @@ export const getUsers = async (onlyActive: boolean = false): Promise<User[]> => 
     // Filter users active in the last 30 days
     const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
     return users.filter(u => {
+      // If lastActive doesn't exist, include the user (they might be newly created)
+      if (!u.lastActive) return true;
+
       const lastActive = u.lastActive instanceof Timestamp ? u.lastActive.toMillis() :
         u.lastActive instanceof Date ? u.lastActive.getTime() : 0;
+
+      // If lastActive is 0 (invalid), include the user
+      if (lastActive === 0) return true;
+
       return lastActive > thirtyDaysAgo;
     });
   }

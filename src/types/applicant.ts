@@ -43,7 +43,6 @@ export interface Applicant {
     name: string;
     concessionApplied: string;
     dateApplied: Timestamp;
-    leasingProfessional: string;
     moveInDate: Timestamp;
     unit: string;
   };
@@ -52,6 +51,7 @@ export interface Applicant {
     status: ApplicantStatus;
     createdAt: Timestamp;
     createdBy: string;
+    assignedTo: string;
     currentStep: number;
     leaseCompletedTime: Timestamp | null;
     promotedToResident: boolean;
@@ -86,5 +86,5 @@ export interface ApplicantFormData {
   dateApplied: Date;
   moveInDate: Date;
   concessionApplied: string;
-  leasingProfessional: string;
+  assignedTo?: string;
 }

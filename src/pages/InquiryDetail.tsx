@@ -1,9 +1,11 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Card, Button, Badge, Input, Modal } from '../components/ui';
+import { Card, Button, Badge, Input, Modal, Select } from '../components/ui';
 import { useInquiry } from '../hooks/useInquiry';
 import { useInquiries } from '../hooks/useInquiries';
+import { useUsers } from '../hooks/useUsers';
+import { extractFirstName } from '../utils/user';
 import type { InquiryPriority, InquiryStatus } from '../types/inquiry';
 import type { Timestamp } from 'firebase/firestore';
 
@@ -37,6 +39,7 @@ export const InquiryDetail = () => {
   const navigate = useNavigate();
   const { inquiry, loading, error } = useInquiry(id);
   const { updateInquiry, deleteInquiry } = useInquiries();
+  const { users, loading: usersLoading } = useUsers();
 
   const [isEditing, setIsEditing] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -49,7 +52,15 @@ export const InquiryDetail = () => {
     status: 'open' as InquiryStatus,
     unitNumber: '',
     notes: '',
+    assignedTo: '',
   });
+
+  const agentOptions = useMemo(() => {
+    return users.map((u) => ({
+      label: u.displayName || extractFirstName(u.email),
+      value: u.uid,
+    }));
+  }, [users]);
 
   const initEditData = () => {
     if (!inquiry) return;
@@ -60,6 +71,7 @@ export const InquiryDetail = () => {
       status: inquiry.status,
       unitNumber: inquiry.unitNumber || '',
       notes: inquiry.notes || '',
+      assignedTo: inquiry.assignedTo || '',
     });
     // Initialize isResident based on whether unit number exists
     setIsResident(!!inquiry.unitNumber);
@@ -301,6 +313,15 @@ export const InquiryDetail = () => {
                   rows={3}
                 />
               </div>
+
+              <Select
+                label="Assigned To"
+                options={agentOptions}
+                value={editData.assignedTo}
+                onChange={(value) => setEditData((prev) => ({ ...prev, assignedTo: value }))}
+                placeholder={usersLoading ? 'Loading agents...' : 'Select Agent'}
+                required
+              />
             </div>
           ) : (
             // View Mode
