@@ -46,8 +46,7 @@ export const ApplicantList = ({ applicants, loading }: ApplicantListProps) => {
       result = result.filter(
         (app) =>
           app["1_Profile"].name.toLowerCase().includes(term) ||
-          app["1_Profile"].unit.toLowerCase().includes(term) ||
-          (app["1_Profile"].leasingProfessional && app["1_Profile"].leasingProfessional.toLowerCase().includes(term))
+          app["1_Profile"].unit.toLowerCase().includes(term)
       );
     }
 

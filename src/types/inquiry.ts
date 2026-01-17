@@ -34,5 +34,5 @@ export interface InquiryFormData {
   status: InquiryStatus;
   unitNumber?: string;
   notes?: string;
-  assignedTo?: string;
+  assignedTo: string;
 }

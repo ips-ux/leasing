@@ -213,7 +213,6 @@ export const normalizeApplicant = (data: any): any => {
       dateApplied: data.dateApplied || null,
       moveInDate: data.moveInDate || null,
       concessionApplied: data.concessionApplied || '',
-      leasingProfessional: data.leasingProfessional || '',
     };
   } else if (!applicant["1_Profile"].name && data.name) {
     // If 1_Profile exists but name is missing, pull it from top level

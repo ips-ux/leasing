@@ -86,5 +86,5 @@ export interface ApplicantFormData {
   dateApplied: Date;
   moveInDate: Date;
   concessionApplied: string;
-  assignedTo?: string;
+  assignedTo: string;
 }
