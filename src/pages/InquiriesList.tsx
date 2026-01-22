@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Button, Card } from '../components/ui';
+import { Button } from '../components/ui';
 import { useInquiries } from '../hooks/useInquiries';
 import { NewInquiryModal } from '../components/inquiries/NewInquiryModal';
 import { EditInquiryModal } from '../components/inquiries/EditInquiryModal';
