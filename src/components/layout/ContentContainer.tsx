@@ -9,10 +9,7 @@ export const ContentContainer = ({ children, className = '' }: ContentContainerP
   return (
     <div className="min-h-screen flex items-start justify-center">
       <div
-        className={`w-full min-h-screen p-4 backdrop-blur-xl ${className}`}
-        style={{
-          background: 'rgba(180, 212, 255, 0.15)'
-        }}
+        className={`w-full min-h-screen p-4 ${className}`}
       >
         {children}
       </div>

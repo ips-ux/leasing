@@ -1,25 +1,31 @@
+import { useNavigate } from 'react-router-dom';
 import { Card, Badge } from '../ui';
 
 interface DashboardMetricsProps {
   activeApplicants: number;
-  inProgressApplicants: number;
+  totalInquiries: number;
   highPriorityInquiries: number;
-  totalCompletedThisMonth: number;
+  monthlyMoveIns: number;
   loading: boolean;
 }
 
 export const DashboardMetrics = ({
   activeApplicants,
-  inProgressApplicants,
+  totalInquiries,
   highPriorityInquiries,
-  totalCompletedThisMonth,
+  monthlyMoveIns,
   loading
 }: DashboardMetricsProps) => {
+  const navigate = useNavigate();
+
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-      <Card>
+      <Card
+        className="cursor-pointer hover:shadow-neuro-hover transition-all duration-200"
+        onClick={() => navigate('/applicants')}
+      >
         <div className="space-y-2">
-          <div className="text-sm font-semibold text-black/60">Total Active Applicants</div>
+          <div className="text-sm font-semibold text-neuro-secondary">Total Active Applicants</div>
           <div className="text-3xl font-bold font-mono">
             {loading ? '-' : activeApplicants}
           </div>
@@ -27,19 +33,25 @@ export const DashboardMetrics = ({
         </div>
       </Card>
 
-      <Card>
+      <Card
+        className="cursor-pointer hover:shadow-neuro-hover transition-all duration-200"
+        onClick={() => navigate('/inquiries')}
+      >
         <div className="space-y-2">
-          <div className="text-sm font-semibold text-black/60">In Progress</div>
+          <div className="text-sm font-semibold text-neuro-secondary">Total Inquiries</div>
           <div className="text-3xl font-bold font-mono">
-            {loading ? '-' : inProgressApplicants}
+            {loading ? '-' : totalInquiries}
           </div>
-          <Badge variant="medium">Processing</Badge>
+          <Badge variant="medium">All Inquiries</Badge>
         </div>
       </Card>
 
-      <Card>
+      <Card
+        className="cursor-pointer hover:shadow-neuro-hover transition-all duration-200"
+        onClick={() => navigate('/inquiries')}
+      >
         <div className="space-y-2">
-          <div className="text-sm font-semibold text-black/60">High Priority Inquiries</div>
+          <div className="text-sm font-semibold text-neuro-secondary">High Priority Inquiries</div>
           <div className="text-3xl font-bold font-mono">
             {loading ? '-' : highPriorityInquiries}
           </div>
@@ -47,13 +59,16 @@ export const DashboardMetrics = ({
         </div>
       </Card>
 
-      <Card>
+      <Card
+        className="cursor-pointer hover:shadow-neuro-hover transition-all duration-200"
+        onClick={() => navigate('/reports')}
+      >
         <div className="space-y-2">
-          <div className="text-sm font-semibold text-black/60">Completed This Month</div>
+          <div className="text-sm font-semibold text-neuro-secondary">Monthly Move-Ins</div>
           <div className="text-3xl font-bold font-mono">
-            {loading ? '-' : totalCompletedThisMonth}
+            {loading ? '-' : monthlyMoveIns}
           </div>
-          <Badge variant="success">Success</Badge>
+          <Badge variant="success">Completed</Badge>
         </div>
       </Card>
     </div>

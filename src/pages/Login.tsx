@@ -120,7 +120,7 @@ export const Login = () => {
   return (
     <>
       <GradientBackground />
-      <div className="min-h-screen flex items-center justify-center p-4">
+      <div className="min-h-screen bg-glass flex items-center justify-center p-4">
         <Card className="w-full max-w-md">
           <div className="space-y-6">
             <div className="text-center">

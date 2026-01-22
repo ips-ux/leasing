@@ -23,18 +23,18 @@ export const DashboardActivityColumn = ({
       <h2 className="text-2xl font-semibold mb-4">Inquiries</h2>
 
       {/* New Inquiry Button */}
-      <Button onClick={onNewInquiry} className="w-full mb-4 bg-mint">
+      <Button onClick={onNewInquiry} variant="secondary" className="w-full mb-4">
         + New Inquiry
       </Button>
 
       {loading ? (
         <div className="text-center py-8">Loading inquiries...</div>
       ) : activeInquiries.length === 0 ? (
-        <div className="text-black/60 text-center py-8">
+        <div className="text-neuro-muted text-center py-8">
           No active inquiries
         </div>
       ) : (
-        <div className="space-y-2 max-h-[calc(100vh-200px)] overflow-y-auto">
+        <div className="space-y-2 max-h-[calc(100vh-200px)] overflow-y-auto pr-2">
           {activeInquiries.map(inq => (
             <ToDoInquiryCard
               key={inq.id}

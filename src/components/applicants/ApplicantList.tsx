@@ -97,24 +97,24 @@ export const ApplicantList = ({ applicants, loading }: ApplicantListProps) => {
   return (
     <div className="space-y-6">
       {/* Status Tabs */}
-      <div className="flex gap-2 border-b-[3px] border-black pb-2">
+      <div className="flex gap-4 pb-2">
         <button
           onClick={() => setActiveTab('in_progress')}
-          className={`px-6 py-2 font-bold border-[3px] border-black transition-all ${activeTab === 'in_progress' ? 'bg-lavender text-black shadow-brutal-sm' : 'bg-white/10 text-black/70 hover:bg-white/20'
+          className={`px-6 py-2 font-bold rounded-neuro-md transition-all ${activeTab === 'in_progress' ? 'bg-neuro-base text-neuro-primary shadow-neuro-pressed' : 'bg-neuro-base text-neuro-secondary shadow-neuro-flat hover:text-neuro-primary hover:shadow-neuro-raised'
             }`}
         >
           In Progress
         </button>
         <button
           onClick={() => setActiveTab('completed')}
-          className={`px-6 py-2 font-bold border-[3px] border-black transition-all ${activeTab === 'completed' ? 'bg-mint text-black shadow-brutal-sm' : 'bg-white/10 text-black/70 hover:bg-white/20'
+          className={`px-6 py-2 font-bold rounded-neuro-md transition-all ${activeTab === 'completed' ? 'bg-neuro-base text-neuro-primary shadow-neuro-pressed' : 'bg-neuro-base text-neuro-secondary shadow-neuro-flat hover:text-neuro-primary hover:shadow-neuro-raised'
             }`}
         >
           Complete
         </button>
         <button
           onClick={() => setActiveTab('cancelled')}
-          className={`px-6 py-2 font-bold border-[3px] border-black transition-all ${activeTab === 'cancelled' ? 'bg-peach text-black shadow-brutal-sm' : 'bg-white/10 text-black/70 hover:bg-white/20'
+          className={`px-6 py-2 font-bold rounded-neuro-md transition-all ${activeTab === 'cancelled' ? 'bg-neuro-base text-neuro-primary shadow-neuro-pressed' : 'bg-neuro-base text-neuro-secondary shadow-neuro-flat hover:text-neuro-primary hover:shadow-neuro-raised'
             }`}
         >
           Cancelled
@@ -122,23 +122,23 @@ export const ApplicantList = ({ applicants, loading }: ApplicantListProps) => {
       </div>
 
       {/* Controls Header */}
-      <div className="flex flex-col md:flex-row gap-4 justify-between items-end md:items-center bg-white/5 p-4 border-b-2 border-black/10 -mx-4 md:mx-0 md:rounded-lg">
+      <div className="flex flex-col md:flex-row gap-4 justify-between items-end md:items-center bg-neuro-base p-4 rounded-neuro-lg shadow-neuro-flat -mx-4 md:mx-0">
         <div className="w-full md:w-64">
           <Input
             label=""
             placeholder="Search name or unit..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="bg-white/50"
+            className="bg-neuro-base shadow-neuro-pressed border-none"
           />
         </div>
 
         <div className="flex items-center gap-2 overflow-x-auto w-full md:w-auto pb-2 md:pb-0">
-          <span className="text-xs font-bold uppercase text-black/50 whitespace-nowrap">Sort by:</span>
+          <span className="text-xs font-bold uppercase text-neuro-secondary whitespace-nowrap">Sort by:</span>
 
           <button
             onClick={() => handleSort('moveInDate')}
-            className={`px-3 py-1 text-xs font-mono border border-black transition-colors whitespace-nowrap ${sortBy === 'moveInDate' ? 'bg-lavender font-bold' : 'bg-white/20 hover:bg-white/40'
+            className={`px-3 py-1 text-xs font-mono rounded-neuro-sm transition-all whitespace-nowrap ${sortBy === 'moveInDate' ? 'bg-neuro-base text-neuro-primary shadow-neuro-pressed font-bold' : 'bg-neuro-base text-neuro-secondary shadow-neuro-flat hover:text-neuro-primary hover:shadow-neuro-raised'
               }`}
           >
             Move-In {sortBy === 'moveInDate' && (sortDirection === 'asc' ? '↑' : '↓')}
@@ -146,7 +146,7 @@ export const ApplicantList = ({ applicants, loading }: ApplicantListProps) => {
 
           <button
             onClick={() => handleSort('dateApplied')}
-            className={`px-3 py-1 text-xs font-mono border border-black transition-colors whitespace-nowrap ${sortBy === 'dateApplied' ? 'bg-lavender font-bold' : 'bg-white/20 hover:bg-white/40'
+            className={`px-3 py-1 text-xs font-mono rounded-neuro-sm transition-all whitespace-nowrap ${sortBy === 'dateApplied' ? 'bg-neuro-base text-neuro-primary shadow-neuro-pressed font-bold' : 'bg-neuro-base text-neuro-secondary shadow-neuro-flat hover:text-neuro-primary hover:shadow-neuro-raised'
               }`}
           >
             Applied {sortBy === 'dateApplied' && (sortDirection === 'asc' ? '↑' : '↓')}
@@ -154,7 +154,7 @@ export const ApplicantList = ({ applicants, loading }: ApplicantListProps) => {
 
           <button
             onClick={() => handleSort('name')}
-            className={`px-3 py-1 text-xs font-mono border border-black transition-colors whitespace-nowrap ${sortBy === 'name' ? 'bg-lavender font-bold' : 'bg-white/20 hover:bg-white/40'
+            className={`px-3 py-1 text-xs font-mono rounded-neuro-sm transition-all whitespace-nowrap ${sortBy === 'name' ? 'bg-neuro-base text-neuro-primary shadow-neuro-pressed font-bold' : 'bg-neuro-base text-neuro-secondary shadow-neuro-flat hover:text-neuro-primary hover:shadow-neuro-raised'
               }`}
           >
             Name {sortBy === 'name' && (sortDirection === 'asc' ? '↑' : '↓')}

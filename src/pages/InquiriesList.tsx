@@ -1,10 +1,11 @@
-import { useState } from 'react';
-import { motion } from 'framer-motion';
-import { Card, Button, Badge } from '../components/ui';
+import { useState, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Button, Card } from '../components/ui';
 import { useInquiries } from '../hooks/useInquiries';
 import { NewInquiryModal } from '../components/inquiries/NewInquiryModal';
 import { EditInquiryModal } from '../components/inquiries/EditInquiryModal';
-import type { Inquiry, InquiryPriority, InquiryStatus } from '../types/inquiry';
+import { InquiryListItem } from '../components/inquiries/InquiryListItem';
+import type { Inquiry, InquiryPriority } from '../types/inquiry';
 
 // Helper to format month display
 const formatMonthDisplay = (monthStr: string): string => {
@@ -27,44 +28,54 @@ const generateMonths = (): string[] => {
   return months;
 };
 
-const getPriorityBadge = (priority: InquiryPriority): 'high' | 'medium' | 'low' => {
-  return priority;
-};
+type SortField = 'createdAt' | 'priority';
+type SortDirection = 'asc' | 'desc';
 
 export const InquiriesList = () => {
   const months = generateMonths();
   const currentMonth = months[0];
   const [selectedMonth, setSelectedMonth] = useState(currentMonth);
-  const [draggedInquiry, setDraggedInquiry] = useState<Inquiry | null>(null);
   const [isNewModalOpen, setIsNewModalOpen] = useState(false);
   const [selectedInquiry, setSelectedInquiry] = useState<Inquiry | null>(null);
 
+  // Sorting State
+  const [sortField, setSortField] = useState<SortField>('createdAt');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+
   const { inquiries, loading, updateInquiry } = useInquiries(selectedMonth);
 
-  const openInquiries = inquiries.filter((i) => i.status === 'open');
-  const inProgressInquiries = inquiries.filter((i) => i.status === 'in_progress');
-  const completedInquiries = inquiries.filter((i) => i.status === 'completed');
-
-  const handleDragStart = (inquiry: Inquiry) => {
-    setDraggedInquiry(inquiry);
-  };
-
-  const handleDragEnd = () => {
-    setDraggedInquiry(null);
-  };
-
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault(); // Allow drop
-  };
-
-  const handleDrop = async (targetStatus: InquiryStatus) => {
-    if (!draggedInquiry || draggedInquiry.status === targetStatus) {
-      setDraggedInquiry(null);
-      return;
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('desc'); // Default to desc for new field
     }
+  };
 
-    await updateInquiry(draggedInquiry.id, { status: targetStatus });
-    setDraggedInquiry(null);
+  const sortedInquiries = useMemo(() => {
+    return [...inquiries].sort((a, b) => {
+      let comparison = 0;
+
+      if (sortField === 'createdAt') {
+        const dateA = a.createdAt?.toDate().getTime() || 0;
+        const dateB = b.createdAt?.toDate().getTime() || 0;
+        comparison = dateA - dateB;
+      } else if (sortField === 'priority') {
+        const priorityWeight: Record<InquiryPriority, number> = { high: 3, medium: 2, low: 1 };
+        comparison = priorityWeight[a.priority] - priorityWeight[b.priority];
+      }
+
+      return sortDirection === 'asc' ? comparison : -comparison;
+    });
+  }, [inquiries, sortField, sortDirection]);
+
+  // Split into Active (Open + In Progress) and Completed
+  const activeInquiries = sortedInquiries.filter(i => i.status === 'open' || i.status === 'in_progress');
+  const completedInquiries = sortedInquiries.filter(i => i.status === 'completed');
+
+  const handleUpdateInquiry = async (id: string, data: Partial<Inquiry>) => {
+    await updateInquiry(id, data);
   };
 
   return (
@@ -86,163 +97,123 @@ export const InquiriesList = () => {
           </Button>
         </div>
 
-      {/* Month Tabs */}
-      <motion.div
-        className="flex gap-2 flex-wrap border-b-[3px] border-black pb-2"
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3, delay: 0.1 }}
-      >
-        {months.map((month) => (
-          <button
-            key={month}
-            onClick={() => setSelectedMonth(month)}
-            className={`
-              px-4 py-2 font-semibold border-[3px] border-black transition-all
-              ${selectedMonth === month
-                ? 'bg-lavender text-black'
-                : 'bg-white/10 text-black/70 hover:bg-white/20'
-              }
-            `}
-          >
-            {formatMonthDisplay(month)}
-          </button>
-        ))}
-      </motion.div>
+        {/* Controls: Month Tabs & Sorting */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-neuro-base p-4 rounded-neuro-lg shadow-neuro-flat">
+          {/* Month Tabs */}
+          <div className="flex gap-2 flex-wrap">
+            {months.map((month) => (
+              <button
+                key={month}
+                onClick={() => setSelectedMonth(month)}
+                className={`
+                  px-4 py-2 font-semibold rounded-neuro-md transition-all text-sm
+                  ${selectedMonth === month
+                    ? 'bg-neuro-base text-neuro-primary shadow-neuro-pressed'
+                    : 'bg-neuro-base text-neuro-secondary shadow-neuro-flat hover:text-neuro-primary hover:shadow-neuro-raised'
+                  }
+                `}
+              >
+                {formatMonthDisplay(month)}
+              </button>
+            ))}
+          </div>
 
-      {/* Loading State */}
-      {loading && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="h-64 bg-white/10 border-[3px] border-black/20 animate-pulse" />
-          ))}
+          {/* Sorting */}
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold uppercase text-neuro-secondary">Sort by:</span>
+            <button
+              onClick={() => handleSort('createdAt')}
+              className={`px-3 py-1 text-xs font-mono rounded-neuro-sm transition-all whitespace-nowrap ${sortField === 'createdAt' ? 'bg-neuro-base text-neuro-primary shadow-neuro-pressed font-bold' : 'bg-neuro-base text-neuro-secondary shadow-neuro-flat hover:text-neuro-primary hover:shadow-neuro-raised'}`}
+            >
+              Date {sortField === 'createdAt' && (sortDirection === 'asc' ? '↑' : '↓')}
+            </button>
+            <button
+              onClick={() => handleSort('priority')}
+              className={`px-3 py-1 text-xs font-mono rounded-neuro-sm transition-all whitespace-nowrap ${sortField === 'priority' ? 'bg-neuro-base text-neuro-primary shadow-neuro-pressed font-bold' : 'bg-neuro-base text-neuro-secondary shadow-neuro-flat hover:text-neuro-primary hover:shadow-neuro-raised'}`}
+            >
+              Priority {sortField === 'priority' && (sortDirection === 'asc' ? '↑' : '↓')}
+            </button>
+          </div>
         </div>
-      )}
 
-      {/* Inquiry Columns */}
-      {!loading && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {/* Open Column */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: 0.2 }}
-          >
-            <Card priority="high" className="h-full">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-bold">Open</h2>
-                <Badge variant="high">{openInquiries.length}</Badge>
+        {/* Loading State */}
+        {loading && (
+          <div className="space-y-4">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="h-24 bg-white/10 border-[3px] border-black/20 animate-pulse rounded-neuro-md" />
+            ))}
+          </div>
+        )}
+
+        {!loading && (
+          <div className="space-y-8">
+            {/* Active Inquiries Section */}
+            <section>
+              <div className="flex items-center gap-3 mb-4">
+                <h2 className="text-2xl font-bold text-neuro-primary">Active Inquiries</h2>
+                <span className="px-2 py-1 bg-neuro-base shadow-neuro-pressed rounded-neuro-sm text-xs font-bold text-neuro-secondary">
+                  {activeInquiries.length}
+                </span>
               </div>
 
-              <div
-                className="space-y-3 max-h-[600px] overflow-y-auto min-h-[200px]"
-                onDragOver={handleDragOver}
-                onDrop={(e) => {
-                  e.preventDefault();
-                  handleDrop('open');
-                }}
-              >
-                {openInquiries.length === 0 && (
-                  <p className="text-black/50 text-sm font-mono text-center py-8">
-                    No open inquiries
-                  </p>
-                )}
-
-                {openInquiries.map((inquiry) => (
-                  <InquiryCard
-                    key={inquiry.id}
-                    inquiry={inquiry}
-                    onClick={() => setSelectedInquiry(inquiry)}
-                    onDragStart={handleDragStart}
-                    onDragEnd={handleDragEnd}
-                    isDragging={draggedInquiry?.id === inquiry.id}
-                  />
-                ))}
+              <div className="space-y-3">
+                <AnimatePresence mode="popLayout">
+                  {activeInquiries.length === 0 ? (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="text-center py-12 text-neuro-muted italic bg-neuro-base/50 rounded-neuro-md border-2 border-dashed border-neuro-secondary/20"
+                    >
+                      No active inquiries for this month.
+                    </motion.div>
+                  ) : (
+                    activeInquiries.map((inquiry) => (
+                      <InquiryListItem
+                        key={inquiry.id}
+                        inquiry={inquiry}
+                        onUpdate={handleUpdateInquiry}
+                        onClick={() => setSelectedInquiry(inquiry)}
+                      />
+                    ))
+                  )}
+                </AnimatePresence>
               </div>
-            </Card>
-          </motion.div>
+            </section>
 
-          {/* In Progress Column */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: 0.3 }}
-          >
-            <Card priority="medium" className="h-full">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-bold">In Progress</h2>
-                <Badge variant="info">{inProgressInquiries.length}</Badge>
+            {/* Completed Inquiries Section */}
+            <section>
+              <div className="flex items-center gap-3 mb-4">
+                <h2 className="text-2xl font-bold text-neuro-secondary">Completed</h2>
+                <span className="px-2 py-1 bg-neuro-base shadow-neuro-pressed rounded-neuro-sm text-xs font-bold text-neuro-secondary">
+                  {completedInquiries.length}
+                </span>
               </div>
 
-              <div
-                className="space-y-3 max-h-[600px] overflow-y-auto min-h-[200px]"
-                onDragOver={handleDragOver}
-                onDrop={(e) => {
-                  e.preventDefault();
-                  handleDrop('in_progress');
-                }}
-              >
-                {inProgressInquiries.length === 0 && (
-                  <p className="text-black/50 text-sm font-mono text-center py-8">
-                    No inquiries in progress
-                  </p>
-                )}
-
-                {inProgressInquiries.map((inquiry) => (
-                  <InquiryCard
-                    key={inquiry.id}
-                    inquiry={inquiry}
-                    onClick={() => setSelectedInquiry(inquiry)}
-                    onDragStart={handleDragStart}
-                    onDragEnd={handleDragEnd}
-                    isDragging={draggedInquiry?.id === inquiry.id}
-                  />
-                ))}
+              <div className="space-y-3 opacity-80">
+                <AnimatePresence mode="popLayout">
+                  {completedInquiries.length === 0 ? (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="text-center py-8 text-neuro-muted italic"
+                    >
+                      No completed inquiries.
+                    </motion.div>
+                  ) : (
+                    completedInquiries.map((inquiry) => (
+                      <InquiryListItem
+                        key={inquiry.id}
+                        inquiry={inquiry}
+                        onUpdate={handleUpdateInquiry}
+                        onClick={() => setSelectedInquiry(inquiry)}
+                      />
+                    ))
+                  )}
+                </AnimatePresence>
               </div>
-            </Card>
-          </motion.div>
-
-          {/* Completed Column */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: 0.4 }}
-          >
-            <Card priority="low" className="h-full">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-bold">Completed</h2>
-                <Badge variant="success">{completedInquiries.length}</Badge>
-              </div>
-
-              <div
-                className="space-y-3 max-h-[600px] overflow-y-auto min-h-[200px]"
-                onDragOver={handleDragOver}
-                onDrop={(e) => {
-                  e.preventDefault();
-                  handleDrop('completed');
-                }}
-              >
-                {completedInquiries.length === 0 && (
-                  <p className="text-black/50 text-sm font-mono text-center py-8">
-                    No completed inquiries
-                  </p>
-                )}
-
-                {completedInquiries.map((inquiry) => (
-                  <InquiryCard
-                    key={inquiry.id}
-                    inquiry={inquiry}
-                    onClick={() => setSelectedInquiry(inquiry)}
-                    onDragStart={handleDragStart}
-                    onDragEnd={handleDragEnd}
-                    isDragging={draggedInquiry?.id === inquiry.id}
-                  />
-                ))}
-              </div>
-            </Card>
-          </motion.div>
-        </div>
-      )}
+            </section>
+          </div>
+        )}
       </div>
 
       <NewInquiryModal
@@ -257,58 +228,5 @@ export const InquiriesList = () => {
         onSuccess={() => setSelectedInquiry(null)}
       />
     </>
-  );
-};
-
-// Inquiry Card Component
-const InquiryCard = ({
-  inquiry,
-  onClick,
-  onDragStart,
-  onDragEnd,
-  isDragging,
-}: {
-  inquiry: Inquiry;
-  onClick: () => void;
-  onDragStart: (inquiry: Inquiry) => void;
-  onDragEnd: () => void;
-  isDragging: boolean;
-}) => {
-  const handleClick = () => {
-    // Prevent navigation when dragging
-    if (!isDragging) {
-      onClick();
-    }
-  };
-
-  return (
-    <div
-      draggable
-      onDragStart={() => onDragStart(inquiry)}
-      onDragEnd={onDragEnd}
-      onClick={handleClick}
-      className={`
-        bg-white/10 backdrop-blur-sm border-[3px] border-black p-3
-        hover:bg-white/20 cursor-move transition-all
-        ${isDragging ? 'opacity-50' : 'opacity-100'}
-      `}
-    >
-      <div className="flex items-start justify-between gap-2 mb-2">
-        <div className="flex items-center gap-2 flex-wrap min-w-0">
-          {inquiry.unitNumber && (
-            <Badge variant="info" className="flex-shrink-0">
-              {inquiry.unitNumber}
-            </Badge>
-          )}
-          <h3 className="font-bold text-sm line-clamp-1 min-w-0">{inquiry.title}</h3>
-        </div>
-        <Badge variant={getPriorityBadge(inquiry.priority)} className="flex-shrink-0">
-          {inquiry.priority.toUpperCase()}
-        </Badge>
-      </div>
-
-      <p className="text-xs text-black/70 font-bold line-clamp-2 mt-2">{inquiry.description}</p>
-      <p className="text-xs text-black/70 em line-clamp-2 mt-2">{inquiry.notes}</p>
-    </div>
   );
 };

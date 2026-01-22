@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Card, Button, Badge, Input, Modal, Select } from '../components/ui';
+import { Card, Button, Badge, Input, Modal, Select, Checkbox, Textarea } from '../components/ui';
 import { useInquiry } from '../hooks/useInquiry';
 import { useInquiries } from '../hooks/useInquiries';
 import { useUsers } from '../hooks/useUsers';
@@ -212,64 +212,56 @@ export const InquiryDetail = () => {
                   />
                 </div>
 
-                <label className="flex items-center gap-2 pb-3 px-4 border-[3px] border-black bg-white/10 hover:bg-white/20 transition-colors cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={isResident}
-                    onChange={handleResidentToggle}
-                    className="w-5 h-5 border-2 border-black"
-                  />
-                  <span className="text-sm font-semibold whitespace-nowrap">Resident?</span>
-                </label>
+                <Checkbox
+                  label="Resident?"
+                  name="isResident"
+                  checked={isResident}
+                  onChange={handleResidentToggle}
+                />
 
                 <div>
-                  <label className="block text-sm font-semibold mb-2">Priority</label>
-                  <select
-                    name="priority"
+                  <Select
+                    label="Priority"
+                    options={[
+                      { label: 'Low', value: 'low' },
+                      { label: 'Medium', value: 'medium' },
+                      { label: 'High', value: 'high' }
+                    ]}
                     value={editData.priority}
-                    onChange={handleChange}
-                    className="p-3 border-[3px] border-black bg-white/10 backdrop-blur-sm font-sans focus:outline-none focus:ring-4 focus:ring-lavender/40"
-                  >
-                    <option value="low">Low</option>
-                    <option value="medium">Medium</option>
-                    <option value="high">High</option>
-                  </select>
+                    onChange={(value) => setEditData((prev) => ({ ...prev, priority: value as any }))}
+                    required
+                  />
                 </div>
 
                 <div className="pb-3">
-                  <div className="flex border-[3px] border-black bg-white/10">
+                  <div className="flex p-1 rounded-neuro-md shadow-neuro-pressed bg-neuro-base w-fit">
                     <button
                       type="button"
                       onClick={() => setEditData((prev) => ({ ...prev, status: 'open' }))}
-                      className={`px-4 py-3 text-sm font-semibold transition-colors ${
-                        editData.status === 'open'
-                          ? 'bg-peach text-black'
-                          : 'bg-white/10 text-black/60 hover:bg-white/20'
-                      }`}
+                      className={`px-4 py-2 text-sm font-semibold rounded-neuro-sm transition-all ${editData.status === 'open'
+                          ? 'bg-neuro-peach text-neuro-primary shadow-neuro-flat'
+                          : 'text-neuro-secondary hover:text-neuro-primary'
+                        }`}
                     >
                       Open
                     </button>
-                    <div className="w-[3px] bg-black" />
                     <button
                       type="button"
                       onClick={() => setEditData((prev) => ({ ...prev, status: 'in_progress' }))}
-                      className={`px-4 py-3 text-sm font-semibold transition-colors ${
-                        editData.status === 'in_progress'
-                          ? 'bg-lavender text-black'
-                          : 'bg-white/10 text-black/60 hover:bg-white/20'
-                      }`}
+                      className={`px-4 py-2 text-sm font-semibold rounded-neuro-sm transition-all ${editData.status === 'in_progress'
+                          ? 'bg-neuro-lavender text-neuro-primary shadow-neuro-flat'
+                          : 'text-neuro-secondary hover:text-neuro-primary'
+                        }`}
                     >
                       In Progress
                     </button>
-                    <div className="w-[3px] bg-black" />
                     <button
                       type="button"
                       onClick={() => setEditData((prev) => ({ ...prev, status: 'completed' }))}
-                      className={`px-4 py-3 text-sm font-semibold transition-colors ${
-                        editData.status === 'completed'
-                          ? 'bg-mint text-black'
-                          : 'bg-white/10 text-black/60 hover:bg-white/20'
-                      }`}
+                      className={`px-4 py-2 text-sm font-semibold rounded-neuro-sm transition-all ${editData.status === 'completed'
+                          ? 'bg-neuro-mint text-neuro-primary shadow-neuro-flat'
+                          : 'text-neuro-secondary hover:text-neuro-primary'
+                        }`}
                     >
                       Closed
                     </button>
@@ -290,26 +282,24 @@ export const InquiryDetail = () => {
               )}
 
               <div>
-                <label className="block text-sm font-semibold mb-2">Description</label>
-                <textarea
+                <Textarea
+                  label="Description"
                   name="description"
                   value={editData.description}
                   onChange={handleChange}
                   required
                   placeholder="Detailed description of the inquiry"
-                  className="w-full p-3 border-[3px] border-black bg-white/10 backdrop-blur-sm font-sans resize-none focus:outline-none focus:ring-4 focus:ring-lavender/40"
                   rows={4}
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-semibold mb-2">Notes (Optional)</label>
-                <textarea
+                <Textarea
+                  label="Notes (Optional)"
                   name="notes"
                   value={editData.notes || ''}
                   onChange={handleChange}
                   placeholder="Additional notes"
-                  className="w-full p-3 border-[3px] border-black bg-white/10 backdrop-blur-sm font-sans resize-none focus:outline-none focus:ring-4 focus:ring-lavender/40"
                   rows={3}
                 />
               </div>

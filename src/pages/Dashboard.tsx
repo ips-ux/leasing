@@ -8,7 +8,10 @@ import { extractFirstName } from '../utils/user';
 import { DashboardToDoColumn } from '../components/dashboard/DashboardToDoColumn';
 import { DashboardActivityColumn } from '../components/dashboard/DashboardActivityColumn';
 import { DashboardMetrics } from '../components/dashboard/DashboardMetrics';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faUser, faUsers } from '@fortawesome/free-solid-svg-icons';
 import { DashboardRecentActivity } from '../components/dashboard/DashboardRecentActivity';
+import { Toggle } from '../components/ui';
 import { NewApplicantModal } from '../components/applicants/NewApplicantModal';
 import { NewInquiryModal } from '../components/inquiries/NewInquiryModal';
 import { EditInquiryModal } from '../components/inquiries/EditInquiryModal';
@@ -64,7 +67,8 @@ export const Dashboard = () => {
   const activeApplicants = applicants.filter(a =>
     a['2_Tracking'].status !== 'completed' && a['2_Tracking'].status !== 'cancelled'
   ).length;
-  const inProgressApplicants = applicants.filter(a => a['2_Tracking'].status === 'in_progress').length;
+
+  const totalInquiries = inquiries.length;
 
   const highPriorityInquiries = inquiries.filter(i =>
     i.status !== 'completed' && i.priority === 'high'
@@ -73,19 +77,11 @@ export const Dashboard = () => {
   const currentMonth = new Date().getMonth();
   const currentYear = new Date().getFullYear();
 
-  const completedApplicantsThisMonth = applicants.filter(a => {
+  const monthlyMoveIns = applicants.filter(a => {
     if (a['2_Tracking'].status !== 'completed' || !a['2_Tracking'].leaseCompletedTime) return false;
     const date = a['2_Tracking'].leaseCompletedTime.toDate();
     return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
   }).length;
-
-  const completedInquiriesThisMonth = inquiries.filter(i => {
-    if (i.status !== 'completed' || !i.completedAt) return false;
-    const date = i.completedAt.toDate();
-    return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
-  }).length;
-
-  const totalCompletedThisMonth = completedApplicantsThisMonth + completedInquiriesThisMonth;
 
   // Recent Activity
   // Combine applicants and inquiries, sort by updatedAt, take top 5
@@ -128,31 +124,16 @@ export const Dashboard = () => {
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
             <div>
               <h1 className="text-4xl font-bold mb-2">Dashboard</h1>
-              <p className="text-black/60">Welcome back, {extractFirstName(user?.email)}!</p>
+              <p className="text-neuro-secondary">Welcome back, {extractFirstName(user?.email)}!</p>
             </div>
 
             {/* Mine/Everyone Selector */}
-            <div className="flex border-[3px] border-black bg-white/10 w-fit">
-              <button
-                onClick={() => setShowMineOnly(true)}
-                className={`px-6 py-2 font-bold transition-all ${showMineOnly
-                  ? 'bg-lavender text-black shadow-brutal-sm'
-                  : 'bg-white/10 text-black/60 hover:bg-white/20'
-                  }`}
-              >
-                Mine
-              </button>
-              <div className="w-[3px] bg-black" />
-              <button
-                onClick={() => setShowMineOnly(false)}
-                className={`px-6 py-2 font-bold transition-all ${!showMineOnly
-                  ? 'bg-lavender text-black shadow-brutal-sm'
-                  : 'bg-white/10 text-black/60 hover:bg-white/20'
-                  }`}
-              >
-                Everyone
-              </button>
-            </div>
+            <Toggle
+              value={showMineOnly}
+              onChange={setShowMineOnly}
+              leftIcon={<FontAwesomeIcon icon={faUser} />}
+              rightIcon={<FontAwesomeIcon icon={faUsers} />}
+            />
           </div>
         </motion.div>
 
@@ -160,9 +141,9 @@ export const Dashboard = () => {
         <motion.div variants={itemVariants}>
           <DashboardMetrics
             activeApplicants={activeApplicants}
-            inProgressApplicants={inProgressApplicants}
+            totalInquiries={totalInquiries}
             highPriorityInquiries={highPriorityInquiries}
-            totalCompletedThisMonth={totalCompletedThisMonth}
+            monthlyMoveIns={monthlyMoveIns}
             loading={loading}
           />
         </motion.div>

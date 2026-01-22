@@ -23,14 +23,14 @@ export const ToDoApplicantCard = ({ applicant, isUpcoming = false }: ToDoApplica
   return (
     <div
       onClick={() => navigate(`/applicants/${applicant.id}`)}
-      className="border-2 border-black p-3 hover:bg-black/5 transition-colors cursor-pointer"
+      className="rounded-neuro-md bg-white/60 shadow-neuro-pressed p-3 transition-all cursor-pointer"
     >
       <div className="flex items-center justify-between mb-2">
         <div>
-          <div className="font-bold text-sm">{applicant['1_Profile'].name}</div>
-          <div className="text-xs text-black/60">Unit {applicant['1_Profile'].unit}</div>
+          <div className="font-bold text-sm text-neuro-primary">{applicant['1_Profile'].name}</div>
+          <div className="text-xs text-neuro-secondary">Unit {applicant['1_Profile'].unit}</div>
           {moveInDate && (
-            <div className="text-xs text-black/50 font-mono">
+            <div className="text-xs text-neuro-muted font-mono">
               Move-in: {formatDistanceToNow(moveInDate, { addSuffix: true })}
             </div>
           )}

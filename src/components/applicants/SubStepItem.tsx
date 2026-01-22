@@ -4,6 +4,7 @@ import type { SubStepData } from '../../types/applicant';
 import type { SubStepConfig } from '../../lib/workflow-steps';
 import type { Timestamp } from 'firebase/firestore';
 import { EmailCopyButtons } from './EmailCopyButtons';
+import { Checkbox } from '../ui';
 import requestIncomeEmail from '../../content/request-income.html?raw';
 import applicationApprovedEmail from '../../content/application-approved-email.html?raw';
 import finalStepsEmail from '../../content/final-steps-email.html?raw';
@@ -113,10 +114,10 @@ export const SubStepItem = ({
                                 onClick={handleCheckboxToggle}
                                 disabled={!isEnabled || data.isNA}
                                 className={`
-                  w-5 h-5 border-[2px] border-black flex items-center justify-center flex-shrink-0
-                  ${data.isCompleted ? 'bg-mint' : 'bg-white/20'}
-                  ${isEnabled && !data.isNA ? 'cursor-pointer hover:bg-white/40' : 'cursor-not-allowed'}
-                  transition-colors duration-100
+                  w-6 h-6 rounded-neuro-sm flex items-center justify-center flex-shrink-0
+                  ${data.isCompleted ? 'bg-neuro-mint shadow-neuro-pressed' : 'bg-neuro-base shadow-neuro-flat'}
+                  ${isEnabled && !data.isNA ? 'cursor-pointer hover:text-neuro-primary' : 'cursor-not-allowed opacity-50'}
+                  transition-all duration-200
                 `}
                                 whileTap={isEnabled && !data.isNA ? { scale: 0.9 } : {}}
                             >
@@ -140,16 +141,16 @@ export const SubStepItem = ({
 
                             {/* N/A checkbox for checkbox-na type */}
                             {config.type === 'checkbox-na' && (
-                                <label className="flex gap-1 text-xs font-mono mr-4">
-                                    <input
-                                        type="checkbox"
+                                <div className="mr-4">
+                                    <Checkbox
+                                        label="N/A"
+                                        name={`na-${config.id}`}
                                         checked={data.isNA}
                                         onChange={handleNAToggle}
                                         disabled={!isEnabled}
-                                        className="w-4 h-4 border-2 border-black"
+                                        className="scale-90"
                                     />
-                                    N/A
-                                </label>
+                                </div>
                             )}
                         </>
                     )}
@@ -195,7 +196,7 @@ export const SubStepItem = ({
                                                     }}
                                                     disabled={!isEnabled || data.isNA}
                                                     placeholder="0"
-                                                    className="w-8 h-8 text-center text-sm border-[2px] border-black bg-white/10 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-lavender/40 disabled:opacity-50"
+                                                    className="w-8 h-8 text-center text-sm rounded-neuro-sm bg-neuro-base shadow-neuro-pressed focus:outline-none focus:ring-2 focus:ring-neuro-lavender disabled:opacity-50"
                                                 />
                                                 <span className="text-[10px] font-bold text-black/60">${price}</span>
                                             </div>
@@ -234,7 +235,7 @@ export const SubStepItem = ({
                                                     }}
                                                     disabled={!isEnabled || data.isNA}
                                                     placeholder="0"
-                                                    className="w-8 h-8 text-center text-sm border-[2px] border-black bg-white/10 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-lavender/40 disabled:opacity-50"
+                                                    className="w-8 h-8 text-center text-sm rounded-neuro-sm bg-neuro-base shadow-neuro-pressed focus:outline-none focus:ring-2 focus:ring-neuro-lavender disabled:opacity-50"
                                                 />
                                                 <span className="text-[10px] font-bold text-black/60">{type}(s)</span>
                                             </div>
@@ -242,10 +243,11 @@ export const SubStepItem = ({
                                     })}
 
                                     <div className="flex items-center gap-2 border-l border-black/20 pl-4">
-                                        <label className="flex items-center gap-1 text-[10px] font-bold text-black/60 cursor-pointer">
-                                            <input
-                                                type="checkbox"
-                                                checked={data.textValue?.includes('ESA:')}
+                                        <div className="flex items-center">
+                                            <Checkbox
+                                                label="ESA?"
+                                                name={`esa-${config.id}`}
+                                                checked={!!data.textValue?.includes('ESA:')}
                                                 onChange={(e) => {
                                                     const isChecked = e.target.checked;
                                                     const otherParts = (data.textValue || '')
@@ -264,10 +266,9 @@ export const SubStepItem = ({
                                                     });
                                                 }}
                                                 disabled={!isEnabled || data.isNA}
-                                                className="w-3 h-3 border-black"
+                                                className="scale-75 origin-left"
                                             />
-                                            ESA?
-                                        </label>
+                                        </div>
 
                                         {data.textValue?.includes('ESA:') && (
                                             <div className="flex items-center gap-1">
@@ -292,7 +293,7 @@ export const SubStepItem = ({
                                                         });
                                                     }}
                                                     disabled={!isEnabled || data.isNA}
-                                                    className="w-8 h-8 text-center text-sm border-[2px] border-black bg-white/10 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-lavender/40"
+                                                    className="w-8 h-8 text-center text-sm rounded-neuro-sm bg-neuro-base shadow-neuro-pressed focus:outline-none focus:ring-2 focus:ring-neuro-lavender"
                                                 />
                                             </div>
                                         )}
@@ -313,8 +314,10 @@ export const SubStepItem = ({
                                             }}
                                             disabled={!isEnabled || data.isNA}
                                             className={`
-                                                px-3 py-1 text-xs font-bold border-[2px] border-black transition-colors
-                                                ${data.textValue === val ? 'bg-lavender text-black' : 'bg-white/10 text-black/60 hover:bg-white/20'}
+                                                px-3 py-1 text-xs font-bold rounded-neuro-sm transition-all
+                                                ${data.textValue === val
+                                                    ? 'bg-neuro-lavender text-neuro-primary shadow-neuro-pressed'
+                                                    : 'bg-neuro-base text-neuro-secondary shadow-neuro-flat hover:text-neuro-primary'}
                                                 disabled:opacity-50
                                             `}
                                         >
@@ -331,25 +334,25 @@ export const SubStepItem = ({
                                     disabled={!isEnabled || data.isNA}
                                     placeholder="Enter value..."
                                     className={`
-                      flex-1 max-w-[150px] min-w-[100px] px-2 py-1 text-sm border-[2px] border-black
-                      bg-white/10 backdrop-blur-sm font-mono
-                      focus:outline-none focus:ring-2 focus:ring-lavender/40
+                      flex-1 max-w-[150px] min-w-[100px] px-3 py-1.5 text-sm rounded-neuro-sm
+                      bg-neuro-base shadow-neuro-pressed font-mono
+                      focus:outline-none focus:ring-2 focus:ring-neuro-lavender
                       disabled:opacity-50 disabled:cursor-not-allowed
                     `}
                                 />
                             )}
 
                             {/* N/A checkbox */}
-                            <label className="flex items-center gap-1 text-xs font-mono flex-shrink-0">
-                                <input
-                                    type="checkbox"
+                            <div className="flex-shrink-0">
+                                <Checkbox
+                                    label="N/A"
+                                    name={`na-generic-${config.id}`}
                                     checked={data.isNA}
                                     onChange={handleNAToggle}
                                     disabled={!isEnabled}
-                                    className="w-4 h-4 border-2 border-black"
+                                    className="scale-90"
                                 />
-                                N/A
-                            </label>
+                            </div>
                         </>
                     )}
 

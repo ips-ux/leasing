@@ -14,17 +14,17 @@ export const GradientBackground = () => {
   useEffect(() => {
     if (!svgRef.current) return;
 
-    // Original settings from CodePen - ONLY lightnessEndColor changes
+    // Vibrant rainbow gradient settings - colors change throughout the day
     const settings = {
       amplitudeX: 100,
       amplitudeY: 20,
       lines: 20,
-      hueStartColor: 12,
-      saturationStartColor: 15,
-      lightnessStartColor: 67,
-      hueEndColor: 216,
-      saturationEndColor: 50,
-      lightnessEndColor: 7, // This is the ONLY value that changes (0-50 based on time)
+      hueStartColor: 12,        // Warm orange
+      saturationStartColor: 30, // Vibrant
+      lightnessStartColor: 67,  // Bright
+      hueEndColor: 216,         // Cool blue
+      saturationEndColor: 100,  // Very vibrant
+      lightnessEndColor: 50,    // Dynamic (varies 0-50 with time)
       smoothness: 3,
       offsetX: 10,
       fill: true,
@@ -35,7 +35,7 @@ export const GradientBackground = () => {
     let winH = window.innerHeight;
     const overflow = Math.abs(settings.lines * settings.offsetX);
 
-    // Calculate lightness based on time: 12pm = 50, 12am = 0
+    // Calculate lightness based on time: 12pm = 50 (brightest), 12am = 0 (darkest)
     const updateLightness = (): number => {
       const now = new Date();
       const hour = now.getHours();

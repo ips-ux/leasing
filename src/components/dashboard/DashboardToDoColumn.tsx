@@ -34,7 +34,7 @@ export const DashboardToDoColumn = ({ applicants, loading, onNewApplicant }: Das
     return (
       <Card>
         <h2 className="text-2xl font-semibold mb-4">Applicants</h2>
-        <div className="text-center py-8 text-black/40">Loading...</div>
+        <div className="text-center py-8 text-neuro-muted">Loading...</div>
       </Card>
     );
   }
@@ -50,11 +50,11 @@ export const DashboardToDoColumn = ({ applicants, loading, onNewApplicant }: Das
         + New Applicant
       </Button>
 
-      <div className="space-y-6 max-h-[calc(100vh-200px)] overflow-y-auto">
+      <div className="space-y-6 max-h-[calc(100vh-200px)] overflow-y-auto pr-2">
         {/* Upcoming Move-Ins Section */}
         {upcomingMoveIns.length > 0 && (
           <div>
-            <h3 className="text-sm font-bold uppercase text-black/60 mb-2">
+            <h3 className="text-sm font-bold uppercase text-neuro-secondary mb-2">
               Upcoming Move-Ins ({upcomingMoveIns.length})
             </h3>
             <div className="space-y-3">
@@ -67,11 +67,11 @@ export const DashboardToDoColumn = ({ applicants, loading, onNewApplicant }: Das
 
         {/* In Progress Applicants Section */}
         <div>
-          <h3 className="text-sm font-bold uppercase text-black/60 mb-2">
+          <h3 className="text-sm font-bold uppercase text-neuro-secondary mb-2">
             In Progress ({inProgressApplicants.length})
           </h3>
           {inProgressApplicants.length === 0 ? (
-            <div className="text-black/40 text-sm py-4">No in-progress applicants</div>
+            <div className="text-neuro-muted text-sm py-4">No in-progress applicants</div>
           ) : (
             <div className="space-y-3">
               {inProgressApplicants.map(app => (

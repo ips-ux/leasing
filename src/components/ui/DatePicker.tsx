@@ -15,7 +15,8 @@ export const DatePicker = ({ label, name, value, onChange, required, error }: Da
   const [viewDate, setViewDate] = useState(value);
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const errorClass = error ? 'border-peach' : '';
+  const errorClass = error ? 'bg-neuro-peach/30' : '';
+  const errorShadow = error ? '0 0 0 2px rgba(245, 198, 198, 0.4)' : '';
 
   // Close popover when clicking outside
   useEffect(() => {
@@ -93,9 +94,9 @@ export const DatePicker = ({ label, name, value, onChange, required, error }: Da
   return (
     <div className="flex flex-col gap-2" ref={containerRef}>
       {label && (
-        <label className="font-sans font-semibold text-sm">
+        <label className="font-sans font-medium text-sm text-neuro-primary">
           {label}
-          {required && <span className="text-peach ml-1">*</span>}
+          {required && <span className="text-neuro-peach ml-1">*</span>}
         </label>
       )}
 
@@ -118,7 +119,20 @@ export const DatePicker = ({ label, name, value, onChange, required, error }: Da
               setIsOpen(!isOpen);
             }
           }}
-          className={`px-4 py-2 border-[3px] border-black bg-white/10 backdrop-blur-sm font-sans focus:outline-none focus:ring-4 focus:ring-lavender/40 w-full ${errorClass}`}
+          className={`px-4 py-2 rounded-neuro-md shadow-neuro-pressed bg-white/50 font-sans text-neuro-primary focus:outline-none transition-all duration-200 w-full ${errorClass}`}
+          style={{
+            boxShadow: error ? errorShadow : undefined
+          }}
+          onFocus={(e) => {
+            if (!error) {
+              e.currentTarget.style.boxShadow = '0 0 0 3px rgba(212, 197, 249, 0.3)';
+            }
+          }}
+          onBlur={(e) => {
+            if (!error) {
+              e.currentTarget.style.boxShadow = '';
+            }
+          }}
         />
       </div>
 
@@ -129,11 +143,10 @@ export const DatePicker = ({ label, name, value, onChange, required, error }: Da
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.15 }}
-            className="absolute z-50 mt-1 bg-white border-4 border-black shadow-brutal-lg p-4"
+            transition={{ duration: 0.2 }}
+            className="absolute z-50 mt-1 bg-white/80 backdrop-blur-md rounded-neuro-lg shadow-neuro-raised p-4"
             style={{
-              marginTop: '2.5rem',
-              boxShadow: '6px 6px 0px rgba(0, 0, 0, 1)'
+              marginTop: '2.5rem'
             }}
           >
             {/* Header */}
@@ -141,15 +154,15 @@ export const DatePicker = ({ label, name, value, onChange, required, error }: Da
               <button
                 type="button"
                 onClick={handlePrevMonth}
-                className="px-1 py-1 border-3 border-black bg-pale-blue font-bold hover:bg-lavender transition-colors"
+                className="px-3 py-1 rounded-neuro-sm shadow-neuro-flat bg-neuro-blue font-semibold text-neuro-primary hover:shadow-neuro-raised transition-all duration-200"
               >
                 ←
               </button>
-              <span className="font-sans font-bold text-sm">{monthName}</span>
+              <span className="font-sans font-semibold text-sm text-neuro-primary">{monthName}</span>
               <button
                 type="button"
                 onClick={handleNextMonth}
-                className="px-1 py-1 border-3 border-black bg-pale-blue font-bold hover:bg-lavender transition-colors"
+                className="px-3 py-1 rounded-neuro-sm shadow-neuro-flat bg-neuro-blue font-semibold text-neuro-primary hover:shadow-neuro-raised transition-all duration-200"
               >
                 →
               </button>
@@ -160,7 +173,7 @@ export const DatePicker = ({ label, name, value, onChange, required, error }: Da
               {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map((day) => (
                 <div
                   key={day}
-                  className="text-center text-xs font-bold text-black/60 py-1"
+                  className="text-center text-xs font-semibold text-neuro-secondary py-1"
                 >
                   {day}
                 </div>
@@ -186,13 +199,12 @@ export const DatePicker = ({ label, name, value, onChange, required, error }: Da
                     type="button"
                     onClick={() => handleDateSelect(day)}
                     className={`
-                      aspect-square flex items-center justify-center text-sm font-semibold
-                      border-2 border-black transition-all duration-100
+                      aspect-square flex items-center justify-center text-sm font-medium rounded-neuro-sm transition-all duration-200 text-neuro-primary
                       ${selected
-                        ? 'bg-lavender border-black shadow-brutal-sm'
+                        ? 'bg-neuro-lavender shadow-neuro-raised'
                         : today
-                          ? 'bg-mint border-black'
-                          : 'bg-white hover:bg-pale-blue border-black/20'
+                          ? 'bg-neuro-mint shadow-neuro-flat'
+                          : 'bg-white/50 shadow-neuro-flat hover:shadow-neuro-raised hover:bg-neuro-blue'
                       }
                     `}
                   >
@@ -211,7 +223,7 @@ export const DatePicker = ({ label, name, value, onChange, required, error }: Da
                 setViewDate(today);
                 setIsOpen(false);
               }}
-              className="w-full mt-4 px-4 py-2 border-3 border-black bg-mint font-bold text-sm hover:bg-pale-blue transition-colors"
+              className="w-full mt-4 px-4 py-2 rounded-neuro-md shadow-neuro-flat bg-neuro-mint font-semibold text-sm text-neuro-primary hover:shadow-neuro-raised transition-all duration-200"
             >
               Today
             </button>
@@ -220,7 +232,7 @@ export const DatePicker = ({ label, name, value, onChange, required, error }: Da
       </AnimatePresence>
 
       {error && (
-        <span className="text-peach text-sm font-sans">
+        <span className="text-neuro-primary text-sm font-sans opacity-80">
           {error}
         </span>
       )}

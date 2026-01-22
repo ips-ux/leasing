@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Card, Button, Badge, Input, DatePicker, Modal, Select } from '../components/ui';
+import { Card, Button, Badge, Input, DatePicker, Modal, Select, Textarea } from '../components/ui';
 import { WorkflowChecklist } from '../components/applicants/WorkflowChecklist';
 import { useApplicant } from '../hooks/useApplicant';
 import { useApplicants } from '../hooks/useApplicants';
@@ -262,7 +262,7 @@ export const ApplicantDetail = () => {
         <Button
           variant="secondary"
           onClick={() => navigate('/applicants')}
-          className="mr-4 pointer-events-auto shadow-brutal-sm bg-white/90 backdrop-blur-sm border-2 border-black"
+          className="mr-4 pointer-events-auto shadow-neuro-flat bg-neuro-base/90 backdrop-blur-sm"
         >
           ← Back to List
         </Button>
@@ -524,11 +524,10 @@ export const ApplicantDetail = () => {
           <p className="text-sm text-black/60">
             Please provide a reason for cancelling this application. This will be visible in the applicant details.
           </p>
-          <textarea
+          <Textarea
             value={cancelReason}
             onChange={(e) => setCancelReason(e.target.value)}
             placeholder="Enter cancellation reason..."
-            className="w-full p-3 border-[3px] border-black bg-white/10 backdrop-blur-sm font-sans resize-none focus:outline-none focus:ring-4 focus:ring-lavender/40"
             rows={4}
             autoFocus
           />

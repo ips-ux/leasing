@@ -11,7 +11,7 @@ interface NavLinkItemProps {
 const NavLinkItem = ({ to, children, disabled = false }: NavLinkItemProps) => {
   if (disabled) {
     return (
-      <div className="px-4 py-3 text-black/40 cursor-not-allowed border-l-4 border-transparent">
+      <div className="px-4 py-3 text-neuro-muted cursor-not-allowed border-l-4 border-transparent">
         {children}
       </div>
     );
@@ -21,9 +21,9 @@ const NavLinkItem = ({ to, children, disabled = false }: NavLinkItemProps) => {
     <NavLink
       to={to}
       className={({ isActive }) =>
-        `block px-4 py-3 border-l-4 transition-all duration-100 font-semibold ${isActive
-          ? 'border-lavender bg-lavender/20 text-black'
-          : 'border-transparent hover:bg-black/5 hover:border-black/20 text-black/70'
+        `block px-4 py-3 border-l-4 transition-all duration-200 font-medium ${isActive
+          ? 'border-neuro-lavender bg-neuro-lavender/20 text-neuro-primary'
+          : 'border-transparent hover:bg-white/20 hover:border-neuro-blue/40 text-neuro-secondary'
         }`
       }
     >
@@ -40,10 +40,15 @@ export const Sidebar = () => {
   };
 
   return (
-    <aside className="w-64 bg-white/30 backdrop-blur-sm border-r-[3px] border-black/20 h-screen flex flex-col sticky top-0">
+    <aside
+      className="w-64 h-screen flex flex-col sticky top-0"
+      style={{
+        borderRight: '1px solid rgba(255, 255, 255, 0.4)'
+      }}
+    >
       {/* Header/Logo */}
-      <div className="p-6 border-b-[3px] border-black/20">
-        <h1 className="text-2xl font-bold">Leasing Assist</h1>
+      <div className="p-6 border-b border-white/20">
+        <h1 className="text-2xl font-semibold text-neuro-primary">Leasing Assist</h1>
       </div>
 
       {/* Navigation Links */}
@@ -57,18 +62,20 @@ export const Sidebar = () => {
       </nav>
 
       {/* User Profile Section */}
-      <div className="p-4 border-t-[3px] border-black/20">
+      <div className="p-4 border-t border-white/20">
         <div className="flex items-center gap-3 mb-3">
-          <div className="flex items-center justify-center w-10 h-10 border-[3px] border-black bg-lavender">
-            <span className="text-lg font-bold">
-              {user?.displayName?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || 'U'}
-            </span>
+          <div className="p-1.5 rounded-full bg-neuro-base shadow-neuro-pressed">
+            <div className="flex items-center justify-center w-10 h-10 rounded-full bg-neuro-lavender shadow-neuro-flat">
+              <span className="text-lg font-semibold text-neuro-primary">
+                {user?.displayName?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || 'U'}
+              </span>
+            </div>
           </div>
           <div className="flex-1 min-w-0">
-            <div className="font-semibold truncate text-sm">
+            <div className="font-medium truncate text-sm text-neuro-primary">
               {user?.displayName || 'User'}
             </div>
-            <div className="text-xs text-black/60 truncate">
+            <div className="text-xs text-neuro-secondary truncate">
               {user?.email}
             </div>
           </div>

@@ -8,3 +8,6 @@ export { GradientBackground } from './GradientBackground';
 export { ErrorBoundary } from './ErrorBoundary';
 export { Select } from './Select';
 export { Checkbox } from './Checkbox';
+export { Radio } from './Radio';
+export { Textarea } from './Textarea';
+export { Toggle } from './Toggle';

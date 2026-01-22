@@ -36,15 +36,15 @@ export const DashboardRecentActivity = ({
             <div
               key={`${item.type}-${item.id}`}
               onClick={() => onNavigate(item.link)}
-              className="flex flex-col gap-1 p-3 border-2 border-black/10 hover:bg-black/5 cursor-pointer transition-colors"
+              className="flex flex-col gap-1 p-3 rounded-neuro-md bg-white/60 shadow-neuro-pressed cursor-pointer transition-all"
             >
-              <div className="font-semibold text-sm">
+              <div className="font-semibold text-sm text-neuro-primary">
                 {item.type === 'applicant' ? 'Applicant Update' : 'Inquiry Update'}
               </div>
-              <div className="text-sm text-black/80">
+              <div className="text-sm text-neuro-secondary">
                 {item.title}
               </div>
-              <div className="text-xs text-black/40 font-mono">
+              <div className="text-xs text-neuro-muted font-mono">
                 <span className="capitalize">{item.status.replace('_', ' ')}</span> • {formatDistanceToNow(item.updatedAt, { addSuffix: true })}
               </div>
             </div>

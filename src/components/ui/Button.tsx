@@ -21,24 +21,24 @@ export const Button = ({
   type = 'button'
 }: ButtonProps) => {
   const variantClasses = {
-    primary: 'bg-lavender',
-    secondary: 'bg-pale-blue',
-    danger: 'bg-peach'
+    primary: 'bg-neuro-lavender text-neuro-primary',
+    secondary: 'bg-neuro-blue text-neuro-primary',
+    danger: 'bg-neuro-peach text-neuro-primary'
   };
 
   return (
     <motion.button
       type={type}
-      className={`font-bold px-6 py-3 border-[3px] border-black shadow-brutal hover:shadow-brutal-hover active:shadow-brutal-active disabled:opacity-50 disabled:cursor-not-allowed ${variantClasses[variant]} ${className}`}
+      className={`font-semibold px-6 py-3 rounded-neuro-md btn-neuro disabled:opacity-50 disabled:cursor-not-allowed ${variantClasses[variant]} ${className}`}
       disabled={disabled || isLoading}
       onClick={onClick}
-      whileTap={{ scale: 0.98 }}
-      whileHover={{ x: -2, y: -2 }}
-      transition={{ duration: 0.1, ease: 'easeOut' }}
+      style={{
+        boxShadow: disabled ? 'none' : undefined
+      }}
     >
       {isLoading ? (
         <motion.div
-          className="inline-block w-5 h-5 border-[3px] border-black border-t-transparent"
+          className="inline-block w-5 h-5 border-[3px] border-neuro-primary border-t-transparent rounded-full"
           animate={{ rotate: 360 }}
           transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
         />

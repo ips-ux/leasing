@@ -10,7 +10,7 @@ export const Layout = ({ children }: LayoutProps) => {
   return (
     <>
       <GradientBackground />
-      <div className="min-h-screen flex">
+      <div className="min-h-screen flex bg-glass">
         {/* Left Sidebar */}
         <Sidebar />
 

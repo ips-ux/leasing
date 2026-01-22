@@ -3,7 +3,7 @@ import { WORKFLOW_STEPS } from '../../lib/workflow-steps';
 import type { SubStepConfig } from '../../lib/workflow-steps';
 import type { Applicant } from '../../types/applicant';
 import { updateSubStep, updateApplicant } from '../../firebase/firestore';
-import { Button } from '../ui';
+import { Button, Checkbox } from '../ui';
 import toast from 'react-hot-toast';
 import { EmailCopyButtons } from './EmailCopyButtons';
 import requestIncomeEmail from '../../content/request-income.html?raw';
@@ -206,7 +206,7 @@ export const QuickActionSubStep = ({ applicant }: QuickActionSubStepProps) => {
                                                     type="text"
                                                     value={multiValues[price] || ''}
                                                     onChange={(e) => setMultiValues(prev => ({ ...prev, [price]: e.target.value }))}
-                                                    className="w-7 h-7 text-center text-xs border-2 border-black bg-white/50 focus:outline-none focus:ring-2 focus:ring-lavender"
+                                                    className="w-8 h-8 text-center text-xs rounded-neuro-sm bg-neuro-base shadow-neuro-pressed focus:outline-none focus:ring-2 focus:ring-neuro-lavender"
                                                     placeholder="0"
                                                 />
                                                 <span className="text-[10px] font-bold text-black/60">${price}</span>
@@ -247,7 +247,7 @@ export const QuickActionSubStep = ({ applicant }: QuickActionSubStepProps) => {
                                                     type="text"
                                                     value={multiValues[price] || ''}
                                                     onChange={(e) => setMultiValues(prev => ({ ...prev, [price]: e.target.value }))}
-                                                    className="w-7 h-7 text-center text-xs border-2 border-black bg-white/50 focus:outline-none focus:ring-2 focus:ring-lavender"
+                                                    className="w-8 h-8 text-center text-xs rounded-neuro-sm bg-neuro-base shadow-neuro-pressed focus:outline-none focus:ring-2 focus:ring-neuro-lavender"
                                                     placeholder="0"
                                                 />
                                                 <span className="text-[10px] font-bold text-black/60">${price}</span>
@@ -288,28 +288,28 @@ export const QuickActionSubStep = ({ applicant }: QuickActionSubStepProps) => {
                                                     type="text"
                                                     value={multiValues[type] || ''}
                                                     onChange={(e) => setMultiValues(prev => ({ ...prev, [type]: e.target.value }))}
-                                                    className="w-7 h-7 text-center text-xs border-2 border-black bg-white/50 focus:outline-none focus:ring-2 focus:ring-lavender"
+                                                    className="w-8 h-8 text-center text-xs rounded-neuro-sm bg-neuro-base shadow-neuro-pressed focus:outline-none focus:ring-2 focus:ring-neuro-lavender"
                                                     placeholder="0"
                                                 />
                                                 <span className="text-[10px] font-bold text-black/60">{type}(s)</span>
                                             </div>
                                         ))}
                                         <div className="flex items-center gap-1 border-l border-black/20 pl-2">
-                                            <label className="flex items-center gap-1 text-[10px] font-bold text-black/60 cursor-pointer">
-                                                <input
-                                                    type="checkbox"
+                                            <div className="flex items-center">
+                                                <Checkbox
+                                                    label="ESA?"
+                                                    name="esa-quick"
                                                     checked={!!multiValues['ESA']}
                                                     onChange={(e) => setMultiValues(prev => ({ ...prev, ESA: e.target.checked ? '1' : '' }))}
-                                                    className="w-3 h-3 border-black"
+                                                    className="scale-75 origin-left"
                                                 />
-                                                ESA?
-                                            </label>
+                                            </div>
                                             {multiValues['ESA'] && (
                                                 <input
                                                     type="text"
                                                     value={multiValues['ESA_count'] || '1'}
                                                     onChange={(e) => setMultiValues(prev => ({ ...prev, ESA_count: e.target.value }))}
-                                                    className="w-7 h-7 text-center text-xs border-2 border-black bg-white/50 focus:outline-none focus:ring-2 focus:ring-lavender"
+                                                    className="w-8 h-8 text-center text-xs rounded-neuro-sm bg-neuro-base shadow-neuro-pressed focus:outline-none focus:ring-2 focus:ring-neuro-lavender"
                                                     placeholder="1"
                                                 />
                                             )}
@@ -362,8 +362,10 @@ export const QuickActionSubStep = ({ applicant }: QuickActionSubStepProps) => {
                                             }}
                                             disabled={isUpdating}
                                             className={`
-                                                px-3 py-1 text-xs font-bold border-2 border-black transition-colors
-                                                ${textValue === val ? 'bg-lavender text-black' : 'bg-white/50 text-black/60 hover:bg-white/70'}
+                                                px-3 py-1 text-xs font-bold rounded-neuro-sm transition-all
+                                                ${textValue === val
+                                                    ? 'bg-neuro-lavender text-neuro-primary shadow-neuro-pressed'
+                                                    : 'bg-neuro-base text-neuro-secondary shadow-neuro-flat hover:text-neuro-primary'}
                                             `}
                                         >
                                             {val}
@@ -377,7 +379,7 @@ export const QuickActionSubStep = ({ applicant }: QuickActionSubStepProps) => {
                                         value={textValue}
                                         onChange={(e) => setTextValue(e.target.value)}
                                         placeholder="Enter value..."
-                                        className="text-xs p-1 border-2 border-black bg-white/50 focus:outline-none focus:ring-2 focus:ring-lavender w-32"
+                                        className="text-xs p-2 rounded-neuro-sm bg-neuro-base shadow-neuro-pressed focus:outline-none focus:ring-2 focus:ring-neuro-lavender w-32"
                                     />
                                     <div className="flex items-center gap-2">
                                         <Button

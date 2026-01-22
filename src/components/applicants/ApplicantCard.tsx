@@ -77,7 +77,7 @@ export const ApplicantCard = ({ applicant, onClick }: ApplicantCardProps) => {
               {profile.concessionApplied && (
                 <>
                   <span>•</span>
-                  <span className="text-black bg-soft-yellow/30 px-1 border border-black/20">
+                  <span className="text-neuro-primary bg-neuro-base px-1.5 py-0.5 rounded-neuro-sm shadow-neuro-pressed text-xs">
                     Concession: {profile.concessionApplied}
                   </span>
                 </>
@@ -118,7 +118,7 @@ export const ApplicantCard = ({ applicant, onClick }: ApplicantCardProps) => {
                 {leaseInfo.slice(0, 3).map((item, index) => (
                   <span
                     key={index}
-                    className="text-[10px] font-mono px-1.5 py-0.5 bg-pale-blue/30 border border-black/20 whitespace-nowrap"
+                    className="text-[10px] font-mono px-1.5 py-0.5 bg-neuro-base rounded-neuro-sm shadow-neuro-pressed whitespace-nowrap text-neuro-primary"
                   >
                     {item.label}: {item.value}
                   </span>
@@ -148,10 +148,10 @@ export const ApplicantCard = ({ applicant, onClick }: ApplicantCardProps) => {
                   <span className="font-mono font-bold text-sm">{tracking.currentStep}/6</span>
                 </div>
 
-                <div className="w-full h-2 bg-black/10 rounded-full overflow-hidden mb-2">
+                <div className="w-full h-4 bg-neuro-base rounded-full shadow-neuro-pressed p-1 mb-2">
                   <div
-                    className="h-full bg-mint transition-all duration-500"
-                    style={{ width: `${(tracking.currentStep / 6) * 100}%` }}
+                    className="h-full bg-neuro-primary rounded-full transition-all duration-500 shadow-neuro-flat"
+                    style={{ width: `${(tracking.currentStep / 6) * 100}%`, backgroundColor: 'orange' }}
                   />
                 </div>
 
@@ -167,7 +167,7 @@ export const ApplicantCard = ({ applicant, onClick }: ApplicantCardProps) => {
                 {applicant.tags.map((tag, i) => (
                   <span
                     key={i}
-                    className="text-[10px] font-mono font-bold px-1.5 py-0.5 bg-lavender border border-black"
+                    className="text-[10px] font-mono font-bold px-1.5 py-0.5 bg-neuro-lavender rounded-neuro-sm shadow-neuro-pressed text-neuro-primary"
                   >
                     {tag}
                   </span>

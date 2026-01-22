@@ -23,13 +23,13 @@ export const ToDoInquiryCard = ({ inquiry, onClick }: ToDoInquiryCardProps) => {
   return (
     <div
       onClick={onClick}
-      className="border-2 border-black p-2 hover:bg-black/5 transition-colors cursor-pointer"
+      className="rounded-neuro-md bg-white/60 shadow-neuro-pressed p-2 transition-all cursor-pointer"
     >
       <div className="flex items-center justify-between">
         <div className="flex-1">
-          <div className="font-semibold text-sm">{inquiry.title}</div>
+          <div className="font-semibold text-sm text-neuro-primary">{inquiry.title}</div>
           {inquiry.unitNumber && (
-            <div className="text-xs text-black/60">Unit {inquiry.unitNumber}</div>
+            <div className="text-xs text-neuro-secondary">Unit {inquiry.unitNumber}</div>
           )}
         </div>
         <div className="flex items-center gap-2">
