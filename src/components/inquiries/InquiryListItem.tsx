@@ -80,7 +80,19 @@ export const InquiryListItem = ({ inquiry, onUpdate, onClick }: InquiryListItemP
             onClick={onClick}
             className="group relative grid grid-cols-12 gap-4 items-center p-4 bg-neuro-base rounded-neuro-md shadow-neuro-flat hover:shadow-neuro-raised transition-all cursor-pointer mb-3"
         >
-            {/* Priority & Unit - Col 1-2 */}
+            {/* Date Box - Col 1 */}
+            <div className="col-span-12 md:col-span-1 flex justify-center">
+                <div className="w-12 h-12 bg-neuro-base rounded-neuro-md shadow-neuro-pressed flex flex-col items-center justify-center text-neuro-primary">
+                    <span className="text-[10px] font-bold uppercase leading-none">
+                        {inquiry.createdAt ? inquiry.createdAt.toDate().toLocaleDateString('en-US', { month: 'short' }) : '-'}
+                    </span>
+                    <span className="text-lg font-bold leading-none mt-1">
+                        {inquiry.createdAt ? inquiry.createdAt.toDate().getDate() : '-'}
+                    </span>
+                </div>
+            </div>
+
+            {/* Priority & Unit - Col 2-3 */}
             <div className="col-span-12 md:col-span-2 flex flex-row md:flex-col gap-2 items-start">
                 <Badge variant={getPriorityVariant(inquiry.priority)} className="w-fit">
                     {inquiry.priority.toUpperCase()}
@@ -92,8 +104,8 @@ export const InquiryListItem = ({ inquiry, onUpdate, onClick }: InquiryListItemP
                 )}
             </div>
 
-            {/* Main Info - Col 3-5 */}
-            <div className="col-span-12 md:col-span-3">
+            {/* Main Info - Col 4-5 */}
+            <div className="col-span-12 md:col-span-2">
                 <h3 className="font-bold text-neuro-primary mb-1">{inquiry.title}</h3>
                 <div className="text-xs text-neuro-muted font-mono">
                     {inquiry.createdAt ? formatDistanceToNow(inquiry.createdAt.toDate(), { addSuffix: true }) : '-'}
@@ -157,8 +169,8 @@ export const InquiryListItem = ({ inquiry, onUpdate, onClick }: InquiryListItemP
             {/* Status Indicator - Col 12 */}
             <div className="col-span-12 md:col-span-1 flex justify-end">
                 <div className={`w-3 h-3 rounded-full shadow-neuro-flat ${inquiry.status === 'completed' ? 'bg-green-400' :
-                        inquiry.status === 'in_progress' ? 'bg-blue-400' :
-                            'bg-yellow-400'
+                    inquiry.status === 'in_progress' ? 'bg-blue-400' :
+                        'bg-yellow-400'
                     }`} />
             </div>
         </motion.div>
