@@ -1,10 +1,13 @@
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Button } from '../components/ui';
+import { Button, Toggle } from '../components/ui';
 import { useInquiries } from '../hooks/useInquiries';
+import { useAuth } from '../hooks/useAuth';
 import { NewInquiryModal } from '../components/inquiries/NewInquiryModal';
 import { EditInquiryModal } from '../components/inquiries/EditInquiryModal';
 import { InquiryListItem } from '../components/inquiries/InquiryListItem';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faUser, faUsers } from '@fortawesome/free-solid-svg-icons';
 import type { Inquiry, InquiryPriority } from '../types/inquiry';
 
 // Helper to format month display
@@ -32,11 +35,13 @@ type SortField = 'createdAt' | 'priority';
 type SortDirection = 'asc' | 'desc';
 
 export const InquiriesList = () => {
+  const { user } = useAuth();
   const months = generateMonths();
   const currentMonth = months[0];
   const [selectedMonth, setSelectedMonth] = useState(currentMonth);
   const [isNewModalOpen, setIsNewModalOpen] = useState(false);
   const [selectedInquiry, setSelectedInquiry] = useState<Inquiry | null>(null);
+  const [showMineOnly, setShowMineOnly] = useState(true);
 
   // Sorting State
   const [sortField, setSortField] = useState<SortField>('createdAt');
@@ -54,7 +59,12 @@ export const InquiriesList = () => {
   };
 
   const sortedInquiries = useMemo(() => {
-    return [...inquiries].sort((a, b) => {
+    const filtered = inquiries.filter(i => {
+      if (!showMineOnly) return true;
+      return i.assignedTo === user?.uid || (!i.assignedTo && i.createdBy === user?.uid);
+    });
+
+    return [...filtered].sort((a, b) => {
       let comparison = 0;
 
       if (sortField === 'createdAt') {
@@ -68,7 +78,7 @@ export const InquiriesList = () => {
 
       return sortDirection === 'asc' ? comparison : -comparison;
     });
-  }, [inquiries, sortField, sortDirection]);
+  }, [inquiries, showMineOnly, user?.uid, sortField, sortDirection]);
 
   // Split into Active (Open + In Progress) and Completed
   const activeInquiries = sortedInquiries.filter(i => i.status === 'open' || i.status === 'in_progress');
@@ -92,9 +102,17 @@ export const InquiriesList = () => {
             Resident Inquiries
           </motion.h1>
 
-          <Button variant="primary" onClick={() => setIsNewModalOpen(true)}>
-            + New Inquiry
-          </Button>
+          <div className="flex items-center gap-4">
+            <Toggle
+              value={showMineOnly}
+              onChange={setShowMineOnly}
+              leftIcon={<FontAwesomeIcon icon={faUser} />}
+              rightIcon={<FontAwesomeIcon icon={faUsers} />}
+            />
+            <Button variant="primary" onClick={() => setIsNewModalOpen(true)}>
+              + New Inquiry
+            </Button>
+          </div>
         </div>
 
         {/* Controls: Month Tabs & Sorting */}
