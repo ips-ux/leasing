@@ -6,7 +6,7 @@
 
   /* Neumorphic Base Colors */
   .bg-neuro-base {
-    background-color: #E0E5EC;
+    background-color: #7AB0DF30;
   }
 
   .bg-glass {
@@ -249,7 +249,7 @@ svg {
 .neuro-input-text {
   margin-left: 16px;
   opacity: 0.6;
-  transition: opacity 0.2s linear, transform 0.2s ease-out;
+  transition: opacity 0.2s linear;
   font-weight: 500;
 }
 
@@ -260,19 +260,19 @@ svg {
   height: 30px;
   width: 30px;
   min-width: 30px;
-  box-shadow: -8px -4px 8px 0px #ffffff, 8px 4px 12px 0px #d1d9e6;
+  box-shadow: -3px -3px 4px 0px #ffffff, 3px 3px 6px 0px #d1d9e6ef;
   overflow: hidden;
   background: #ecf0f3;
 }
 
 /* Checkbox specific override */
 .neuro-input-indicator.checkbox {
-  border-radius: 8px;
+  border-radius: 12px;
 }
 
 .neuro-input-indicator.checkbox::before,
 .neuro-input-indicator.checkbox::after {
-  border-radius: 8px;
+  border-radius: 12px;
 }
 
 .neuro-input-indicator::before,
@@ -288,7 +288,7 @@ svg {
 }
 
 .neuro-input-indicator::before {
-  box-shadow: -4px -2px 4px 0px #d1d9e6, 4px 2px 8px 0px #fff;
+  box-shadow: -4px -2px 4px 0px #0000000a, 4px 2px 8px 0px #fff;
 }
 
 .neuro-input-indicator::after {
@@ -304,7 +304,6 @@ svg {
 }
 
 .neuro-input-state:focus~.neuro-input-label .neuro-input-text {
-  transform: translate3d(8px, 0, 0);
   opacity: 1;
 }
 

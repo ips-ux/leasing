@@ -1,11 +1,14 @@
 import { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Card, Button, Badge, Input, Modal, Select, Checkbox, Textarea } from '../components/ui';
+import { Card, Button, Badge, Input, Modal, Select, Checkbox, Textarea, Toggle } from '../components/ui';
 import { useInquiry } from '../hooks/useInquiry';
 import { useInquiries } from '../hooks/useInquiries';
 import { useUsers } from '../hooks/useUsers';
 import { extractFirstName } from '../utils/user';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faClipboard as faClipboardRegular } from '@fortawesome/free-regular-svg-icons';
+import { faClipboardCheck } from '@fortawesome/free-solid-svg-icons';
 import type { InquiryPriority, InquiryStatus } from '../types/inquiry';
 import type { Timestamp } from 'firebase/firestore';
 
@@ -234,38 +237,12 @@ export const InquiryDetail = () => {
                 </div>
 
                 <div className="pb-3">
-                  <div className="flex p-1 rounded-neuro-md shadow-neuro-pressed bg-neuro-base w-fit">
-                    <button
-                      type="button"
-                      onClick={() => setEditData((prev) => ({ ...prev, status: 'open' }))}
-                      className={`px-4 py-2 text-sm font-semibold rounded-neuro-sm transition-all ${editData.status === 'open'
-                          ? 'bg-neuro-peach text-neuro-primary shadow-neuro-flat'
-                          : 'text-neuro-secondary hover:text-neuro-primary'
-                        }`}
-                    >
-                      Open
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setEditData((prev) => ({ ...prev, status: 'in_progress' }))}
-                      className={`px-4 py-2 text-sm font-semibold rounded-neuro-sm transition-all ${editData.status === 'in_progress'
-                          ? 'bg-neuro-lavender text-neuro-primary shadow-neuro-flat'
-                          : 'text-neuro-secondary hover:text-neuro-primary'
-                        }`}
-                    >
-                      In Progress
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setEditData((prev) => ({ ...prev, status: 'completed' }))}
-                      className={`px-4 py-2 text-sm font-semibold rounded-neuro-sm transition-all ${editData.status === 'completed'
-                          ? 'bg-neuro-mint text-neuro-primary shadow-neuro-flat'
-                          : 'text-neuro-secondary hover:text-neuro-primary'
-                        }`}
-                    >
-                      Closed
-                    </button>
-                  </div>
+                  <Toggle
+                    value={editData.status !== 'completed'}
+                    onChange={(val) => setEditData((prev) => ({ ...prev, status: val ? 'open' : 'completed' }))}
+                    leftIcon={<FontAwesomeIcon icon={faClipboardRegular} />}
+                    rightIcon={<FontAwesomeIcon icon={faClipboardCheck} />}
+                  />
                 </div>
               </div>
 

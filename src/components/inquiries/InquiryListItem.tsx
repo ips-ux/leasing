@@ -92,8 +92,8 @@ export const InquiryListItem = ({ inquiry, onUpdate, onClick }: InquiryListItemP
                 </div>
             </div>
 
-            {/* Priority & Unit - Col 2-3 */}
-            <div className="col-span-12 md:col-span-2 flex flex-row md:flex-col gap-2 items-start">
+            {/* Priority & Unit - Col 2 */}
+            <div className="col-span-12 md:col-span-1 flex flex-row md:flex-col gap-2 items-start">
                 <Badge variant={getPriorityVariant(inquiry.priority)} className="w-fit">
                     {inquiry.priority.toUpperCase()}
                 </Badge>
@@ -104,16 +104,16 @@ export const InquiryListItem = ({ inquiry, onUpdate, onClick }: InquiryListItemP
                 )}
             </div>
 
-            {/* Main Info - Col 4-5 */}
-            <div className="col-span-12 md:col-span-2">
+            {/* Main Info - Col 3 */}
+            <div className="col-span-12 md:col-span-1">
                 <h3 className="font-bold text-neuro-primary mb-1">{inquiry.title}</h3>
                 <div className="text-xs text-neuro-muted font-mono">
                     {inquiry.createdAt ? formatDistanceToNow(inquiry.createdAt.toDate(), { addSuffix: true }) : '-'}
                 </div>
             </div>
 
-            {/* Description - Col 6-8 */}
-            <div className="col-span-12 md:col-span-3 min-h-[40px] flex items-center">
+            {/* Description - Col 4-7 */}
+            <div className="col-span-12 md:col-span-4 min-h-[40px] flex items-center">
                 {editingField === 'description' ? (
                     <textarea
                         ref={inputRef}
@@ -137,8 +137,8 @@ export const InquiryListItem = ({ inquiry, onUpdate, onClick }: InquiryListItemP
                 )}
             </div>
 
-            {/* Notes - Col 9-11 */}
-            <div className="col-span-12 md:col-span-3 min-h-[40px] flex items-center">
+            {/* Notes - Col 8-11 */}
+            <div className="col-span-12 md:col-span-4 min-h-[40px] flex items-center">
                 {editingField === 'notes' ? (
                     <textarea
                         ref={inputRef}
