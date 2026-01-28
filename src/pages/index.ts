@@ -4,3 +4,5 @@ export { ApplicantsList } from './ApplicantsList';
 export { ApplicantDetail } from './ApplicantDetail';
 export { InquiriesList } from './InquiriesList';
 export { Reports } from './Reports';
+export { Scheduler } from './Scheduler';
+export { DataMigration } from './DataMigration';

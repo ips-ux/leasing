@@ -1,16 +1,20 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useApplicants } from '../hooks/useApplicants';
 import { useInquiries } from '../hooks/useInquiries';
-import { extractFirstName } from '../utils/user';
+import { useReservations } from '../hooks/useReservations';
+import { extractFirstName, getSchedulerStaffName } from '../utils/user';
+import { getCookie, setCookie } from '../utils/cookies';
+import { isAfter, isBefore, isEqual, startOfDay, endOfDay, startOfMonth, endOfMonth } from 'date-fns';
+import { Timestamp } from 'firebase/firestore';
 import { DashboardToDoColumn } from '../components/dashboard/DashboardToDoColumn';
 import { DashboardActivityColumn } from '../components/dashboard/DashboardActivityColumn';
 import { DashboardMetrics } from '../components/dashboard/DashboardMetrics';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUser, faUsers } from '@fortawesome/free-solid-svg-icons';
-import { DashboardRecentActivity } from '../components/dashboard/DashboardRecentActivity';
+
 import { Toggle } from '../components/ui';
 import { NewApplicantModal } from '../components/applicants/NewApplicantModal';
 import { NewInquiryModal } from '../components/inquiries/NewInquiryModal';
@@ -42,11 +46,20 @@ export const Dashboard = () => {
   const [isApplicantModalOpen, setIsApplicantModalOpen] = useState(false);
   const [isInquiryModalOpen, setIsInquiryModalOpen] = useState(false);
   const [selectedInquiry, setSelectedInquiry] = useState<Inquiry | null>(null);
-  const [showMineOnly, setShowMineOnly] = useState(true);
+  const [showMineOnly, setShowMineOnly] = useState(() => {
+    const saved = getCookie('dashboard_mine_only');
+    return saved !== null ? saved === 'true' : true;
+  });
 
-  // Fetch all applicants and inquiries
+  // Persist Mine/Everyone preference
+  useEffect(() => {
+    setCookie('dashboard_mine_only', String(showMineOnly));
+  }, [showMineOnly]);
+
+  // Fetch all applicants, inquiries, and reservations
   const { applicants, loading: applicantsLoading } = useApplicants();
   const { inquiries, loading: inquiriesLoading } = useInquiries();
+  const { reservations, loading: reservationsLoading } = useReservations();
 
   // Filter applicants based on toggle
   const filteredApplicants = applicants.filter(a => {
@@ -63,50 +76,49 @@ export const Dashboard = () => {
       (!i.assignedTo && i.createdBy === user?.uid);
   });
 
-  // Calculate Metrics (always based on all data for global overview)
-  const activeApplicants = applicants.filter(a =>
+  // Calculate Metrics
+  const activeApplicants = filteredApplicants.filter(a =>
     a['2_Tracking'].status !== 'completed' && a['2_Tracking'].status !== 'cancelled'
   ).length;
 
-  const totalInquiries = inquiries.length;
-
-  const highPriorityInquiries = inquiries.filter(i =>
-    i.status !== 'completed' && i.priority === 'high'
+  const openInquiries = filteredInquiries.filter(i =>
+    i.status !== 'completed'
   ).length;
 
-  const currentMonth = new Date().getMonth();
-  const currentYear = new Date().getFullYear();
+  const today = new Date();
+  const reservationsToday = reservations.filter(r => {
+    const rDate = new Date(r.start_time);
+    const isToday = rDate.getDate() === today.getDate() &&
+      rDate.getMonth() === today.getMonth() &&
+      rDate.getFullYear() === today.getFullYear();
 
-  const monthlyMoveIns = applicants.filter(a => {
-    if (a['2_Tracking'].status !== 'completed' || !a['2_Tracking'].leaseCompletedTime) return false;
-    const date = a['2_Tracking'].leaseCompletedTime.toDate();
-    return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
+    if (!isToday) return false;
+
+    if (showMineOnly) {
+      return r.scheduled_by === getSchedulerStaffName(user?.email);
+    }
+    return true;
   }).length;
 
-  // Recent Activity
-  // Combine applicants and inquiries, sort by updatedAt, take top 5
-  const recentActivity = [
-    ...applicants.map(a => ({
-      id: a.id,
-      type: 'applicant' as const,
-      title: a['1_Profile'].name,
-      status: a['2_Tracking'].status,
-      updatedAt: a['2_Tracking'].updatedAt?.toDate() || new Date(0),
-      link: `/applicants/${a.id}`
-    })),
-    ...inquiries.map(i => ({
-      id: i.id,
-      type: 'inquiry' as const,
-      title: i.title,
-      status: i.status,
-      updatedAt: i.updatedAt?.toDate() || new Date(0),
-      link: `/inquiries/${i.id}`
-    }))
-  ]
-    .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime())
-    .slice(0, 5);
+  const currentMonthEnd = endOfDay(endOfMonth(today));
+  const currentMonthStart = startOfDay(startOfMonth(today));
 
-  const loading = applicantsLoading || inquiriesLoading;
+  const monthlyMoveIns = applicants.filter(a => {
+    // Exclude cancelled
+    if (a['2_Tracking'].status === 'cancelled') return false;
+    if (!a['1_Profile'].moveInDate) return false;
+
+    const moveInDate = a['1_Profile'].moveInDate instanceof Timestamp
+      ? a['1_Profile'].moveInDate.toDate()
+      : new Date(a['1_Profile'].moveInDate);
+
+    return (isAfter(moveInDate, currentMonthStart) || isEqual(moveInDate, currentMonthStart)) &&
+      (isBefore(moveInDate, currentMonthEnd) || isEqual(moveInDate, currentMonthEnd));
+  }).length;
+
+
+
+  const loading = applicantsLoading || inquiriesLoading || reservationsLoading;
 
   const handleOpenApplicantModal = () => setIsApplicantModalOpen(true);
   const handleOpenInquiryModal = () => setIsInquiryModalOpen(true);
@@ -141,8 +153,8 @@ export const Dashboard = () => {
         <motion.div variants={itemVariants}>
           <DashboardMetrics
             activeApplicants={activeApplicants}
-            totalInquiries={totalInquiries}
-            highPriorityInquiries={highPriorityInquiries}
+            openInquiries={openInquiries}
+            reservationsToday={reservationsToday}
             monthlyMoveIns={monthlyMoveIns}
             loading={loading}
           />
@@ -168,14 +180,7 @@ export const Dashboard = () => {
           </div>
         </motion.div>
 
-        {/* Full-Width Recent Activity */}
-        <motion.div variants={itemVariants}>
-          <DashboardRecentActivity
-            recentActivity={recentActivity}
-            loading={loading}
-            onNavigate={navigate}
-          />
-        </motion.div>
+
       </motion.div>
 
       {/* Modals */}

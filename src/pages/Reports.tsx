@@ -3,21 +3,27 @@ import { useApplicants } from '../hooks/useApplicants';
 import { useUsers } from '../hooks/useUsers';
 import { extractFirstName } from '../utils/user';
 import { Card } from '../components/ui';
-import { format, subMonths, setDate, isAfter, isBefore, isEqual, startOfDay, endOfDay } from 'date-fns';
+import { format, subMonths, setDate, isAfter, isBefore, isEqual, startOfDay, endOfDay, startOfMonth, endOfMonth } from 'date-fns';
 import { Timestamp } from 'firebase/firestore';
 
-type ReportType = 'move-in' | 'eod';
+type ReportType = 'move-in' | 'concession' | 'eod';
 
 export const Reports = () => {
   const { applicants, loading } = useApplicants();
   const { users } = useUsers();
   const [selectedReport, setSelectedReport] = useState<ReportType>('move-in');
 
-  // Calculate date range for Move-In Report
-  // 25th of previous month to 25th of current month
+  // Calculate date range for Concession Report (25th to 25th)
   const today = new Date();
-  const currentMonth25th = endOfDay(setDate(today, 25));
-  const prevMonth25th = startOfDay(setDate(subMonths(today, 1), 25));
+  const concessionEnd = endOfDay(setDate(today, 25));
+  const concessionStart = startOfDay(setDate(subMonths(today, 1), 25));
+
+  // Calculate date range for Move-In Report (1st to End of Month)
+  const moveInStart = startOfDay(startOfMonth(today));
+  const moveInEnd = endOfDay(endOfMonth(today));
+
+  const startDate = selectedReport === 'concession' ? concessionStart : moveInStart;
+  const endDate = selectedReport === 'concession' ? concessionEnd : moveInEnd;
 
   const filteredApplicants = applicants
     .filter(app => {
@@ -29,8 +35,8 @@ export const Reports = () => {
         ? app['1_Profile'].moveInDate.toDate()
         : new Date(app['1_Profile'].moveInDate);
 
-      return (isAfter(moveInDate, prevMonth25th) || isEqual(moveInDate, prevMonth25th)) &&
-        (isBefore(moveInDate, currentMonth25th) || isEqual(moveInDate, currentMonth25th));
+      return (isAfter(moveInDate, startDate) || isEqual(moveInDate, startDate)) &&
+        (isBefore(moveInDate, endDate) || isEqual(moveInDate, endDate));
     })
     .sort((a, b) => {
       const dateA = a['1_Profile'].moveInDate instanceof Timestamp
@@ -64,18 +70,21 @@ export const Reports = () => {
             }}
           >
             <option value="move-in">Move-In Report</option>
+            <option value="concession">Concession Report</option>
             <option value="eod">EOD Report</option>
           </select>
         </div>
       </div>
 
       <Card>
-        {selectedReport === 'move-in' && (
+        {(selectedReport === 'move-in' || selectedReport === 'concession') && (
           <div className="space-y-4">
             <div className="flex justify-between items-center mb-6 border-b-3 border-black pb-4">
-              <h2 className="text-2xl font-bold">Move-In Report</h2>
+              <h2 className="text-2xl font-bold">
+                {selectedReport === 'concession' ? 'Concession Report' : 'Move-In Report'}
+              </h2>
               <span className="font-mono font-bold text-sm bg-lavender px-3 py-1 border-2 border-black shadow-[2px_2px_0px_rgba(0,0,0,1)]">
-                {format(prevMonth25th, 'MMM do')} - {format(currentMonth25th, 'MMM do')}
+                {format(startDate, 'MMM do')} - {format(endDate, 'MMM do')}
               </span>
             </div>
 

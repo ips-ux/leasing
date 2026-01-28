@@ -27,3 +27,13 @@ export const capitalize = (str: string): string => {
         .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
         .join(' ');
 };
+
+/**
+ * Generates the staff name format used in the Scheduler (Firstname capitalized)
+ * based on the user's email.
+ */
+export const getSchedulerStaffName = (email: string | null | undefined): string => {
+    if (!email) return 'Unknown User';
+    const namePart = email.split('@')[0];
+    return namePart.charAt(0).toUpperCase() + namePart.slice(1);
+};

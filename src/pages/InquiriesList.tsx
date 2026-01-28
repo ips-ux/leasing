@@ -47,7 +47,7 @@ export const InquiriesList = () => {
   const [sortField, setSortField] = useState<SortField>('createdAt');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
 
-  const { inquiries, loading, updateInquiry } = useInquiries(selectedMonth);
+  const { inquiries, loading, updateInquiry } = useInquiries();
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -60,8 +60,17 @@ export const InquiriesList = () => {
 
   const sortedInquiries = useMemo(() => {
     const filtered = inquiries.filter(i => {
-      if (!showMineOnly) return true;
-      return i.assignedTo === user?.uid || (!i.assignedTo && i.createdBy === user?.uid);
+      // Filter by Mine/Everyone
+      const isMine = i.assignedTo === user?.uid || (!i.assignedTo && i.createdBy === user?.uid);
+      if (showMineOnly && !isMine) return false;
+
+      // Logic:
+      // 1. If Active (open/in_progress) -> Always show
+      // 2. If Completed -> Only show if it matches selectedMonth
+      const isActive = i.status === 'open' || i.status === 'in_progress';
+      if (isActive) return true;
+
+      return i.month === selectedMonth;
     });
 
     return [...filtered].sort((a, b) => {
@@ -78,7 +87,7 @@ export const InquiriesList = () => {
 
       return sortDirection === 'asc' ? comparison : -comparison;
     });
-  }, [inquiries, showMineOnly, user?.uid, sortField, sortDirection]);
+  }, [inquiries, showMineOnly, user?.uid, sortField, sortDirection, selectedMonth]);
 
   // Split into Active (Open + In Progress) and Completed
   const activeInquiries = sortedInquiries.filter(i => i.status === 'open' || i.status === 'in_progress');
@@ -116,7 +125,7 @@ export const InquiriesList = () => {
         </div>
 
         {/* Controls: Month Tabs & Sorting */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-neuro-base p-4 rounded-neuro-lg shadow-neuro-flat">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white/60 p-4 rounded-neuro-md shadow-neuro-pressed">
           {/* Month Tabs */}
           <div className="flex gap-2 flex-wrap">
             {months.map((month) => (
@@ -182,7 +191,7 @@ export const InquiriesList = () => {
                       animate={{ opacity: 1 }}
                       className="text-center py-12 text-neuro-muted italic bg-neuro-base/50 rounded-neuro-md border-2 border-dashed border-neuro-secondary/20"
                     >
-                      No active inquiries for this month.
+                      No active inquiries.
                     </motion.div>
                   ) : (
                     activeInquiries.map((inquiry) => (

@@ -57,6 +57,7 @@ export const Sidebar = () => {
           <NavLinkItem to="/dashboard">Dashboard</NavLinkItem>
           <NavLinkItem to="/applicants">Applicants</NavLinkItem>
           <NavLinkItem to="/inquiries">Inquiries</NavLinkItem>
+          <NavLinkItem to="/scheduler">Scheduler</NavLinkItem>
           <NavLinkItem to="/reports">Reports</NavLinkItem>
         </div>
       </nav>

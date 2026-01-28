@@ -1,0 +1,469 @@
+/**
+ * FullCalendar Base Styles
+ * Minimal required styles for FullCalendar v6 to render correctly
+ * Based on FullCalendar's structure
+ */
+
+.fc {
+  display: flex;
+  flex-direction: column;
+}
+
+.fc *,
+.fc *:before,
+.fc *:after {
+  box-sizing: border-box;
+}
+
+.fc table {
+  border-collapse: collapse;
+  border-spacing: 0;
+  font-size: 1em;
+}
+
+.fc th {
+  text-align: center;
+}
+
+.fc th,
+.fc td {
+  vertical-align: top;
+  padding: 0;
+}
+
+.fc a[data-navlink] {
+  cursor: pointer;
+}
+
+.fc-direction-ltr {
+  direction: ltr;
+  text-align: left;
+}
+
+.fc-direction-rtl {
+  direction: rtl;
+  text-align: right;
+}
+
+.fc-theme-standard td,
+.fc-theme-standard th {
+  border: 1px solid #ddd;
+}
+
+.fc-liquid-hack td,
+.fc-liquid-hack th {
+  position: relative;
+}
+
+/* Header Toolbar */
+.fc .fc-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.fc .fc-toolbar-chunk {
+  display: flex;
+  align-items: center;
+}
+
+.fc .fc-toolbar-title {
+  font-size: 1.75em;
+  margin: 0;
+}
+
+.fc .fc-button {
+  display: inline-block;
+  font-weight: 400;
+  text-align: center;
+  vertical-align: middle;
+  user-select: none;
+  background-color: transparent;
+  border: 1px solid transparent;
+  padding: 0.4em 0.65em;
+  font-size: 1em;
+  line-height: 1.5;
+  border-radius: 0.25em;
+}
+
+.fc .fc-button:hover {
+  text-decoration: none;
+}
+
+.fc .fc-button:focus {
+  outline: 0;
+  box-shadow: 0 0 0 0.2rem rgba(44, 62, 80, 0.25);
+}
+
+.fc .fc-button-primary {
+  color: #fff;
+  background-color: #2c3e50;
+  border-color: #2c3e50;
+}
+
+.fc .fc-button-primary:not(:disabled):active,
+.fc .fc-button-primary:not(:disabled).fc-button-active {
+  color: #fff;
+  background-color: #1e2b37;
+  border-color: #1a252f;
+}
+
+.fc .fc-button .fc-icon {
+  vertical-align: middle;
+  font-size: 1.5em;
+}
+
+.fc .fc-button-group {
+  position: relative;
+  display: inline-flex;
+  vertical-align: middle;
+}
+
+.fc .fc-button-group > .fc-button {
+  position: relative;
+  flex: 1 1 auto;
+}
+
+/* View Container */
+.fc .fc-view-harness {
+  flex-grow: 1;
+  position: relative;
+}
+
+.fc .fc-view-harness-active > .fc-view {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+}
+
+/* Scrollgrid */
+.fc .fc-scrollgrid {
+  border-collapse: separate;
+  border-right-width: 0;
+  border-bottom-width: 0;
+}
+
+.fc .fc-scrollgrid-liquid {
+  height: 100%;
+}
+
+.fc .fc-scrollgrid-section,
+.fc .fc-scrollgrid-section table,
+.fc .fc-scrollgrid-section > td {
+  height: 1px;
+}
+
+.fc .fc-scrollgrid-section-liquid > td {
+  height: 100%;
+}
+
+.fc .fc-scrollgrid-section > * {
+  border-top-width: 0;
+  border-left-width: 0;
+}
+
+.fc .fc-scrollgrid-section-header > *,
+.fc .fc-scrollgrid-section-footer > * {
+  border-bottom-width: 0;
+}
+
+/* Scroller */
+.fc-scroller {
+  overflow-y: auto;
+  overflow-x: hidden;
+  position: relative;
+}
+
+.fc-scroller-liquid {
+  height: 100%;
+}
+
+.fc-scroller-liquid-absolute {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  bottom: 0;
+}
+
+/* Day Grid */
+.fc .fc-daygrid-body {
+  position: relative;
+  z-index: 1;
+}
+
+.fc .fc-daygrid-day-frame {
+  position: relative;
+  min-height: 100%;
+}
+
+.fc .fc-daygrid-day-top {
+  display: flex;
+  flex-direction: row-reverse;
+}
+
+.fc .fc-day-other .fc-daygrid-day-top {
+  opacity: 0.3;
+}
+
+.fc .fc-daygrid-day-number {
+  position: relative;
+  z-index: 4;
+  padding: 4px;
+}
+
+.fc .fc-daygrid-day-events {
+  margin-top: 1px;
+}
+
+.fc .fc-daygrid-event-harness {
+  position: relative;
+}
+
+.fc .fc-daygrid-event {
+  position: relative;
+  white-space: nowrap;
+  border-radius: 3px;
+  font-size: 0.85em;
+  padding: 2px 3px;
+  margin: 1px 2px;
+}
+
+.fc .fc-daygrid-block-event {
+  display: block;
+}
+
+.fc .fc-daygrid-dot-event {
+  display: flex;
+  align-items: center;
+  padding: 2px 0;
+}
+
+.fc .fc-daygrid-dot-event .fc-event-time {
+  flex-shrink: 0;
+  font-weight: bold;
+}
+
+.fc .fc-daygrid-dot-event .fc-event-title {
+  font-weight: bold;
+  flex-grow: 1;
+  flex-shrink: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+/* Events */
+.fc-h-event {
+  display: block;
+  border: 1px solid #3788d8;
+  background-color: #3788d8;
+}
+
+.fc-h-event .fc-event-main {
+  color: #fff;
+}
+
+.fc .fc-event {
+  position: relative;
+  display: block;
+  font-size: 0.85em;
+  line-height: 1.4;
+  border-radius: 3px;
+  border: 1px solid #3788d8;
+}
+
+.fc .fc-event-main {
+  position: relative;
+  z-index: 2;
+}
+
+.fc .fc-event-main-frame {
+  position: relative;
+  display: flex;
+}
+
+.fc .fc-event-time {
+  overflow: hidden;
+}
+
+.fc .fc-event-title-container {
+  flex-grow: 1;
+  flex-shrink: 1;
+  min-width: 0;
+}
+
+.fc .fc-event-title {
+  display: inline-block;
+  vertical-align: top;
+  left: 0;
+  right: 0;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+/* Time Grid */
+.fc .fc-timegrid {
+  position: relative;
+  z-index: 1;
+}
+
+.fc .fc-timegrid-axis {
+  white-space: nowrap;
+}
+
+.fc .fc-timegrid-slot {
+  height: 1.5em;
+  border-bottom: 0;
+}
+
+.fc .fc-timegrid-slot-label {
+  vertical-align: middle;
+}
+
+.fc .fc-timegrid-slot-minor {
+  border-top-style: dotted;
+}
+
+.fc .fc-timegrid-event {
+  position: absolute;
+  border-radius: 3px;
+}
+
+.fc .fc-timegrid-event-harness {
+  position: absolute;
+}
+
+.fc .fc-timegrid-col-events {
+  position: relative;
+  z-index: 1;
+}
+
+.fc .fc-timegrid-now-indicator-container {
+  overflow: hidden;
+  position: absolute;
+  left: 0;
+  right: 0;
+}
+
+.fc .fc-timegrid-now-indicator-arrow {
+  margin-top: -5px;
+  border-style: solid;
+  border-width: 5px 0 5px 6px;
+  border-color: transparent;
+  border-left-color: red;
+}
+
+.fc .fc-timegrid-now-indicator-line {
+  border-top: 1px solid red;
+}
+
+/* Column Headers */
+.fc .fc-col-header-cell {
+  padding: 8px 4px;
+}
+
+.fc .fc-col-header-cell-cushion {
+  display: inline-block;
+  padding: 2px 4px;
+}
+
+/* Today Highlighting */
+.fc .fc-day-today {
+  background-color: rgba(255, 220, 40, 0.15);
+}
+
+/* More Link */
+.fc .fc-more-link {
+  position: relative;
+  display: block;
+  padding: 1px;
+  cursor: pointer;
+  color: inherit;
+}
+
+.fc .fc-more-link:hover {
+  text-decoration: underline;
+}
+
+/* Popover */
+.fc .fc-popover {
+  position: absolute;
+  z-index: 9999;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.fc .fc-popover-header {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  padding: 3px 4px;
+}
+
+.fc .fc-popover-title {
+  margin: 0 2px;
+}
+
+.fc .fc-popover-close {
+  cursor: pointer;
+  opacity: 0.65;
+  font-size: 1.1em;
+}
+
+/* List View */
+.fc-theme-standard .fc-list {
+  border: 1px solid #ddd;
+}
+
+.fc .fc-list-empty {
+  background-color: rgba(208, 208, 208, 0.3);
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.fc .fc-list-empty-cushion {
+  margin: 5em 0;
+}
+
+.fc .fc-list-table {
+  width: 100%;
+  border-style: hidden;
+}
+
+.fc .fc-list-event:hover td {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.fc .fc-list-event-graphic,
+.fc .fc-list-event-time {
+  white-space: nowrap;
+  width: 1px;
+}
+
+.fc .fc-list-event-dot {
+  display: inline-block;
+  box-sizing: content-box;
+  width: 0;
+  height: 0;
+  border: 5px solid #3788d8;
+  border-radius: 5px;
+}
+
+.fc .fc-list-event-title a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Misc */
+.fc .fc-cell-shaded,
+.fc .fc-day-disabled {
+  background-color: rgba(208, 208, 208, 0.3);
+}
+
+.fc-highlight {
+  background-color: rgba(188, 232, 241, 0.3);
+}

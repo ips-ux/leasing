@@ -27,7 +27,7 @@ export const Card = ({
 
   return (
     <motion.div
-      className={`rounded-neuro-lg shadow-neuro-flat p-5 ${priorityClass} ${hoverClass} ${className}`}
+      className={`rounded-neuro-md bg-white/60 shadow-neuro-pressed p-3 ${priorityClass} ${hoverClass} ${className}`}
       onClick={onClick}
       whileHover={hoverable || onClick ? { y: -2 } : undefined}
       transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}

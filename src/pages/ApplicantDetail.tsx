@@ -26,6 +26,7 @@ const getStatusBadge = (status: string) => {
   const variants: Record<string, 'high' | 'medium' | 'low' | 'success' | 'info'> = {
     in_progress: 'info',
     approved: 'success',
+    finalize_move_in: 'medium',
     completed: 'success',
     cancelled: 'high',
   };
@@ -152,6 +153,7 @@ export const ApplicantDetail = () => {
     const success = await updateApplicant(applicant.id, {
       promotedToResident: true,
       promotedToResidentAt: new Date() as any,
+      status: 'finalize_move_in',
     });
 
     if (!success) {

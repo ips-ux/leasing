@@ -78,7 +78,7 @@ export const WorkflowChecklist = ({
     return (
         <div className="space-y-6">
             {/* Progress Header */}
-            <div className="bg-white/10 backdrop-blur-sm border-[3px] border-black p-4">
+            <div className="rounded-neuro-md bg-white/60 shadow-neuro-pressed p-6">
                 <div className="flex justify-between items-center mb-3">
                     <h3 className="font-bold text-lg">Workflow Progress</h3>
                     <div className="text-right">
@@ -92,12 +92,13 @@ export const WorkflowChecklist = ({
                 </div>
 
                 {/* Progress Bar */}
-                <div className="h-4 bg-black/20 border-[2px] border-black overflow-hidden">
+                <div className="w-full h-4 bg-neuro-base rounded-full shadow-neuro-pressed p-1 mb-2">
                     <motion.div
-                        className="h-full bg-mint"
+                        className="h-full bg-neuro-primary rounded-full transition-all duration-500 shadow-neuro-flat"
                         initial={{ width: 0 }}
                         animate={{ width: `${progressPercentage}%` }}
                         transition={{ duration: 0.5, ease: 'easeOut' }}
+                        style={{ background: 'orange' }}
                     />
                 </div>
 

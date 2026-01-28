@@ -1,6 +1,6 @@
 import type { Timestamp } from 'firebase/firestore';
 
-export type ApplicantStatus = 'in_progress' | 'approved' | 'completed' | 'cancelled';
+export type ApplicantStatus = 'in_progress' | 'approved' | 'finalize_move_in' | 'completed' | 'cancelled';
 
 // Sub-step data for individual checkboxes/textboxes within a workflow step
 export interface SubStepData {

@@ -3,16 +3,16 @@ import { Card, Badge } from '../ui';
 
 interface DashboardMetricsProps {
   activeApplicants: number;
-  totalInquiries: number;
-  highPriorityInquiries: number;
+  openInquiries: number;
+  reservationsToday: number;
   monthlyMoveIns: number;
   loading: boolean;
 }
 
 export const DashboardMetrics = ({
   activeApplicants,
-  totalInquiries,
-  highPriorityInquiries,
+  openInquiries,
+  reservationsToday,
   monthlyMoveIns,
   loading
 }: DashboardMetricsProps) => {
@@ -38,24 +38,25 @@ export const DashboardMetrics = ({
         onClick={() => navigate('/inquiries')}
       >
         <div className="space-y-2">
-          <div className="text-sm font-semibold text-neuro-secondary">Total Inquiries</div>
+          <div className="text-sm font-semibold text-neuro-secondary">Open Inquiries</div>
           <div className="text-3xl font-bold font-mono">
-            {loading ? '-' : totalInquiries}
+            {loading ? '-' : openInquiries}
           </div>
-          <Badge variant="medium">All Inquiries</Badge>
+          <Badge variant="medium">Active</Badge>
         </div>
       </Card>
 
       <Card
-        className="cursor-pointer hover:shadow-neuro-hover transition-all duration-200"
-        onClick={() => navigate('/inquiries')}
+        className={`cursor-pointer hover:shadow-neuro-hover transition-all duration-200 ${reservationsToday > 0 ? 'bg-neuro-base' : ''
+          }`}
+        onClick={() => navigate('/scheduler')}
       >
         <div className="space-y-2">
-          <div className="text-sm font-semibold text-neuro-secondary">High Priority Inquiries</div>
+          <div className="text-sm font-semibold text-neuro-secondary">Reservations Today</div>
           <div className="text-3xl font-bold font-mono">
-            {loading ? '-' : highPriorityInquiries}
+            {loading ? '-' : reservationsToday}
           </div>
-          <Badge variant="high">Action Needed</Badge>
+          <Badge variant="high">Today</Badge>
         </div>
       </Card>
 

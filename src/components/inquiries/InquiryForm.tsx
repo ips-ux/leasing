@@ -135,19 +135,21 @@ export const InquiryForm = ({ initialData, onSubmit, onChange, mode }: InquiryFo
                 </div>
 
                 {/* Status Toggle */}
-                <div className="flex flex-col gap-1.5">
-                    <span className="text-xs font-bold uppercase text-neuro-muted ml-1">Status</span>
-                    <Toggle
-                        value={formData.status !== 'completed'}
-                        onChange={(val) => {
-                            const newData = { ...formData, status: (val ? 'open' : 'completed') as any };
-                            setFormData(newData);
-                            onChange?.(newData);
-                        }}
-                        leftIcon={<FontAwesomeIcon icon={faClipboardRegular} />}
-                        rightIcon={<FontAwesomeIcon icon={faClipboardCheck} />}
-                    />
-                </div>
+                {mode === 'edit' && (
+                    <div className="flex flex-col gap-1.5">
+                        <span className="text-xs font-bold uppercase text-neuro-muted ml-1">Status</span>
+                        <Toggle
+                            value={formData.status !== 'completed'}
+                            onChange={(val) => {
+                                const newData = { ...formData, status: (val ? 'open' : 'completed') as any };
+                                setFormData(newData);
+                                onChange?.(newData);
+                            }}
+                            leftIcon={<FontAwesomeIcon icon={faClipboardRegular} />}
+                            rightIcon={<FontAwesomeIcon icon={faClipboardCheck} />}
+                        />
+                    </div>
+                )}
             </div>
 
             {/* Description */}

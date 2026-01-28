@@ -78,7 +78,7 @@ export const InquiryListItem = ({ inquiry, onUpdate, onClick }: InquiryListItemP
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95 }}
             onClick={onClick}
-            className="group relative grid grid-cols-12 gap-4 items-center p-4 bg-neuro-base rounded-neuro-md shadow-neuro-flat hover:shadow-neuro-raised transition-all cursor-pointer mb-3"
+            className="group relative grid grid-cols-12 gap-4 items-center p-4 bg-white/60 rounded-neuro-md shadow-neuro-pressed hover:shadow-neuro-raised transition-all cursor-pointer mb-3"
         >
             {/* Date Box - Col 1 */}
             <div className="col-span-12 md:col-span-1 flex justify-center">

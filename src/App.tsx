@@ -7,6 +7,8 @@ import {
   ApplicantDetail,
   InquiriesList,
   Reports,
+  Scheduler,
+  DataMigration,
 } from './pages';
 import { Layout, ProtectedRoute } from './components/layout';
 
@@ -105,6 +107,28 @@ function App() {
             <ProtectedRoute>
               <Layout>
                 <Reports />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/scheduler"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <Scheduler />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/data-migration"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <DataMigration />
               </Layout>
             </ProtectedRoute>
           }

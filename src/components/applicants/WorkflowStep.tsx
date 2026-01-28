@@ -67,8 +67,7 @@ export const WorkflowStep = ({
         <motion.div
             id={`workflow-step-${stepConfig.step}`}
             className={`
-        relative bg-white/10 backdrop-blur-sm border-[3px] border-black
-        border-l-[6px] ${getBorderClass()}
+        rounded-neuro-md bg-white/60 shadow-neuro-pressed p-3
         ${!isEnabled ? 'opacity-40 grayscale-[0.7]' : ''}
         ${isLocked ? 'opacity-70 bg-black/5' : ''}
         transition-all duration-200

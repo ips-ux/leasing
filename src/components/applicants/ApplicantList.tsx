@@ -33,7 +33,7 @@ export const ApplicantList = ({ applicants, loading }: ApplicantListProps) => {
 
     // Filter by Tab
     if (activeTab === 'in_progress') {
-      result = result.filter(app => app["2_Tracking"].status === 'in_progress' || app["2_Tracking"].status === 'approved');
+      result = result.filter(app => app["2_Tracking"].status === 'in_progress' || app["2_Tracking"].status === 'approved' || app["2_Tracking"].status === 'finalize_move_in');
     } else if (activeTab === 'completed') {
       result = result.filter(app => app["2_Tracking"].status === 'completed');
     } else if (activeTab === 'cancelled') {
@@ -100,29 +100,29 @@ export const ApplicantList = ({ applicants, loading }: ApplicantListProps) => {
       <div className="flex gap-4 pb-2">
         <button
           onClick={() => setActiveTab('in_progress')}
-          className={`px-6 py-2 font-bold rounded-neuro-md transition-all ${activeTab === 'in_progress' ? 'bg-neuro-base text-neuro-primary shadow-neuro-pressed' : 'bg-neuro-base text-neuro-secondary shadow-neuro-flat hover:text-neuro-primary hover:shadow-neuro-raised'
+          className={`px-6 py-2 font-bold rounded-neuro-md transition-all ${activeTab === 'in_progress' ? 'bg-neuro-base text-neuro-primary shadow-neuro-pressed' : 'bg-white/60 text-neuro-secondary shadow-neuro-flat hover:text-neuro-primary hover:shadow-neuro-raised'
             }`}
         >
           In Progress
         </button>
         <button
           onClick={() => setActiveTab('completed')}
-          className={`px-6 py-2 font-bold rounded-neuro-md transition-all ${activeTab === 'completed' ? 'bg-neuro-base text-neuro-primary shadow-neuro-pressed' : 'bg-neuro-base text-neuro-secondary shadow-neuro-flat hover:text-neuro-primary hover:shadow-neuro-raised'
+          className={`px-6 py-2 font-bold rounded-neuro-md transition-all ${activeTab === 'completed' ? 'bg-neuro-base text-neuro-primary shadow-neuro-pressed' : 'bg-white/60 text-neuro-secondary shadow-neuro-flat hover:text-neuro-primary hover:shadow-neuro-raised'
             }`}
         >
           Complete
         </button>
         <button
           onClick={() => setActiveTab('cancelled')}
-          className={`px-6 py-2 font-bold rounded-neuro-md transition-all ${activeTab === 'cancelled' ? 'bg-neuro-base text-neuro-primary shadow-neuro-pressed' : 'bg-neuro-base text-neuro-secondary shadow-neuro-flat hover:text-neuro-primary hover:shadow-neuro-raised'
+          className={`px-6 py-2 font-bold rounded-neuro-md transition-all ${activeTab === 'cancelled' ? 'bg-neuro-base text-neuro-primary shadow-neuro-pressed' : 'bg-white/60 text-neuro-secondary shadow-neuro-flat hover:text-neuro-primary hover:shadow-neuro-raised'
             }`}
         >
           Cancelled
         </button>
       </div>
 
-      {/* Controls Header */}
-      <div className="flex flex-col md:flex-row gap-4 justify-between items-end md:items-center bg-neuro-base p-4 rounded-neuro-lg shadow-neuro-flat -mx-4 md:mx-0">
+      {/* Search & Filter Header */}
+      <div className="flex flex-col md:flex-row gap-4 justify-between items-end md:items-center rounded-neuro-md bg-white/60 shadow-neuro-pressed p-4 -mx-4 md:mx-0">
         <div className="w-full md:w-64">
           <Input
             label=""
