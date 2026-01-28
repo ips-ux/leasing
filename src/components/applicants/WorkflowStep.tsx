@@ -43,13 +43,6 @@ export const WorkflowStep = ({
 
     const totalCount = stepConfig.subSteps.length;
 
-    // Determine border color
-    const getBorderClass = () => {
-        if (stepComplete) return 'border-l-mint';
-        if (isEnabled) return 'border-l-lavender';
-        return 'border-l-black/30';
-    };
-
     // Determine badge variant
     const getBadgeVariant = (): 'success' | 'info' | 'low' => {
         if (stepComplete) return 'success';
