@@ -134,7 +134,7 @@ export const Dashboard = () => {
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
             <div>
               <h1 className="text-4xl font-bold mb-2">Dashboard</h1>
-              <p className="text-neuro-secondary">Welcome back, {extractFirstName(user?.email)}!</p>
+              <p className="text-neuro-secondary">Welcome back, {user?.Agent_Name?.split(' ')[0] || extractFirstName(user?.email)}!</p>
             </div>
 
             {/* Mine/Everyone Selector */}

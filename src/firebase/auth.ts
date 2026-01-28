@@ -3,6 +3,9 @@ import {
   signInWithEmailAndPassword,
   signOut as firebaseSignOut,
   updateProfile,
+  updatePassword,
+  reauthenticateWithCredential,
+  EmailAuthProvider,
 } from 'firebase/auth';
 import type { User } from 'firebase/auth';
 import { auth } from './config';
@@ -24,4 +27,19 @@ export const signOut = async (): Promise<void> => {
 
 export const getCurrentUser = (): User | null => {
   return auth.currentUser;
+};
+
+export const changePassword = async (currentPassword: string, newPassword: string): Promise<void> => {
+  const user = auth.currentUser;
+
+  if (!user || !user.email) {
+    throw new Error('No authenticated user found');
+  }
+
+  // Re-authenticate user with current password
+  const credential = EmailAuthProvider.credential(user.email, currentPassword);
+  await reauthenticateWithCredential(user, credential);
+
+  // Update to new password
+  await updatePassword(user, newPassword);
 };

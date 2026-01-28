@@ -8,6 +8,7 @@ import {
   setDoc,
   getDocs,
   query,
+  where,
   orderBy,
   serverTimestamp,
   Timestamp,
@@ -19,7 +20,7 @@ import type { Applicant, ApplicantFormData, SubStepData } from '../types/applica
 import type { Inquiry, InquiryFormData } from '../types/inquiry';
 import type { User } from '../types/user';
 import { initializeWorkflow, WORKFLOW_STEPS, isStepComplete, getApplicantTags } from '../lib/workflow-steps';
-import { extractFirstName } from '../utils/user';
+import { extractFirstName, extractAgentName } from '../utils/user';
 
 // ==================== HELPER FUNCTIONS ====================
 
@@ -377,6 +378,100 @@ export const deleteInquiry = async (id: string): Promise<void> => {
 
 // ==================== USERS ====================
 
+/**
+ * Find a user by email address (excluding archived users)
+ */
+const findUserByEmail = async (email: string | null): Promise<User | null> => {
+  if (!email) return null;
+
+  const usersRef = collection(db, 'users');
+  const q = query(usersRef, where('email', '==', email));
+  const querySnapshot = await getDocs(q);
+
+  if (querySnapshot.empty) return null;
+
+  // Filter out archived users
+  const activeUsers = querySnapshot.docs.filter(doc => !doc.data().archived);
+  if (activeUsers.length === 0) return null;
+
+  return activeUsers[0].data() as User;
+};
+
+/**
+ * Migrate all assignments from old UID to new UID
+ * This handles the case where a Firebase user is deleted and recreated with the same email
+ */
+const migrateUserAssignments = async (oldUid: string, newUid: string): Promise<void> => {
+  console.log(`🔄 Migrating assignments from ${oldUid} to ${newUid}`);
+
+  let migratedCount = 0;
+
+  // 1. Migrate applicant assignments (assignedTo)
+  const applicantsRef = collection(db, 'applicants');
+  const assignedQuery = query(applicantsRef, where('2_Tracking.assignedTo', '==', oldUid));
+  const assignedDocs = await getDocs(assignedQuery);
+
+  for (const docSnap of assignedDocs.docs) {
+    await updateDoc(docSnap.ref, {
+      '2_Tracking.assignedTo': newUid,
+      '2_Tracking.updatedAt': serverTimestamp(),
+    });
+    migratedCount++;
+  }
+  console.log(`  ✓ Migrated ${assignedDocs.size} applicants (assignedTo)`);
+
+  // 2. Migrate applicant creations (createdBy)
+  const createdQuery = query(applicantsRef, where('2_Tracking.createdBy', '==', oldUid));
+  const createdDocs = await getDocs(createdQuery);
+
+  for (const docSnap of createdDocs.docs) {
+    await updateDoc(docSnap.ref, {
+      '2_Tracking.createdBy': newUid,
+      '2_Tracking.updatedAt': serverTimestamp(),
+    });
+    migratedCount++;
+  }
+  console.log(`  ✓ Migrated ${createdDocs.size} applicants (createdBy)`);
+
+  // 3. Migrate inquiry assignments (assignedTo)
+  const inquiriesRef = collection(db, 'inquiries');
+  const inquiryAssignedQuery = query(inquiriesRef, where('assignedTo', '==', oldUid));
+  const inquiryAssignedDocs = await getDocs(inquiryAssignedQuery);
+
+  for (const docSnap of inquiryAssignedDocs.docs) {
+    await updateDoc(docSnap.ref, {
+      assignedTo: newUid,
+      updatedAt: serverTimestamp(),
+    });
+    migratedCount++;
+  }
+  console.log(`  ✓ Migrated ${inquiryAssignedDocs.size} inquiries (assignedTo)`);
+
+  // 4. Migrate inquiry creations (createdBy)
+  const inquiryCreatedQuery = query(inquiriesRef, where('createdBy', '==', oldUid));
+  const inquiryCreatedDocs = await getDocs(inquiryCreatedQuery);
+
+  for (const docSnap of inquiryCreatedDocs.docs) {
+    await updateDoc(docSnap.ref, {
+      createdBy: newUid,
+      updatedAt: serverTimestamp(),
+    });
+    migratedCount++;
+  }
+  console.log(`  ✓ Migrated ${inquiryCreatedDocs.size} inquiries (createdBy)`);
+
+  // 5. Archive old user document
+  const oldUserRef = doc(db, 'users', oldUid);
+  await updateDoc(oldUserRef, {
+    archived: true,
+    migratedTo: newUid,
+    migratedAt: serverTimestamp(),
+  });
+  console.log(`  ✓ Archived old user record`);
+
+  console.log(`✅ Migration complete: ${migratedCount} total assignments migrated`);
+};
+
 export const syncUserToFirestore = async (user: User): Promise<void> => {
   const userRef = doc(db, 'users', user.uid);
   const userSnap = await getDoc(userRef);
@@ -385,21 +480,35 @@ export const syncUserToFirestore = async (user: User): Promise<void> => {
     uid: user.uid,
     email: user.email,
     displayName: user.displayName || extractFirstName(user.email),
+    Agent_Name: user.Agent_Name || extractAgentName(user.email),
     lastLogin: serverTimestamp(),
     lastActive: serverTimestamp(),
     updatedAt: serverTimestamp(),
   };
 
   if (!userSnap.exists()) {
+    // New user - check if email exists with different UID (user was recreated)
+    const existingUser = await findUserByEmail(user.email);
+
+    if (existingUser && existingUser.uid !== user.uid) {
+      // Email exists with different UID - migrate assignments
+      console.log(`⚠️ Detected duplicate email: ${user.email}`);
+      console.log(`   Old UID: ${existingUser.uid}`);
+      console.log(`   New UID: ${user.uid}`);
+      await migrateUserAssignments(existingUser.uid, user.uid);
+    }
+
+    // Create new user document
     await setDoc(userRef, {
       ...userData,
       createdAt: serverTimestamp(),
     });
   } else {
-    // Only update fields that might have changed or need refreshing
+    // Existing user - update fields
     await updateDoc(userRef, {
       email: userData.email,
       displayName: userData.displayName,
+      Agent_Name: userData.Agent_Name,
       lastActive: userData.lastActive,
       updatedAt: userData.updatedAt,
     });

@@ -6,7 +6,7 @@ import { WorkflowChecklist } from '../components/applicants/WorkflowChecklist';
 import { useApplicant } from '../hooks/useApplicant';
 import { useApplicants } from '../hooks/useApplicants';
 import { useUsers } from '../hooks/useUsers';
-import { extractFirstName } from '../utils/user';
+import { extractAgentName } from '../utils/user';
 import { getLeaseInfoForCard } from '../lib/workflow-steps';
 import type { Timestamp } from 'firebase/firestore';
 
@@ -49,7 +49,7 @@ export const ApplicantDetail = () => {
 
   const agentOptions = useMemo(() => {
     return users.map((u) => ({
-      label: u.displayName || extractFirstName(u.email),
+      label: u.Agent_Name || extractAgentName(u.email),
       value: u.uid,
     }));
   }, [users]);
@@ -370,8 +370,8 @@ export const ApplicantDetail = () => {
               <div className="mb-4 pb-4 border-b-2 border-black/20">
                 <p className="text-xs font-mono text-black/50 uppercase mb-1">Assigned To</p>
                 <p className="text-lg font-bold text-lavender">
-                  {users.find(u => u.uid === tracking.assignedTo)?.displayName ||
-                    extractFirstName(users.find(u => u.uid === tracking.assignedTo)?.email) ||
+                  {users.find(u => u.uid === tracking.assignedTo)?.Agent_Name ||
+                    extractAgentName(users.find(u => u.uid === tracking.assignedTo)?.email) ||
                     'Not Set'}
                 </p>
               </div>

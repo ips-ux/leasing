@@ -4,7 +4,7 @@ import { getLeaseInfoForCard, WORKFLOW_STEPS } from '../../lib/workflow-steps';
 import type { Timestamp } from 'firebase/firestore';
 import { QuickActionSubStep } from './QuickActionSubStep';
 import { useUsers } from '../../hooks/useUsers';
-import { extractFirstName } from '../../utils/user';
+import { extractAgentName } from '../../utils/user';
 
 // Format date by extracting UTC components to avoid timezone issues
 const formatDateUTC = (timestamp: Timestamp | null): string => {
@@ -89,7 +89,7 @@ export const ApplicantCard = ({ applicant, onClick }: ApplicantCardProps) => {
                   const agentId = tracking.assignedTo;
                   if (!agentId) return 'N/A';
                   const agent = users.find(u => u.uid === agentId);
-                  return agent ? extractFirstName(agent.email) : 'Unknown';
+                  return agent ? (agent.Agent_Name || extractAgentName(agent.email)) : 'Unknown';
                 })()}
               </span>
             </div>

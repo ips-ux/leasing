@@ -3,7 +3,7 @@ import { Button, Input, DatePicker, Select, Modal, Checkbox } from '../ui';
 import { useApplicants } from '../../hooks/useApplicants';
 import { useUsers } from '../../hooks/useUsers';
 import { useAuth } from '../../hooks/useAuth';
-import { extractFirstName } from '../../utils/user';
+import { extractAgentName } from '../../utils/user';
 import type { ApplicantFormData } from '../../types/applicant';
 
 interface NewApplicantModalProps {
@@ -31,7 +31,7 @@ export const NewApplicantModal = ({ isOpen, onClose, onSuccess }: NewApplicantMo
 
   const agentOptions = useMemo(() => {
     return users.map((u) => ({
-      label: u.displayName || extractFirstName(u.email),
+      label: u.Agent_Name || extractAgentName(u.email),
       value: u.uid,
     }));
   }, [users]);

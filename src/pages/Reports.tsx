@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useApplicants } from '../hooks/useApplicants';
 import { useUsers } from '../hooks/useUsers';
-import { extractFirstName } from '../utils/user';
+import { extractAgentName } from '../utils/user';
 import { Card } from '../components/ui';
 import { format, subMonths, setDate, isAfter, isBefore, isEqual, startOfDay, endOfDay, startOfMonth, endOfMonth } from 'date-fns';
 import { Timestamp } from 'firebase/firestore';
@@ -120,7 +120,7 @@ export const Reports = () => {
                             const agentId = app['2_Tracking'].assignedTo;
                             if (!agentId) return 'N/A';
                             const agent = users.find(u => u.uid === agentId);
-                            return agent ? extractFirstName(agent.email) : 'Unknown';
+                            return agent ? (agent.Agent_Name || extractAgentName(agent.email)) : 'Unknown';
                           })()}
                         </td>
                         <td className="py-3 px-4 border-r-2 border-black/10">

@@ -5,7 +5,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faClipboard as faClipboardRegular } from '@fortawesome/free-regular-svg-icons';
 import { faClipboardCheck, faHouseChimneyUser } from '@fortawesome/free-solid-svg-icons';
 import { useUsers } from '../../hooks/useUsers';
-import { extractFirstName } from '../../utils/user';
+import { extractAgentName } from '../../utils/user';
 import type { InquiryFormData } from '../../types/inquiry';
 
 interface InquiryFormProps {
@@ -27,7 +27,7 @@ export const InquiryForm = ({ initialData, onSubmit, onChange, mode }: InquiryFo
 
     const agentOptions = useMemo(() => {
         return users.map((u) => ({
-            label: u.displayName || extractFirstName(u.email),
+            label: u.Agent_Name || extractAgentName(u.email),
             value: u.uid,
         }));
     }, [users]);

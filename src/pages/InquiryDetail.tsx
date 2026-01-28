@@ -5,7 +5,7 @@ import { Card, Button, Badge, Input, Modal, Select, Checkbox, Textarea, Toggle }
 import { useInquiry } from '../hooks/useInquiry';
 import { useInquiries } from '../hooks/useInquiries';
 import { useUsers } from '../hooks/useUsers';
-import { extractFirstName } from '../utils/user';
+import { extractAgentName } from '../utils/user';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faClipboard as faClipboardRegular } from '@fortawesome/free-regular-svg-icons';
 import { faClipboardCheck } from '@fortawesome/free-solid-svg-icons';
@@ -60,7 +60,7 @@ export const InquiryDetail = () => {
 
   const agentOptions = useMemo(() => {
     return users.map((u) => ({
-      label: u.displayName || extractFirstName(u.email),
+      label: u.Agent_Name || extractAgentName(u.email),
       value: u.uid,
     }));
   }, [users]);
