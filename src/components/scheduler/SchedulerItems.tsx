@@ -21,8 +21,8 @@ interface EditModalProps {
   onSave: (item: SchedulerItem) => Promise<void>;
 }
 
-const getResourceIcon = (resourceType: ResourceType): string => {
-  switch (resourceType) {
+const getResourceIcon = (resourceType: ResourceType | string): string => {
+  switch (resourceType?.toUpperCase()) {
     case 'GUEST_SUITE':
       return '🏠';
     case 'SKY_LOUNGE':
@@ -34,8 +34,8 @@ const getResourceIcon = (resourceType: ResourceType): string => {
   }
 };
 
-const getResourceColor = (resourceType: ResourceType): string => {
-  switch (resourceType) {
+const getResourceColor = (resourceType: ResourceType | string): string => {
+  switch (resourceType?.toUpperCase()) {
     case 'GUEST_SUITE':
       return 'border-l-4 border-neuro-yellow';
     case 'SKY_LOUNGE':
@@ -47,8 +47,9 @@ const getResourceColor = (resourceType: ResourceType): string => {
   }
 };
 
-const getServiceStatusClass = (status: ServiceStatus): string => {
-  return status === 'In Service'
+const getServiceStatusClass = (status: ServiceStatus | string): string => {
+  const normalizedStatus = status?.toLowerCase().replace(/_/g, ' ');
+  return normalizedStatus === 'in service'
     ? 'bg-neuro-mint text-green-800'
     : 'bg-neuro-peach text-red-800';
 };
@@ -220,7 +221,7 @@ export const SchedulerItems = ({ items }: SchedulerItemsProps) => {
     }
 
     if (typeFilter !== 'all') {
-      filtered = filtered.filter((item) => item.resource_type === typeFilter);
+      filtered = filtered.filter((item) => item.resource_type?.toUpperCase() === typeFilter.toUpperCase());
     }
 
     return filtered.sort((a, b) => {

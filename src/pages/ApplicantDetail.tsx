@@ -7,18 +7,17 @@ import { useApplicant } from '../hooks/useApplicant';
 import { useApplicants } from '../hooks/useApplicants';
 import { useUsers } from '../hooks/useUsers';
 import { extractAgentName } from '../utils/user';
+import { timestampToLocalDate } from '../utils/date';
 import { getLeaseInfoForCard } from '../lib/workflow-steps';
 import type { Timestamp } from 'firebase/firestore';
 
 const formatDate = (timestamp: Timestamp | null): string => {
   if (!timestamp) return 'N/A';
-  const date = timestamp.toDate();
-  // Dates are stored at midnight UTC, so format them as UTC to get the correct date
+  const date = timestampToLocalDate(timestamp);
   return date.toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
-    timeZone: 'UTC',
   });
 };
 
@@ -75,24 +74,12 @@ export const ApplicantDetail = () => {
   const initEditData = () => {
     if (!applicant) return;
     const profile = applicant["1_Profile"];
-    // Convert Firestore Timestamps (stored at midnight UTC) to local Date objects for the date picker
-    const dateAppliedUTC = profile.dateApplied.toDate();
-    const moveInDateUTC = profile.moveInDate.toDate();
 
     setEditData({
       name: profile.name,
       unit: profile.unit,
-      // Create date in local timezone with the same year/month/day as the UTC date
-      dateApplied: new Date(
-        dateAppliedUTC.getUTCFullYear(),
-        dateAppliedUTC.getUTCMonth(),
-        dateAppliedUTC.getUTCDate()
-      ),
-      moveInDate: new Date(
-        moveInDateUTC.getUTCFullYear(),
-        moveInDateUTC.getUTCMonth(),
-        moveInDateUTC.getUTCDate()
-      ),
+      dateApplied: timestampToLocalDate(profile.dateApplied),
+      moveInDate: timestampToLocalDate(profile.moveInDate),
       concessionApplied: profile.concessionApplied,
       assignedTo: applicant['2_Tracking'].assignedTo || '',
     });

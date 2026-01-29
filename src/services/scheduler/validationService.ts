@@ -43,12 +43,13 @@ export async function validateReservation(
     errors.push('Start time must be before end time');
   }
 
-  // Type-specific validations
-  if (data.resource_type === 'GUEST_SUITE') {
+  // Type-specific validations (handle case-insensitive resource types)
+  const resourceType = data.resource_type?.toUpperCase();
+  if (resourceType === 'GUEST_SUITE') {
     await validateGuestSuite(data, startDateTime, endDateTime, errors, editingId);
-  } else if (data.resource_type === 'SKY_LOUNGE') {
+  } else if (resourceType === 'SKY_LOUNGE') {
     await validateSkyLounge(data, startDateTime, errors, editingId);
-  } else if (data.resource_type === 'GEAR_SHED') {
+  } else if (resourceType === 'GEAR_SHED') {
     await validateGearShed(data, startDateTime, endDateTime, errors, editingId);
   }
 
@@ -160,10 +161,9 @@ async function checkReservationOverlap(
   endTime: string,
   editingId?: string
 ): Promise<boolean> {
+  // Query all scheduled reservations (Firebase is case-sensitive, so we filter client-side)
   const q = query(
     collection(db, 'reservations'),
-    where('resource_type', '==', resourceType),
-    where('item', '==', itemName),
     where('status', '==', 'Scheduled')
   );
 
@@ -175,6 +175,17 @@ async function checkReservationOverlap(
     }
 
     const reservation = doc.data();
+
+    // Case-insensitive resource type check
+    if (reservation.resource_type?.toUpperCase() !== resourceType.toUpperCase()) {
+      continue;
+    }
+
+    // Item name check
+    if (reservation.item !== itemName) {
+      continue;
+    }
+
     const resStart = new Date(reservation.start_time);
     const resEnd = new Date(reservation.end_time);
     const newStart = new Date(startTime);
@@ -196,9 +207,9 @@ async function checkSkyLoungeAllDayLock(
   dateStr: string,
   editingId?: string
 ): Promise<boolean> {
+  // Query all scheduled reservations (filter client-side for case-insensitivity)
   const q = query(
     collection(db, 'reservations'),
-    where('resource_type', '==', 'SKY_LOUNGE'),
     where('status', '==', 'Scheduled')
   );
 
@@ -210,6 +221,12 @@ async function checkSkyLoungeAllDayLock(
     }
 
     const reservation = doc.data();
+
+    // Case-insensitive resource type check
+    if (reservation.resource_type?.toUpperCase() !== 'SKY_LOUNGE') {
+      continue;
+    }
+
     const resDateStr = reservation.start_time.split('T')[0];
 
     // Check if the reservation is on the same date
@@ -230,9 +247,9 @@ async function checkItemAvailability(
   endTime: string,
   editingId?: string
 ): Promise<boolean> {
+  // Query all scheduled reservations (filter client-side for case-insensitivity)
   const q = query(
     collection(db, 'reservations'),
-    where('resource_type', '==', 'GEAR_SHED'),
     where('status', '==', 'Scheduled')
   );
 
@@ -244,6 +261,11 @@ async function checkItemAvailability(
     }
 
     const reservation = doc.data();
+
+    // Case-insensitive resource type check
+    if (reservation.resource_type?.toUpperCase() !== 'GEAR_SHED') {
+      continue;
+    }
 
     // Check if this reservation includes the item we're checking
     const items = reservation.items || [];

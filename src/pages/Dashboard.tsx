@@ -5,9 +5,9 @@ import { useApplicants } from '../hooks/useApplicants';
 import { useInquiries } from '../hooks/useInquiries';
 import { useReservations } from '../hooks/useReservations';
 import { extractFirstName, getSchedulerStaffName } from '../utils/user';
+import { timestampToLocalDate } from '../utils/date';
 import { getCookie, setCookie } from '../utils/cookies';
 import { isAfter, isBefore, isEqual, startOfDay, endOfDay, startOfMonth, endOfMonth } from 'date-fns';
-import { Timestamp } from 'firebase/firestore';
 import { DashboardToDoColumn } from '../components/dashboard/DashboardToDoColumn';
 import { DashboardActivityColumn } from '../components/dashboard/DashboardActivityColumn';
 import { DashboardMetrics } from '../components/dashboard/DashboardMetrics';
@@ -106,9 +106,7 @@ export const Dashboard = () => {
     if (a['2_Tracking'].status === 'cancelled') return false;
     if (!a['1_Profile'].moveInDate) return false;
 
-    const moveInDate = a['1_Profile'].moveInDate instanceof Timestamp
-      ? a['1_Profile'].moveInDate.toDate()
-      : new Date(a['1_Profile'].moveInDate);
+    const moveInDate = timestampToLocalDate(a['1_Profile'].moveInDate);
 
     return (isAfter(moveInDate, currentMonthStart) || isEqual(moveInDate, currentMonthStart)) &&
       (isBefore(moveInDate, currentMonthEnd) || isEqual(moveInDate, currentMonthEnd));

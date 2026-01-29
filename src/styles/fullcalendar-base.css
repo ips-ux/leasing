@@ -194,9 +194,27 @@
   z-index: 1;
 }
 
+/* Important: This enables proper table layout for multi-day events */
+.fc .fc-daygrid-body-balanced .fc-daygrid-day-events {
+  position: absolute;
+  left: 0;
+  right: 0;
+}
+
+.fc .fc-daygrid-body-unbalanced .fc-daygrid-day-events {
+  position: relative;
+  min-height: 2em;
+}
+
+.fc .fc-daygrid-body-natural .fc-daygrid-day-events {
+  margin-bottom: 1em;
+}
+
 .fc .fc-daygrid-day-frame {
   position: relative;
   min-height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .fc .fc-daygrid-day-top {
@@ -215,11 +233,25 @@
 }
 
 .fc .fc-daygrid-day-events {
+  flex-grow: 1;
   margin-top: 1px;
+}
+
+.fc .fc-daygrid-day-bottom {
+  font-size: 0.85em;
+  padding: 2px 3px 0;
 }
 
 .fc .fc-daygrid-event-harness {
   position: relative;
+}
+
+/* Multi-day event positioning */
+.fc .fc-daygrid-event-harness-abs {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
 }
 
 .fc .fc-daygrid-event {
@@ -228,11 +260,16 @@
   border-radius: 3px;
   font-size: 0.85em;
   padding: 2px 3px;
-  margin: 1px 2px;
+  margin: 1px 2px 0;
 }
 
 .fc .fc-daygrid-block-event {
   display: block;
+}
+
+.fc .fc-daygrid-block-event .fc-event-time,
+.fc .fc-daygrid-block-event .fc-event-title {
+  padding: 1px;
 }
 
 .fc .fc-daygrid-dot-event {
@@ -263,6 +300,60 @@
 
 .fc-h-event .fc-event-main {
   color: #fff;
+}
+
+/* Multi-day event spanning styles */
+.fc .fc-daygrid-event-harness-abs {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+}
+
+.fc .fc-daygrid-bg-harness {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+}
+
+.fc-direction-ltr .fc-daygrid-event-harness-abs {
+  right: 0;
+}
+
+/* Multi-day events that span across rows */
+.fc-daygrid-event-harness + .fc-daygrid-event-harness {
+  margin-top: 1px;
+}
+
+/* Ensure multi-day events display as continuous bars */
+.fc-h-event .fc-event-main-frame {
+  display: flex;
+  overflow: hidden;
+}
+
+.fc-h-event.fc-event-start {
+  border-top-left-radius: 3px;
+  border-bottom-left-radius: 3px;
+}
+
+.fc-h-event.fc-event-end {
+  border-top-right-radius: 3px;
+  border-bottom-right-radius: 3px;
+}
+
+/* Remove border radius for middle segments */
+.fc-h-event:not(.fc-event-start) {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  border-left: none;
+  margin-left: 0;
+}
+
+.fc-h-event:not(.fc-event-end) {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+  border-right: none;
+  margin-right: 0;
 }
 
 .fc .fc-event {

@@ -5,14 +5,15 @@ import type { Timestamp } from 'firebase/firestore';
 import { QuickActionSubStep } from './QuickActionSubStep';
 import { useUsers } from '../../hooks/useUsers';
 import { extractAgentName } from '../../utils/user';
+import { timestampToLocalDate } from '../../utils/date';
 
-// Format date by extracting UTC components to avoid timezone issues
+// Format date using the local date conversion utility
 const formatDateUTC = (timestamp: Timestamp | null): string => {
   if (!timestamp) return '-';
-  const date = timestamp.toDate();
-  const month = String(date.getUTCMonth() + 1).padStart(2, '0');
-  const day = String(date.getUTCDate()).padStart(2, '0');
-  const year = String(date.getUTCFullYear()).slice(-2);
+  const date = timestampToLocalDate(timestamp);
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const year = String(date.getFullYear()).slice(-2);
   return `${month}/${day}/${year}`;
 };
 

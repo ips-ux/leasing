@@ -8,8 +8,8 @@ import '../../styles/fullcalendar-base.css';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
-import interactionPlugin from '@fullcalendar/interaction';
-import type { EventInput, EventClickArg, DateSelectArg } from '@fullcalendar/core';
+import interactionPlugin, { type DateClickArg } from '@fullcalendar/interaction';
+import type { EventInput, EventClickArg } from '@fullcalendar/core';
 import type { Reservation, ResourceType } from '../../types/scheduler';
 
 interface SchedulerCalendarProps {
@@ -19,9 +19,9 @@ interface SchedulerCalendarProps {
   onDatesSet?: (arg: any) => void;
 }
 
-// Color mapping for resource types
-const getEventColor = (resourceType: ResourceType): string => {
-  switch (resourceType) {
+// Color mapping for resource types (handles legacy lowercase format)
+const getEventColor = (resourceType: ResourceType | string): string => {
+  switch (resourceType?.toUpperCase()) {
     case 'GUEST_SUITE':
       return '#F5EEC8'; // Yellow
     case 'SKY_LOUNGE':
@@ -43,6 +43,14 @@ export const SchedulerCalendar = forwardRef<FullCalendar, SchedulerCalendarProps
   onDateClick,
   onDatesSet,
 }, ref) => {
+  // Helper to format date as YYYY-MM-DD in local timezone
+  const formatDateLocal = (date: Date): string => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
   // Transform reservations into FullCalendar events
   const events = useMemo<EventInput[]>(() => {
     const eventList: EventInput[] = [];
@@ -52,14 +60,42 @@ export const SchedulerCalendar = forwardRef<FullCalendar, SchedulerCalendarProps
         return; // Skip cancelled reservations
       }
 
+      const startDate = new Date(res.start_time);
+      const endDate = new Date(res.end_time);
+
+      // Check if this is a multi-day event (different calendar dates)
+      const startDateStr = formatDateLocal(startDate);
+      const endDateStr = formatDateLocal(endDate);
+      const isMultiDay = startDateStr !== endDateStr;
+
+      // For multi-day events, FullCalendar's end date is exclusive
+      // We need to add 1 day to the end date so the event displays through the last day
+      // Use date-only strings (YYYY-MM-DD) so FullCalendar treats them as all-day spanning events
+      let displayStart: string;
+      let displayEnd: string;
+
+      if (isMultiDay) {
+        // Use date-only format for multi-day events
+        displayStart = startDateStr;
+        // Add 1 day to end date (exclusive end)
+        const adjustedEnd = new Date(endDate);
+        adjustedEnd.setDate(adjustedEnd.getDate() + 1);
+        displayEnd = formatDateLocal(adjustedEnd);
+      } else {
+        // Single day event - use original times
+        displayStart = res.start_time;
+        displayEnd = res.end_time;
+      }
+
       // For Gear Shed with multiple items, create separate events for each item
-      if (res.resource_type === 'GEAR_SHED' && res.items && res.items.length > 0) {
+      if (res.resource_type?.toUpperCase() === 'GEAR_SHED' && res.items && res.items.length > 0) {
         res.items.forEach((item) => {
           eventList.push({
             id: `${res.tx_id}-${item}`,
             title: `${res.rented_to} - ${item}`,
-            start: res.start_time,
-            end: res.end_time,
+            start: displayStart,
+            end: displayEnd,
+            allDay: isMultiDay,
             backgroundColor: getEventColor(res.resource_type),
             borderColor: getEventColor(res.resource_type),
             textColor: getTextColor(),
@@ -73,8 +109,9 @@ export const SchedulerCalendar = forwardRef<FullCalendar, SchedulerCalendarProps
         eventList.push({
           id: res.tx_id,
           title: `${res.rented_to} - ${res.item}`,
-          start: res.start_time,
-          end: res.end_time,
+          start: displayStart,
+          end: displayEnd,
+          allDay: isMultiDay,
           backgroundColor: getEventColor(res.resource_type),
           borderColor: getEventColor(res.resource_type),
           textColor: getTextColor(),
@@ -93,9 +130,20 @@ export const SchedulerCalendar = forwardRef<FullCalendar, SchedulerCalendarProps
     onEventClick(reservation);
   };
 
-  const handleDateSelect = (selectInfo: DateSelectArg) => {
-    // Pass the selected date to parent
-    onDateClick(selectInfo.startStr.split('T')[0]);
+  const handleDateClick = (clickInfo: DateClickArg) => {
+    const calendarApi = (ref as React.RefObject<FullCalendar>)?.current?.getApi();
+
+    // Check if clicked date is in a different month (fc-day-other class)
+    const dayEl = clickInfo.dayEl;
+    const isOtherMonth = dayEl.classList.contains('fc-day-other');
+
+    if (isOtherMonth && calendarApi) {
+      // Navigate to the clicked date's month
+      calendarApi.gotoDate(clickInfo.date);
+    } else {
+      // Open reservation modal for current month dates
+      onDateClick(clickInfo.dateStr.split('T')[0]);
+    }
   };
 
   return (
@@ -107,8 +155,7 @@ export const SchedulerCalendar = forwardRef<FullCalendar, SchedulerCalendarProps
         headerToolbar={false}
         events={events}
         eventClick={handleEventClick}
-        selectable={true}
-        select={handleDateSelect}
+        dateClick={handleDateClick}
         datesSet={onDatesSet}
         height="100%"
         eventDisplay="block"

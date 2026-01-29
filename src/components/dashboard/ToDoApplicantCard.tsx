@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { Badge } from '../ui';
 import { QuickActionSubStep } from '../applicants/QuickActionSubStep';
+import { timestampToLocalDate } from '../../utils/date';
 import type { Applicant } from '../../types/applicant';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -18,7 +19,7 @@ const getStatusVariant = (status: string): 'high' | 'medium' | 'success' | 'info
 
 export const ToDoApplicantCard = ({ applicant, isUpcoming = false }: ToDoApplicantCardProps) => {
   const navigate = useNavigate();
-  const moveInDate = applicant['1_Profile'].moveInDate?.toDate();
+  const moveInDate = applicant['1_Profile'].moveInDate ? timestampToLocalDate(applicant['1_Profile'].moveInDate) : null;
 
   return (
     <div

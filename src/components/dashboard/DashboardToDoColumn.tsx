@@ -1,5 +1,6 @@
 import { Card, Button } from '../ui';
 import { ToDoApplicantCard } from './ToDoApplicantCard';
+import { timestampToLocalDate } from '../../utils/date';
 import type { Applicant } from '../../types/applicant';
 
 interface DashboardToDoColumnProps {
@@ -12,12 +13,12 @@ export const DashboardToDoColumn = ({ applicants, loading, onNewApplicant }: Das
   // Filter upcoming move-ins: all steps complete + future move-in date
   const upcomingMoveIns = applicants.filter(a => {
     const allStepsComplete = Object.values(a.workflow).every(step => step.isCompleted);
-    const moveInDate = a['1_Profile'].moveInDate?.toDate();
+    const moveInDate = a['1_Profile'].moveInDate ? timestampToLocalDate(a['1_Profile'].moveInDate) : null;
     const isFuture = moveInDate && moveInDate > new Date();
     return allStepsComplete && isFuture && a['2_Tracking'].status !== 'cancelled';
   }).sort((a, b) => {
-    const dateA = a['1_Profile'].moveInDate?.toDate() || new Date(0);
-    const dateB = b['1_Profile'].moveInDate?.toDate() || new Date(0);
+    const dateA = a['1_Profile'].moveInDate ? timestampToLocalDate(a['1_Profile'].moveInDate) : new Date(0);
+    const dateB = b['1_Profile'].moveInDate ? timestampToLocalDate(b['1_Profile'].moveInDate) : new Date(0);
     return dateA.getTime() - dateB.getTime();
   });
 
@@ -25,8 +26,8 @@ export const DashboardToDoColumn = ({ applicants, loading, onNewApplicant }: Das
   const inProgressApplicants = applicants.filter(a =>
     a['2_Tracking'].status === 'in_progress'
   ).sort((a, b) => {
-    const dateA = a['1_Profile'].moveInDate?.toDate() || new Date(0);
-    const dateB = b['1_Profile'].moveInDate?.toDate() || new Date(0);
+    const dateA = a['1_Profile'].moveInDate ? timestampToLocalDate(a['1_Profile'].moveInDate) : new Date(0);
+    const dateB = b['1_Profile'].moveInDate ? timestampToLocalDate(b['1_Profile'].moveInDate) : new Date(0);
     return dateA.getTime() - dateB.getTime();
   });
 
