@@ -10,8 +10,10 @@
 
 import type { Reservation, ResourceType } from '../../types/scheduler';
 
-// Base URL for Office 365 Outlook Web
-const OUTLOOK_BASE_URL = 'https://outlook.office.com/calendar/deeplink/compose';
+// Greystar Outlook Cloud calendar deeplink
+// Format: https://outlook.cloud.microsoft/calendar/{email}/deeplink/compose
+const OUTLOOK_EMAIL = 'beacon85@greystar.com';
+const OUTLOOK_BASE_URL = `https://outlook.cloud.microsoft/calendar/${OUTLOOK_EMAIL}/deeplink/compose`;
 
 /**
  * Resource type display names for calendar events
