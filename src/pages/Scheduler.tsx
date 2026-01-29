@@ -19,8 +19,10 @@ import { useSchedulerItems } from '../hooks/useSchedulerItems';
 import { useAuth } from '../hooks/useAuth';
 import type { Reservation, ResourceType, ReservationFormData } from '../types/scheduler';
 import { getReservationCost, getCancellationFee, formatPrice } from '../services/scheduler/pricingService';
+import { openOutlookCalendar } from '../services/scheduler/outlookCalendarService';
 import FullCalendar from '@fullcalendar/react';
 import { getSchedulerStaffName } from '../utils/user';
+import toast from 'react-hot-toast';
 
 type ViewType = 'calendar' | 'list' | 'items';
 
@@ -157,9 +159,10 @@ export const Scheduler = () => {
       }, staffName);
     } else {
       // Create new reservation
-      await createReservation({
+      const itemDisplay = data.item || data.items?.join(', ') || '';
+      const tx_id = await createReservation({
         rented_to: data.rented_to,
-        item: data.item || data.items?.join(', ') || '',
+        item: itemDisplay,
         items: data.items,
         resource_type: data.resource_type,
         start_time: data.start_time,
@@ -169,6 +172,45 @@ export const Scheduler = () => {
         rental_notes: data.rental_notes,
         override_lock: data.override_lock,
       });
+
+      // Build reservation object for Outlook calendar
+      const reservationForCalendar: Reservation = {
+        tx_id,
+        rented_to: data.rented_to,
+        item: itemDisplay,
+        items: data.items,
+        resource_type: data.resource_type,
+        status: 'Scheduled',
+        start_time: data.start_time,
+        end_time: data.end_time,
+        total_cost: priceInfo.total,
+        scheduled_by: staffName,
+        rental_notes: data.rental_notes,
+        override_lock: data.override_lock,
+        created_at: new Date().toISOString(),
+      };
+
+      // Show toast with option to add to Outlook calendar
+      toast(
+        (t) => (
+          <div className="flex items-center gap-3">
+            <span>Reservation created!</span>
+            <button
+              onClick={() => {
+                openOutlookCalendar(reservationForCalendar);
+                toast.dismiss(t.id);
+              }}
+              className="px-3 py-1 text-sm font-medium bg-neuro-blue text-white rounded-md hover:bg-neuro-blue/90 transition-colors"
+            >
+              Add to Outlook
+            </button>
+          </div>
+        ),
+        {
+          duration: 6000,
+          position: 'bottom-center',
+        }
+      );
     }
 
     setShowReservationModal(false);

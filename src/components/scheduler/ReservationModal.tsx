@@ -12,6 +12,7 @@ import { TimePickerWheel } from './TimePickerWheel';
 import { useSchedulerItems } from '../../hooks/useSchedulerItems';
 import { validateReservation } from '../../services/scheduler/validationService';
 import { getReservationCost, getCancellationFee, formatPrice } from '../../services/scheduler/pricingService';
+import { openOutlookCalendar } from '../../services/scheduler/outlookCalendarService';
 import toast from 'react-hot-toast';
 
 interface ReservationModalProps {
@@ -92,13 +93,17 @@ export const ReservationModal = ({
     }
   }, [formData.resource_type, formData.start_time]);
 
-  // Filter items by resource type
+  // Filter items by resource type (handle legacy lowercase format from ported data)
   const availableItems = useMemo(() => {
-    return items.filter(
-      (item) =>
-        item.resource_type === formData.resource_type &&
-        item.service_status === 'In Service'
-    );
+    const normalizeResourceType = (type: string) => type?.toUpperCase();
+    const normalizeServiceStatus = (status: string) => status?.toLowerCase().replace(/_/g, ' ');
+
+    return items.filter((item) => {
+      const itemType = normalizeResourceType(item.resource_type);
+      const formType = normalizeResourceType(formData.resource_type);
+      const itemStatus = normalizeServiceStatus(item.service_status);
+      return itemType === formType && itemStatus === 'in service';
+    });
   }, [items, formData.resource_type]);
 
   // Calculate price
@@ -552,6 +557,17 @@ export const ReservationModal = ({
                     className="px-4 py-2 text-sm"
                   >
                     Restore
+                  </Button>
+                )}
+                {/* Add to Outlook Calendar - available for scheduled reservations */}
+                {isEditMode && reservation && reservation.status === 'Scheduled' && (
+                  <Button
+                    variant="secondary"
+                    onClick={() => openOutlookCalendar(reservation)}
+                    type="button"
+                    className="px-4 py-2 text-sm"
+                  >
+                    Add to Outlook
                   </Button>
                 )}
               </div>
