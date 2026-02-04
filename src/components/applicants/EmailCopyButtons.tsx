@@ -44,29 +44,48 @@ export const EmailCopyButtons = ({
   compact = false,
   applicant = null
 }: EmailCopyButtonsProps) => {
-  const [copiedState, setCopiedState] = useState<'html' | 'text' | null>(null);
+  const [copiedState, setCopiedState] = useState<'html' | 'rich' | null>(null);
 
-  const handleCopy = async (format: 'html' | 'text') => {
+  // Helper to prepare content with placeholders and sanitation
+  const prepareContent = () => {
+    let content = replacePlaceholders(emailHtml, applicant);
+    // Fix escaped quotes/backslashes
+    return content.replace(/\\"/g, '"').replace(/\\/g, '');
+  };
+
+  const handleCopyHTML = async () => {
     try {
-      // Replace placeholders before copying
-      let contentToCopy = replacePlaceholders(emailHtml, applicant);
-
-      // Sanitize: Remove escape characters that may have been added
-      // This fixes the issue where pasted content contains \" or \&
-      contentToCopy = contentToCopy
-        .replace(/\\"/g, '"')
-        .replace(/\\/g, ''); // Remove remaining backslashes as they are likely artifacts
-
-      if (format === 'text') {
-        contentToCopy = htmlToPlainText(contentToCopy);
-      }
-
-      await navigator.clipboard.writeText(contentToCopy);
-      setCopiedState(format);
+      const content = prepareContent();
+      await navigator.clipboard.writeText(content);
+      setCopiedState('html');
       setTimeout(() => setCopiedState(null), 2000);
     } catch (error) {
-      console.error('Failed to copy:', error);
-      alert('Failed to copy to clipboard');
+      console.error('Failed to copy HTML:', error);
+      alert('Failed to copy HTML');
+    }
+  };
+
+  const handleCopyRichText = async () => {
+    try {
+      const sanitizedHtml = prepareContent();
+      const plainText = htmlToPlainText(sanitizedHtml);
+
+      const htmlBlob = new Blob([sanitizedHtml], { type: 'text/html' });
+      const textBlob = new Blob([plainText], { type: 'text/plain' });
+
+      const data = [
+        new ClipboardItem({
+          'text/html': htmlBlob,
+          'text/plain': textBlob,
+        }),
+      ];
+
+      await navigator.clipboard.write(data);
+      setCopiedState('rich');
+      setTimeout(() => setCopiedState(null), 2000);
+    } catch (error) {
+      console.error('Failed to copy Rich Text:', error);
+      alert('Failed to copy Rich Text. Please try Copy HTML instead.');
     }
   };
 
@@ -88,7 +107,7 @@ export const EmailCopyButtons = ({
       >
         <Button
           variant="secondary"
-          onClick={() => handleCopy('html')}
+          onClick={handleCopyHTML}
           className="!text-xs !px-3 !py-1"
           title={`${buttonPrefix} HTML`}
         >
@@ -103,11 +122,11 @@ export const EmailCopyButtons = ({
       >
         <Button
           variant="secondary"
-          onClick={() => handleCopy('text')}
+          onClick={handleCopyRichText}
           className="!text-xs !px-3 !py-1"
-          title={`${buttonPrefix} Text`}
+          title={`${buttonPrefix} Rich Text`}
         >
-          <FontAwesomeIcon icon={copiedState === 'text' ? faCheck : faFont} />
+          <FontAwesomeIcon icon={copiedState === 'rich' ? faCheck : faFont} />
         </Button>
       </motion.div>
     </div>
