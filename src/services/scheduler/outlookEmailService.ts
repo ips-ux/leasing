@@ -26,7 +26,7 @@ function formatDate(timestamp: Timestamp | Date | null): string {
 
 /**
  * Replaces placeholders in email template with actual applicant data
- * Placeholders: [Applicant], [Apartment #], [Move-In Date], [Move-In Balance]
+ * Placeholders: [Resident], [PROSPECT], [Applicant], [Apartment#], [APT#], [Move-In Date]
  */
 export function replacePlaceholders(
     emailHtml: string,
@@ -35,20 +35,26 @@ export function replacePlaceholders(
     if (!applicant) return emailHtml;
 
     let result = emailHtml;
+    const profile = applicant['1_Profile'];
+    const fullName = profile?.name || '';
+    const firstName = fullName.split(' ')[0] || '[Name]';
+    const unit = profile?.unit || '[Apartment #]';
 
-    // Replace [Applicant] with applicant name
-    result = result.replace(/\[Applicant\]/g, applicant['1_Profile']?.name || '[Applicant]');
+    // Replace Resident/Name placeholders with FIRST NAME
+    const namePlaceholders = [/\[Resident\]/g, /\[PROSPECT\]/g, /\[Applicant\]/g];
+    namePlaceholders.forEach(regex => {
+        result = result.replace(regex, firstName);
+    });
 
-    // Replace [APARTMENT#] or [Apartment #] with unit number
-    result = result.replace(/\[APARTMENT#\]/g, applicant['1_Profile']?.unit || '[Apartment #]');
-    result = result.replace(/\[Apartment #\]/g, applicant['1_Profile']?.unit || '[Apartment #]');
+    // Replace Apartment placeholders with UNIT NUMBER
+    const unitPlaceholders = [/\[APARTMENT#\]/g, /\[Apartment #\]/g, /\[Apartment#\]/g, /\[APT#\]/g];
+    unitPlaceholders.forEach(regex => {
+        result = result.replace(regex, unit);
+    });
 
     // Replace [Move-In Date] with formatted move-in date
-    const moveInDate = formatDate(applicant['1_Profile']?.moveInDate);
+    const moveInDate = formatDate(profile?.moveInDate);
     result = result.replace(/\[Move-In Date\]/g, moveInDate);
-
-    // Note: [Move-In Balance] is left as-is since we don't have that data
-    // Agents will need to manually fill this in
 
     return result;
 }
