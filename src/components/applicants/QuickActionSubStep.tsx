@@ -452,6 +452,7 @@ export const QuickActionSubStep = ({ applicant }: QuickActionSubStepProps) => {
                                                 emailType="request-income"
                                                 buttonPrefix="Copy"
                                                 compact
+                                                applicant={applicant}
                                             />
                                         )}
                                         {current.config.id === '2d' && (
@@ -459,6 +460,7 @@ export const QuickActionSubStep = ({ applicant }: QuickActionSubStepProps) => {
                                                 emailHtml={applicationApprovedEmail}
                                                 emailType="application-approved"
                                                 compact
+                                                applicant={applicant}
                                             />
                                         )}
                                         {current.config.id === '4c' && (
@@ -466,6 +468,7 @@ export const QuickActionSubStep = ({ applicant }: QuickActionSubStepProps) => {
                                                 emailHtml={finalStepsEmail}
                                                 emailType="final-steps"
                                                 compact
+                                                applicant={applicant}
                                             />
                                         )}
                                     </div>
