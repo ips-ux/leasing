@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCode, faFont, faEnvelopeOpenText, faCheck } from '@fortawesome/free-solid-svg-icons';
+import { faCode, faFont, faCheck } from '@fortawesome/free-solid-svg-icons';
 import { Button } from '../ui';
-import { openOutlookEmail, replacePlaceholders } from '../../services/scheduler/outlookEmailService';
+import { replacePlaceholders } from '../../services/scheduler/outlookEmailService';
 import type { Applicant } from '../../types/applicant';
 import type { EmailTemplateType } from '../../services/scheduler/outlookEmailService';
 
@@ -70,10 +70,6 @@ export const EmailCopyButtons = ({
     }
   };
 
-  const handleOutlookOpen = () => {
-    openOutlookEmail(emailHtml, emailType, applicant);
-  };
-
   const emailName =
     emailType === 'application-approved'
       ? 'Application Approved Email'
@@ -112,21 +108,6 @@ export const EmailCopyButtons = ({
           title={`${buttonPrefix} Text`}
         >
           <FontAwesomeIcon icon={copiedState === 'text' ? faCheck : faFont} />
-        </Button>
-      </motion.div>
-
-      <motion.div
-        initial={{ opacity: 0, x: -10 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.2, delay: 0.1 }}
-      >
-        <Button
-          variant="primary"
-          onClick={handleOutlookOpen}
-          className="!text-xs !px-3 !py-1"
-          title="Open in Outlook"
-        >
-          <FontAwesomeIcon icon={faEnvelopeOpenText} />
         </Button>
       </motion.div>
     </div>
