@@ -1,4 +1,4 @@
-import { Card, Badge } from '../ui';
+import { Card } from '../ui';
 import type { Applicant } from '../../types/applicant';
 import { getLeaseInfoForCard, WORKFLOW_STEPS } from '../../lib/workflow-steps';
 import type { Timestamp } from 'firebase/firestore';
@@ -25,36 +25,6 @@ interface ApplicantCardProps {
 export const ApplicantCard = ({ applicant, onClick }: ApplicantCardProps) => {
   const { users } = useUsers();
 
-  const getStatusVariant = (status: string) => {
-    switch (status) {
-      case 'in_progress':
-        return 'info';
-      case 'approved':
-        return 'success';
-      case 'completed':
-        return 'success';
-      case 'cancelled':
-        return 'medium';
-      default:
-        return 'info';
-    }
-  };
-
-  const getStatusLabel = (status: string) => {
-    switch (status) {
-      case 'in_progress':
-        return 'In Progress';
-      case 'approved':
-        return 'Approved';
-      case 'completed':
-        return 'Completed';
-      case 'cancelled':
-        return 'Cancelled';
-      default:
-        return status;
-    }
-  };
-
   // Get lease info for at-a-glance display
   const leaseInfo = applicant.workflow ? getLeaseInfoForCard(applicant.workflow) : [];
 
@@ -66,58 +36,52 @@ export const ApplicantCard = ({ applicant, onClick }: ApplicantCardProps) => {
       <div className="flex flex-col gap-4">
         <div className="flex flex-col md:flex-row md:items-center gap-4">
           {/* Left Column: Identity & Status */}
-          <div className="flex-1 min-w-[200px]">
-            <div className="flex items-center gap-3 mb-1">
-              <h3 className="text-lg font-bold">{profile.name}</h3>
-              <Badge variant={getStatusVariant(tracking.status)}>
-                {['completed', 'cancelled'].includes(tracking.status)
-                  ? getStatusLabel(tracking.status)
-                  : (WORKFLOW_STEPS[tracking.currentStep - 1]?.name || getStatusLabel(tracking.status))}
-              </Badge>
-            </div>
-            <div className="flex items-center gap-2 text-sm text-black/60 font-mono">
-              <span>Unit {profile.unit}</span>
-              {profile.concessionApplied && (
+          {/* Left Column: Identity & Dates */}
+          <div className="flex-1 min-w-[200px] flex items-center gap-4">
+            {/* Move-In Date Calendar Badge */}
+            <div className="flex flex-col items-center justify-center w-14 h-14 bg-neuro-base rounded-neuro-md shadow-neuro-raised border border-white/60 shrink-0">
+              {profile.moveInDate ? (
                 <>
-                  <span>•</span>
-                  <span className="text-neuro-primary bg-neuro-base px-1.5 py-0.5 rounded-neuro-sm shadow-neuro-pressed text-xs">
-                    Concession: {profile.concessionApplied}
+                  <span className="text-[10px] font-bold text-neuro-secondary uppercase leading-none mb-1">
+                    {(() => {
+                      const d = timestampToLocalDate(profile.moveInDate);
+                      return d.toLocaleString('default', { month: 'short' }).toUpperCase();
+                    })()}
+                  </span>
+                  <span className="text-2xl font-bold text-black/80 leading-none tracking-tight">
+                    {(() => {
+                      const d = timestampToLocalDate(profile.moveInDate);
+                      return String(d.getDate()).padStart(2, '0');
+                    })()}
                   </span>
                 </>
+              ) : (
+                <span className="text-xs text-black/30">-</span>
               )}
             </div>
-            <div className="text-xs text-black/50 font-mono mt-1">
-              Agent: <span className="text-black/80 font-bold uppercase">
-                {(() => {
-                  const agentId = tracking.assignedTo;
-                  if (!agentId) return 'N/A';
-                  const agent = users.find(u => u.uid === agentId);
-                  return agent ? (agent.Agent_Name || extractAgentName(agent.email)) : 'Unknown';
-                })()}
-              </span>
+
+            <div className="flex flex-col justify-center gap-0.5">
+              <h3 className="text-lg font-bold leading-tight">
+                {profile.name} <span className="text-black/40 mx-2">|</span> {profile.unit}
+              </h3>
+              {profile.dateApplied && (
+                <span className="text-[10px] text-black/50 font-mono uppercase tracking-wide">
+                  Applied: <span className="font-bold text-black/70">{formatDateUTC(profile.dateApplied)}</span>
+                </span>
+              )}
             </div>
           </div>
 
-          {/* Middle Column: Dates & Lease Info */}
-          <div className="flex-1 min-w-[200px] border-l-0 md:border-l-2 border-black/10 md:pl-4">
-            <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm mb-2">
-              <div>
-                <span className="text-black/50 text-xs uppercase block">Applied</span>
-                <span className="font-mono font-semibold">
-                  {formatDateUTC(profile.dateApplied)}
-                </span>
-              </div>
-              <div>
-                <span className="text-black/50 text-xs uppercase block">Move-In</span>
-                <span className="font-mono font-semibold">
-                  {formatDateUTC(profile.moveInDate)}
-                </span>
-              </div>
-            </div>
-
-            {/* Lease Info Preview */}
-            {leaseInfo.length > 0 && (
-              <div className="flex flex-wrap gap-1.5">
+          {/* Center Column: Lease Info & Tags */}
+          <div className="flex-1 min-w-[200px] border-l-0 md:border-l-2 border-black/10 md:pl-4 flex flex-col justify-center">
+            {/* Lease Info Preview + Concession */}
+            {(leaseInfo.length > 0 || profile.concessionApplied) && (
+              <div className="flex flex-wrap gap-1.5 mb-2">
+                {profile.concessionApplied && (
+                  <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 bg-neuro-lavender rounded-neuro-sm shadow-neuro-pressed text-neuro-primary">
+                    Concession: {profile.concessionApplied}
+                  </span>
+                )}
                 {leaseInfo.slice(0, 3).map((item, index) => (
                   <span
                     key={index}
@@ -133,9 +97,23 @@ export const ApplicantCard = ({ applicant, onClick }: ApplicantCardProps) => {
                 )}
               </div>
             )}
+
+            {/* Tags moved to center */}
+            {applicant.tags && applicant.tags.length > 0 && (
+              <div className="flex flex-wrap gap-1">
+                {applicant.tags.map((tag, i) => (
+                  <span
+                    key={i}
+                    className="text-[10px] font-mono font-bold px-1.5 py-0.5 bg-neuro-lavender rounded-neuro-sm shadow-neuro-pressed text-neuro-primary"
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
 
-          {/* Right Column: Progress & Tags OR Cancellation Reason */}
+          {/* Right Column: Progress & Agent */}
           <div className="flex-1 min-w-[200px] border-l-0 md:border-l-2 border-black/10 md:pl-4">
             {tracking.status === 'cancelled' ? (
               <div className="h-full flex flex-col">
@@ -161,21 +139,19 @@ export const ApplicantCard = ({ applicant, onClick }: ApplicantCardProps) => {
                 <p className="text-xs text-black/60 truncate mb-2">
                   {WORKFLOW_STEPS[tracking.currentStep - 1]?.name || 'Complete'}
                 </p>
-              </>
-            )}
 
-            {/* Tags */}
-            {applicant.tags && applicant.tags.length > 0 && (
-              <div className="flex flex-wrap gap-1">
-                {applicant.tags.map((tag, i) => (
-                  <span
-                    key={i}
-                    className="text-[10px] font-mono font-bold px-1.5 py-0.5 bg-neuro-lavender rounded-neuro-sm shadow-neuro-pressed text-neuro-primary"
-                  >
-                    {tag}
+                {/* Agent Name moved here */}
+                <div className="text-xs text-black/50 font-mono mt-1">
+                  Agent: <span className="text-black/80 font-bold uppercase">
+                    {(() => {
+                      const agentId = tracking.assignedTo;
+                      if (!agentId) return 'N/A';
+                      const agent = users.find(u => u.uid === agentId);
+                      return agent ? (agent.Agent_Name || extractAgentName(agent.email)) : 'Unknown';
+                    })()}
                   </span>
-                ))}
-              </div>
+                </div>
+              </>
             )}
           </div>
         </div>

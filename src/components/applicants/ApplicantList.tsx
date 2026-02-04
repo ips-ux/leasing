@@ -5,19 +5,21 @@ import { ApplicantCard } from './ApplicantCard';
 import { Input, Button } from '../ui';
 import type { Applicant } from '../../types/applicant';
 
+export type ApplicantStatus = 'in_progress' | 'completed' | 'cancelled';
+
 interface ApplicantListProps {
   applicants: Applicant[];
   loading: boolean;
+  activeStatus: ApplicantStatus;
 }
 
 type SortOption = 'dateApplied' | 'moveInDate' | 'name';
 
-export const ApplicantList = ({ applicants, loading }: ApplicantListProps) => {
+export const ApplicantList = ({ applicants, loading, activeStatus }: ApplicantListProps) => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState<SortOption>('moveInDate');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
-  const [activeTab, setActiveTab] = useState<'in_progress' | 'completed' | 'cancelled'>('in_progress');
 
   const handleSort = (option: SortOption) => {
     if (sortBy === option) {
@@ -32,11 +34,11 @@ export const ApplicantList = ({ applicants, loading }: ApplicantListProps) => {
     let result = [...applicants];
 
     // Filter by Tab
-    if (activeTab === 'in_progress') {
+    if (activeStatus === 'in_progress') {
       result = result.filter(app => app["2_Tracking"].status === 'in_progress' || app["2_Tracking"].status === 'approved' || app["2_Tracking"].status === 'finalize_move_in');
-    } else if (activeTab === 'completed') {
+    } else if (activeStatus === 'completed') {
       result = result.filter(app => app["2_Tracking"].status === 'completed');
-    } else if (activeTab === 'cancelled') {
+    } else if (activeStatus === 'cancelled') {
       result = result.filter(app => app["2_Tracking"].status === 'cancelled');
     }
 
@@ -70,7 +72,7 @@ export const ApplicantList = ({ applicants, loading }: ApplicantListProps) => {
     });
 
     return result;
-  }, [applicants, searchTerm, sortBy, sortDirection, activeTab]);
+  }, [applicants, searchTerm, sortBy, sortDirection, activeStatus]);
 
   if (loading) {
     return (
@@ -96,31 +98,6 @@ export const ApplicantList = ({ applicants, loading }: ApplicantListProps) => {
 
   return (
     <div className="space-y-6">
-      {/* Status Tabs */}
-      <div className="flex gap-4 pb-2">
-        <button
-          onClick={() => setActiveTab('in_progress')}
-          className={`px-6 py-2 font-bold rounded-neuro-md transition-all ${activeTab === 'in_progress' ? 'bg-neuro-base text-neuro-primary shadow-neuro-pressed' : 'bg-white/60 text-neuro-secondary shadow-neuro-flat hover:text-neuro-primary hover:shadow-neuro-raised'
-            }`}
-        >
-          In Progress
-        </button>
-        <button
-          onClick={() => setActiveTab('completed')}
-          className={`px-6 py-2 font-bold rounded-neuro-md transition-all ${activeTab === 'completed' ? 'bg-neuro-base text-neuro-primary shadow-neuro-pressed' : 'bg-white/60 text-neuro-secondary shadow-neuro-flat hover:text-neuro-primary hover:shadow-neuro-raised'
-            }`}
-        >
-          Complete
-        </button>
-        <button
-          onClick={() => setActiveTab('cancelled')}
-          className={`px-6 py-2 font-bold rounded-neuro-md transition-all ${activeTab === 'cancelled' ? 'bg-neuro-base text-neuro-primary shadow-neuro-pressed' : 'bg-white/60 text-neuro-secondary shadow-neuro-flat hover:text-neuro-primary hover:shadow-neuro-raised'
-            }`}
-        >
-          Cancelled
-        </button>
-      </div>
-
       {/* Search & Filter Header */}
       <div className="flex flex-col md:flex-row gap-4 justify-between items-end md:items-center rounded-neuro-md bg-white/60 shadow-neuro-pressed p-4 -mx-4 md:mx-0">
         <div className="w-full md:w-64">
