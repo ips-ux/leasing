@@ -2,13 +2,14 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Badge } from '../ui';
 import { SubStepItem } from './SubStepItem';
-import type { WorkflowStepData, SubStepData } from '../../types/applicant';
+import type { WorkflowStepData, SubStepData, Applicant } from '../../types/applicant';
 import type { WorkflowStepConfig } from '../../lib/workflow-steps';
 import { isStepComplete } from '../../lib/workflow-steps';
 
 interface WorkflowStepProps {
     stepConfig: WorkflowStepConfig;
     stepData: WorkflowStepData;
+    applicant: Applicant;
     isEnabled: boolean;
     isLocked?: boolean;
     onSubStepUpdate: (subStepId: string, updates: Partial<SubStepData>) => void;
@@ -19,6 +20,7 @@ interface WorkflowStepProps {
 export const WorkflowStep = ({
     stepConfig,
     stepData,
+    applicant,
     isEnabled,
     isLocked = false,
     onSubStepUpdate,
@@ -159,6 +161,7 @@ export const WorkflowStep = ({
                                         key={subStepConfig.id}
                                         config={subStepConfig}
                                         data={subStepData}
+                                        applicant={applicant}
                                         isEnabled={isEnabled && !isLocked}
                                         onUpdate={(updates) => onSubStepUpdate(subStepConfig.id, updates)}
                                         onDateChange={(date) => onSubStepDateChange(subStepConfig.id, date)}

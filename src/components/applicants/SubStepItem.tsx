@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import type { SubStepData } from '../../types/applicant';
+import type { SubStepData, Applicant } from '../../types/applicant';
 import type { SubStepConfig } from '../../lib/workflow-steps';
 import type { Timestamp } from 'firebase/firestore';
 import { EmailCopyButtons } from './EmailCopyButtons';
@@ -12,6 +12,7 @@ import finalStepsEmail from '../../content/final-steps-email.html?raw';
 interface SubStepItemProps {
     config: SubStepConfig;
     data: SubStepData;
+    applicant: Applicant;
     isEnabled: boolean;
     onUpdate: (updates: Partial<SubStepData>) => void;
     onDateChange: (date: Date | null) => void;
@@ -36,6 +37,7 @@ const formatDateForInput = (timestamp: Timestamp | Date | null): string => {
 export const SubStepItem = ({
     config,
     data,
+    applicant,
     isEnabled,
     onUpdate,
     onDateChange,
@@ -413,18 +415,21 @@ export const SubStepItem = ({
                         emailHtml={requestIncomeEmail}
                         emailType="request-income"
                         buttonPrefix="Copy"
+                        applicant={applicant}
                     />
                 )}
                 {config.id === '2d' && (
                     <EmailCopyButtons
                         emailHtml={applicationApprovedEmail}
                         emailType="application-approved"
+                        applicant={applicant}
                     />
                 )}
                 {config.id === '4c' && (
                     <EmailCopyButtons
                         emailHtml={finalStepsEmail}
                         emailType="final-steps"
+                        applicant={applicant}
                     />
                 )}
             </div>

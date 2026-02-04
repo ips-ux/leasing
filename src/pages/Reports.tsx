@@ -1,10 +1,10 @@
-import { useState } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { useApplicants } from '../hooks/useApplicants';
 import { useUsers } from '../hooks/useUsers';
 import { extractAgentName } from '../utils/user';
 import { timestampToLocalDate } from '../utils/date';
 import { Card, Button } from '../components/ui';
-import { format, subMonths, setDate, isAfter, isBefore, isEqual, startOfDay, endOfDay, startOfMonth, endOfMonth } from 'date-fns';
+import { format, subMonths, setDate, isAfter, isBefore, isEqual, startOfDay, endOfDay, startOfMonth, endOfMonth, isSameMonth } from 'date-fns';
 
 type ReportType = 'move-in' | 'concession' | 'eod';
 
@@ -12,16 +12,63 @@ export const Reports = () => {
   const { applicants, loading } = useApplicants();
   const { users } = useUsers();
   const [selectedReport, setSelectedReport] = useState<ReportType>('move-in');
+  const [currentViewDate, setCurrentViewDate] = useState(new Date());
+  const [isMonthOpen, setIsMonthOpen] = useState(false);
+  const [isReportTypeOpen, setIsReportTypeOpen] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
+  const monthParamsRef = useRef<HTMLDivElement>(null);
+  const reportParamsRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
+      if (monthParamsRef.current && !monthParamsRef.current.contains(target)) {
+        setIsMonthOpen(false);
+      }
+      if (reportParamsRef.current && !reportParamsRef.current.contains(target)) {
+        setIsReportTypeOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Calculate available months based on data
+  const availableMonths = useMemo(() => {
+    const months = new Set<string>();
+    const today = new Date();
+
+    // Always include current month
+    // We store as string for Set uniqueness, then parse back
+    months.add(startOfMonth(today).toISOString());
+
+    applicants.forEach(app => {
+      if (app['1_Profile'].moveInDate) {
+        const moveInDate = timestampToLocalDate(app['1_Profile'].moveInDate);
+        months.add(startOfMonth(moveInDate).toISOString());
+      }
+    });
+
+    return Array.from(months)
+      .map(dateStr => new Date(dateStr))
+      .sort((a, b) => b.getTime() - a.getTime()) // Newest first
+      // Only keep months that are roughly within the "previous 5 months" request or seem reasonable
+      // For now, we show all months that have data as requested in point 1 ("starting with the earliest")
+      // but we can limit if UI gets too long. Let's stick strictly to data presence.
+      .filter((date) => isBefore(date, endOfMonth(today)) || isSameMonth(date, today));
+  }, [applicants]);
 
   // Calculate date range for Concession Report (25th to 25th)
-  const today = new Date();
-  const concessionEnd = endOfDay(setDate(today, 25));
-  const concessionStart = startOfDay(setDate(subMonths(today, 1), 25));
+  // For concession report, it typically spans two months. 
+  // If we select "Feb 2026", does it mean Jan 25 - Feb 25?
+  // Let's assume the selected month is the primary month.
+  const concessionEnd = endOfDay(setDate(currentViewDate, 25));
+  const concessionStart = startOfDay(setDate(subMonths(currentViewDate, 1), 25));
 
   // Calculate date range for Move-In Report (1st to End of Month)
-  const moveInStart = startOfDay(startOfMonth(today));
-  const moveInEnd = endOfDay(endOfMonth(today));
+  const moveInStart = startOfDay(startOfMonth(currentViewDate));
+  const moveInEnd = endOfDay(endOfMonth(currentViewDate));
 
   const startDate = selectedReport === 'concession' ? concessionStart : moveInStart;
   const endDate = selectedReport === 'concession' ? concessionEnd : moveInEnd;
@@ -126,27 +173,101 @@ export const Reports = () => {
           <p className="text-neuro-muted">Generate and view property reports</p>
         </div>
 
-        <div className="w-64">
-          <div
-            className="relative w-full px-4 py-2.5 rounded-neuro-md shadow-neuro-pressed bg-white/50 font-sans text-neuro-primary cursor-pointer"
-          >
-            <select
-              value={selectedReport}
-              onChange={(e) => setSelectedReport(e.target.value as ReportType)}
-              className="w-full bg-transparent focus:outline-none cursor-pointer appearance-none pr-8 font-medium"
+        <div className="flex gap-4">
+          {/* Month Selector */}
+          {(selectedReport === 'move-in' || selectedReport === 'concession') && (
+            <div className="relative w-64" ref={monthParamsRef}>
+              <button
+                onClick={() => {
+                  setIsMonthOpen(!isMonthOpen);
+                  setIsReportTypeOpen(false);
+                }}
+                className="w-full flex items-center justify-between px-4 py-2.5 rounded-neuro-md shadow-neuro-pressed bg-white/50 font-sans text-neuro-primary font-medium cursor-pointer focus:outline-none"
+              >
+                <span>{format(currentViewDate, 'MMMM yyyy')}</span>
+                <svg
+                  className={`w-5 h-5 text-neuro-secondary transition-transform duration-200 ${isMonthOpen ? 'rotate-180' : ''}`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+              {isMonthOpen && (
+                <div className="absolute top-full left-0 right-0 mt-3 py-2 bg-white/95 backdrop-blur-sm rounded-neuro-md shadow-neuro-floating z-50 animate-in fade-in zoom-in-95 duration-200 border border-neuro-white/50">
+                  <div className="max-h-60 overflow-y-auto custom-scrollbar">
+                    {availableMonths.map((date) => (
+                      <button
+                        key={date.toISOString()}
+                        onClick={() => {
+                          setCurrentViewDate(date);
+                          setIsMonthOpen(false);
+                        }}
+                        className={`w-full text-left px-4 py-2.5 text-sm transition-all ${isSameMonth(date, currentViewDate)
+                          ? 'bg-neuro-lavender/30 text-neuro-primary font-bold'
+                          : 'text-neuro-muted hover:bg-neuro-lavender/10 hover:text-neuro-primary'
+                          }`}
+                      >
+                        {format(date, 'MMMM yyyy')}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Report Type Selector */}
+          <div className="relative w-64" ref={reportParamsRef}>
+            <button
+              onClick={() => {
+                setIsReportTypeOpen(!isReportTypeOpen);
+                setIsMonthOpen(false);
+              }}
+              className="w-full flex items-center justify-between px-4 py-2.5 rounded-neuro-md shadow-neuro-pressed bg-white/50 font-sans text-neuro-primary font-medium cursor-pointer focus:outline-none"
             >
-              <option value="move-in">Move-In Report</option>
-              <option value="concession">Concession Report</option>
-              <option value="eod">EOD Report</option>
-            </select>
-            <svg
-              className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 pointer-events-none text-neuro-secondary"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
-            </svg>
+              <span>
+                {selectedReport === 'move-in' && 'Move-In Report'}
+                {selectedReport === 'concession' && 'Concession Report'}
+                {selectedReport === 'eod' && 'EOD Report'}
+              </span>
+              <svg
+                className={`w-5 h-5 text-neuro-secondary transition-transform duration-200 ${isReportTypeOpen ? 'rotate-180' : ''}`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+
+            {isReportTypeOpen && (
+              <div className="absolute top-full left-0 right-0 mt-3 py-2 bg-white/95 backdrop-blur-sm rounded-neuro-md shadow-neuro-floating z-50 animate-in fade-in zoom-in-95 duration-200 border border-neuro-white/50">
+                <div className="max-h-60 overflow-y-auto custom-scrollbar">
+                  {[
+                    { value: 'move-in', label: 'Move-In Report' },
+                    { value: 'concession', label: 'Concession Report' },
+                    { value: 'eod', label: 'EOD Report' }
+                  ].map((option) => (
+                    <button
+                      key={option.value}
+                      onClick={() => {
+                        setSelectedReport(option.value as ReportType);
+                        setIsReportTypeOpen(false);
+                      }}
+                      className={`w-full text-left px-4 py-2.5 text-sm transition-all ${selectedReport === option.value
+                        ? 'bg-neuro-lavender/30 text-neuro-primary font-bold'
+                        : 'text-neuro-muted hover:bg-neuro-lavender/10 hover:text-neuro-primary'
+                        }`}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -181,7 +302,7 @@ export const Reports = () => {
               </div>
             ) : filteredApplicants.length === 0 ? (
               <div className="text-center py-12 rounded-neuro-md bg-neuro-base/30">
-                <p className="text-neuro-muted font-medium">No move-ins found for this period.</p>
+                <p className="text-neuro-muted font-medium">No move-ins found for {format(currentViewDate, 'MMMM yyyy')}.</p>
               </div>
             ) : (
               <div className="overflow-x-auto rounded-neuro-md">

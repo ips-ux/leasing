@@ -157,7 +157,7 @@ export const SchedulerList = ({
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 p-4">
       {/* Filters */}
       <div className="flex gap-4">
         <input

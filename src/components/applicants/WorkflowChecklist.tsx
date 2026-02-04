@@ -146,6 +146,7 @@ export const WorkflowChecklist = ({
                                 <WorkflowStep
                                     stepConfig={stepConfig}
                                     stepData={stepData}
+                                    applicant={applicant}
                                     isEnabled={isStepEnabled(stepConfig.step)}
                                     isLocked={promotedToResident && stepConfig.step <= 5}
                                     onSubStepUpdate={(subStepId, updates) =>
