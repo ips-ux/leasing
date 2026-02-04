@@ -5,6 +5,7 @@ interface UserSettingsPopoverProps {
     isOpen: boolean;
     onClose: () => void;
     onChangePassword: () => void;
+    onTemplates: () => void;
     anchorRef: React.RefObject<HTMLElement | HTMLDivElement | null>;
 }
 
@@ -12,6 +13,7 @@ export const UserSettingsPopover = ({
     isOpen,
     onClose,
     onChangePassword,
+    onTemplates,
     anchorRef
 }: UserSettingsPopoverProps) => {
     const popoverRef = useRef<HTMLDivElement>(null);
@@ -59,6 +61,15 @@ export const UserSettingsPopover = ({
                         }}
                     >
                         <div className="p-2">
+                            <button
+                                onClick={() => {
+                                    onTemplates();
+                                    onClose();
+                                }}
+                                className="w-full text-left px-4 py-3 rounded-neuro-md text-neuro-primary font-medium hover:bg-neuro-lavender/20 transition-all duration-200"
+                            >
+                                Templates
+                            </button>
                             <button
                                 onClick={() => {
                                     onChangePassword();

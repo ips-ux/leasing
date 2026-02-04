@@ -14,3 +14,4 @@ export { ErrorBoundary } from './ErrorBoundary';
 export { FancyButton } from './FancyButton';
 export { UserSettingsPopover } from './UserSettingsPopover';
 export { ChangePasswordModal } from './ChangePasswordModal';
+export { TemplateEditorModal } from './TemplateEditorModal';
