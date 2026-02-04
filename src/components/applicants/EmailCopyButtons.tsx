@@ -51,6 +51,12 @@ export const EmailCopyButtons = ({
       // Replace placeholders before copying
       let contentToCopy = replacePlaceholders(emailHtml, applicant);
 
+      // Sanitize: Remove escape characters that may have been added
+      // This fixes the issue where pasted content contains \" or \&
+      contentToCopy = contentToCopy
+        .replace(/\\"/g, '"')
+        .replace(/\\/g, ''); // Remove remaining backslashes as they are likely artifacts
+
       if (format === 'text') {
         contentToCopy = htmlToPlainText(contentToCopy);
       }

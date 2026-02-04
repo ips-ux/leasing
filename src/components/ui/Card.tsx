@@ -7,6 +7,7 @@ interface CardProps {
   priority?: 'high' | 'medium' | 'low' | null;
   onClick?: () => void;
   hoverable?: boolean;
+  disableHoverAnimation?: boolean;
 }
 
 export const Card = ({
@@ -14,7 +15,8 @@ export const Card = ({
   className = '',
   priority = null,
   onClick,
-  hoverable = false
+  hoverable = false,
+  disableHoverAnimation = false
 }: CardProps) => {
   const priorityClasses = {
     high: 'border-l-4 border-neuro-peach',
@@ -29,7 +31,7 @@ export const Card = ({
     <motion.div
       className={`rounded-neuro-md bg-white/60 shadow-neuro-pressed p-3 ${priorityClass} ${hoverClass} ${className}`}
       onClick={onClick}
-      whileHover={hoverable || onClick ? { y: -2 } : undefined}
+      whileHover={(!disableHoverAnimation && (hoverable || onClick)) ? { y: -2 } : undefined}
       transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
     >
       {children}

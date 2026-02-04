@@ -62,7 +62,7 @@ export const ApplicantCard = ({ applicant, onClick }: ApplicantCardProps) => {
   const tracking = applicant["2_Tracking"];
 
   return (
-    <Card onClick={onClick} className="cursor-pointer">
+    <Card onClick={onClick} className="cursor-pointer" disableHoverAnimation={true}>
       <div className="flex flex-col gap-4">
         <div className="flex flex-col md:flex-row md:items-center gap-4">
           {/* Left Column: Identity & Status */}
@@ -70,7 +70,9 @@ export const ApplicantCard = ({ applicant, onClick }: ApplicantCardProps) => {
             <div className="flex items-center gap-3 mb-1">
               <h3 className="text-lg font-bold">{profile.name}</h3>
               <Badge variant={getStatusVariant(tracking.status)}>
-                {getStatusLabel(tracking.status)}
+                {['completed', 'cancelled'].includes(tracking.status)
+                  ? getStatusLabel(tracking.status)
+                  : (WORKFLOW_STEPS[tracking.currentStep - 1]?.name || getStatusLabel(tracking.status))}
               </Badge>
             </div>
             <div className="flex items-center gap-2 text-sm text-black/60 font-mono">
