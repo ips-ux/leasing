@@ -1,6 +1,6 @@
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import { Button, FancyButton, UserSettingsPopover, ChangePasswordModal, TemplateEditorModal } from '../ui';
+import { Button, FancyButton, UserSettingsPopover, ChangePasswordModal } from '../ui';
 import { changePassword } from '../../firebase/auth';
 import { useState, useRef } from 'react';
 
@@ -38,7 +38,6 @@ export const Sidebar = () => {
   const { user, signOut } = useAuth();
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
-  const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
   const avatarRef = useRef<HTMLDivElement>(null);
 
   const handleSignOut = () => {
@@ -92,7 +91,6 @@ export const Sidebar = () => {
               isOpen={isPopoverOpen}
               onClose={() => setIsPopoverOpen(false)}
               onChangePassword={() => setIsPasswordModalOpen(true)}
-              onTemplates={() => setIsTemplateModalOpen(true)}
               anchorRef={avatarRef}
             />
           </div>
@@ -120,12 +118,6 @@ export const Sidebar = () => {
         isOpen={isPasswordModalOpen}
         onClose={() => setIsPasswordModalOpen(false)}
         onSubmit={handleChangePassword}
-      />
-
-      {/* Template Editor Modal */}
-      <TemplateEditorModal
-        isOpen={isTemplateModalOpen}
-        onClose={() => setIsTemplateModalOpen(false)}
       />
     </aside>
   );
