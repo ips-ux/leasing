@@ -5,6 +5,7 @@ import { extractAgentName } from '../utils/user';
 import { timestampToLocalDate } from '../utils/date';
 import { Card, Button } from '../components/ui';
 import { format, subMonths, setDate, isAfter, isBefore, isEqual, startOfDay, endOfDay, startOfMonth, endOfMonth, isSameMonth } from 'date-fns';
+import { getEODReport, saveEODReport, type EODReportData } from '../services/eodReportService';
 
 type ReportType = 'move-in' | 'concession' | 'eod';
 
@@ -18,6 +19,21 @@ export const Reports = () => {
   const [copySuccess, setCopySuccess] = useState(false);
   const monthParamsRef = useRef<HTMLDivElement>(null);
   const reportParamsRef = useRef<HTMLDivElement>(null);
+
+  // EOD Report state
+  const [eodData, setEodData] = useState<Omit<EODReportData, 'lastSubmitted'>>({
+    occupancy: '',
+    fourWeekTrend: '',
+    sixWeekTrend: '',
+    traffic: '0',
+    leases: '0',
+    competition: 'N/A',
+    reasonsNotLeasing: 'N/A',
+    pendingApplications: 'N/A',
+    finalAccountStatements: 'N/A',
+    cancellationReason: 'N/A',
+  });
+  const [eodLoading, setEodLoading] = useState(false);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -33,6 +49,36 @@ export const Reports = () => {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  // Load EOD report data when switching to EOD report
+  useEffect(() => {
+    if (selectedReport === 'eod') {
+      loadEODData();
+    }
+  }, [selectedReport]);
+
+  const loadEODData = async () => {
+    setEodLoading(true);
+    try {
+      const data = await getEODReport();
+      setEodData({
+        occupancy: data.occupancy,
+        fourWeekTrend: data.fourWeekTrend,
+        sixWeekTrend: data.sixWeekTrend,
+        traffic: data.traffic || '0',
+        leases: data.leases || '0',
+        competition: data.competition || 'N/A',
+        reasonsNotLeasing: data.reasonsNotLeasing || 'N/A',
+        pendingApplications: data.pendingApplications || 'N/A',
+        finalAccountStatements: data.finalAccountStatements || 'N/A',
+        cancellationReason: data.cancellationReason || 'N/A',
+      });
+    } catch (error) {
+      console.error('Failed to load EOD data:', error);
+    } finally {
+      setEodLoading(false);
+    }
+  };
 
   // Calculate available months based on data
   const availableMonths = useMemo(() => {
@@ -147,6 +193,87 @@ export const Reports = () => {
         `${app['1_Profile'].name || 'N/A'}\t${app['1_Profile'].unit || 'N/A'}\t${getAgentName(app['2_Tracking'].assignedTo)}\t${app['1_Profile'].concessionApplied || 'N/A'}\t${app['1_Profile'].moveInDate ? format(timestampToLocalDate(app['1_Profile'].moveInDate), 'MMM do, yyyy') : 'N/A'}`
       )
     ].join('\n');
+
+    try {
+      await navigator.clipboard.write([
+        new ClipboardItem({
+          'text/html': new Blob([html], { type: 'text/html' }),
+          'text/plain': new Blob([plainText], { type: 'text/plain' }),
+        }),
+      ]);
+      setCopySuccess(true);
+      setTimeout(() => setCopySuccess(false), 2000);
+    } catch {
+      // Fallback to plain text if clipboard API fails
+      await navigator.clipboard.writeText(plainText);
+      setCopySuccess(true);
+      setTimeout(() => setCopySuccess(false), 2000);
+    }
+  };
+
+
+
+  // Copy EOD table to clipboard
+  const copyEODTableToClipboard = async () => {
+    // Auto-save before copying
+    try {
+      await saveEODReport(eodData);
+    } catch (error) {
+      console.error('Failed to auto-save EOD data:', error);
+    }
+
+    // Colors for table
+    const headerBg = '#4472C4';
+    const headerText = '#FFFFFF';
+    const evenRowBg = '#D6DCE5';
+    const oddRowBg = '#FFFFFF';
+
+    // Format occupancy values as percentages
+    const formatPercentage = (value: string) => {
+      if (!value || value === 'N/A') return 'N/A';
+      const num = parseFloat(value);
+      return isNaN(num) ? value : `${num.toFixed(2)}%`;
+    };
+
+    const eodFields = [
+      { label: 'Occupancy', value: formatPercentage(eodData.occupancy) },
+      { label: '4 Week Occupancy Trend', value: formatPercentage(eodData.fourWeekTrend) },
+      { label: '6 Week Occupancy Trend', value: formatPercentage(eodData.sixWeekTrend) },
+      { label: 'Traffic (daily)', value: eodData.traffic || 'N/A' },
+      { label: 'Leases (daily)', value: eodData.leases || 'N/A' },
+      { label: 'Competition', value: eodData.competition || 'N/A' },
+      { label: 'Reason(s) for not leasing', value: eodData.reasonsNotLeasing || 'N/A' },
+      { label: 'Pending Applications and Status', value: eodData.pendingApplications || 'N/A' },
+      { label: 'Open Final Account Statements', value: eodData.finalAccountStatements || 'N/A' },
+      { label: 'Cancelation - reason', value: eodData.cancellationReason || 'N/A' },
+    ];
+
+    // Build HTML table for rich text clipboard
+    const html = `
+      <table style="width: 500px; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 11px;">
+        <thead>
+          <tr style="background-color: ${headerBg}; color: ${headerText};">
+            <th colspan="2" style="border: 1px solid #8EA9DB; padding: 8px; text-align: center; font-weight: bold; font-size: 12px;">Beacon 85 Daily Update</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${eodFields.map((field, index) => `
+            <tr style="background-color: ${index % 2 === 0 ? evenRowBg : oddRowBg};">
+              <td style="border: 1px solid #8EA9DB; padding: 4px 8px; font-weight: bold;">${field.label}</td>
+              <td style="border: 1px solid #8EA9DB; padding: 4px 8px;">${field.value}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    `;
+
+    // Plain text fallback
+    const plainText = [
+      'Beacon 85 Daily Update',
+      '',
+      'Metric\\tValue',
+      ...eodFields.map(field => `${field.label}\\t${field.value}`)
+    ].join('\\n');
 
     try {
       await navigator.clipboard.write([
@@ -351,17 +478,177 @@ export const Reports = () => {
         )}
 
         {selectedReport === 'eod' && (
-          <div className="flex flex-col items-center justify-center py-20 space-y-6 text-center">
-            <div className="text-8xl animate-bounce">🚧</div>
-            <div className="space-y-2">
-              <h2 className="text-2xl font-bold text-neuro-primary">Coming Soon</h2>
-              <p className="text-neuro-muted max-w-md mx-auto">
-                The End of Day (EOD) Report is currently under construction. Check back later for updates.
-              </p>
+          <div className="space-y-4">
+            <div className="flex justify-between items-center mb-4 pb-4 border-b border-neuro-base/30">
+              <h2 className="text-xl font-bold text-neuro-primary">
+                End of Day Report
+              </h2>
+              <div className="flex items-center gap-3">
+                <span className="inline-block font-mono font-bold text-xs px-3 py-1.5 rounded-neuro-sm shadow-neuro-pressed bg-neuro-lavender text-neuro-primary">
+                  {format(new Date(), 'MMM do, yyyy')}
+                </span>
+                <Button
+                  variant="secondary"
+                  onClick={copyEODTableToClipboard}
+                  className="text-sm"
+                >
+                  {copySuccess ? 'Copied!' : 'Copy Table'}
+                </Button>
+              </div>
             </div>
-            <span className="inline-block font-mono font-bold text-xs px-3 py-1.5 rounded-neuro-sm shadow-neuro-pressed bg-neuro-peach text-neuro-primary">
-              FEATURE LOCKED
-            </span>
+
+            {eodLoading ? (
+              <div className="text-center py-12">
+                <div className="animate-spin w-8 h-8 border-4 border-neuro-lavender border-t-transparent rounded-full mx-auto mb-4"></div>
+                <p className="text-neuro-muted">Loading EOD data...</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto rounded-neuro-md">
+                <table className="w-full text-left border-collapse">
+                  <tbody>
+                    {/* Combined Metrics Row */}
+                    <tr>
+                      <td className="py-2 px-3 text-xs font-medium text-neuro-secondary w-[18%]">Occupancy</td>
+                      <td className="py-2 px-3 text-xs font-medium text-neuro-secondary w-[18%]">4 Week Trend</td>
+                      <td className="py-2 px-3 text-xs font-medium text-neuro-secondary w-[18%]">6 Week Trend</td>
+                      <td className="w-[1px] bg-neuro-base/20 p-0"></td>
+                      <td className="py-2 px-3 text-xs font-medium text-neuro-secondary w-[22%]">Traffic (daily)</td>
+                      <td className="py-2 px-3 text-xs font-medium text-neuro-secondary w-[22%]">Leases (daily)</td>
+                    </tr>
+                    <tr className="bg-white/40">
+                      <td className="py-2 px-3">
+                        <input
+                          type="text"
+                          value={eodData.occupancy}
+                          onChange={(e) => setEodData({ ...eodData, occupancy: e.target.value })}
+                          placeholder="89.5"
+                          className="w-full px-2 py-1 text-sm rounded border border-neuro-base/20 bg-white/50 font-sans text-neuro-primary focus:outline-none focus:border-neuro-lavender"
+                        />
+                      </td>
+                      <td className="py-2 px-3">
+                        <input
+                          type="text"
+                          value={eodData.fourWeekTrend}
+                          onChange={(e) => setEodData({ ...eodData, fourWeekTrend: e.target.value })}
+                          placeholder="88.33"
+                          className="w-full px-2 py-1 text-sm rounded border border-neuro-base/20 bg-white/50 font-sans text-neuro-primary focus:outline-none focus:border-neuro-lavender"
+                        />
+                      </td>
+                      <td className="py-2 px-3">
+                        <input
+                          type="text"
+                          value={eodData.sixWeekTrend}
+                          onChange={(e) => setEodData({ ...eodData, sixWeekTrend: e.target.value })}
+                          placeholder="88.04"
+                          className="w-full px-2 py-1 text-sm rounded border border-neuro-base/20 bg-white/50 font-sans text-neuro-primary focus:outline-none focus:border-neuro-lavender"
+                        />
+                      </td>
+                      <td className="w-[1px] bg-neuro-base/20 p-0"></td>
+                      <td className="py-2 px-3">
+                        <input
+                          type="text"
+                          value={eodData.traffic}
+                          onChange={(e) => setEodData({ ...eodData, traffic: e.target.value })}
+                          placeholder="0"
+                          className="w-full px-2 py-1 text-sm rounded border border-neuro-base/20 bg-white/50 font-sans text-neuro-primary focus:outline-none focus:border-neuro-lavender"
+                        />
+                      </td>
+                      <td className="py-2 px-3">
+                        <input
+                          type="text"
+                          value={eodData.leases}
+                          onChange={(e) => setEodData({ ...eodData, leases: e.target.value })}
+                          placeholder="0"
+                          className="w-full px-2 py-1 text-sm rounded border border-neuro-base/20 bg-white/50 font-sans text-neuro-primary focus:outline-none focus:border-neuro-lavender"
+                        />
+                      </td>
+                    </tr>
+
+                    {/* Competition Row */}
+                    <tr>
+                      <td className="py-2 px-3 text-xs font-medium text-neuro-secondary" colSpan={6}>Competition</td>
+                    </tr>
+                    <tr className="bg-white/40">
+                      <td className="py-2 px-3" colSpan={6}>
+                        <input
+                          type="text"
+                          value={eodData.competition}
+                          onChange={(e) => setEodData({ ...eodData, competition: e.target.value })}
+                          placeholder="N/A"
+                          className="w-full px-2 py-1 text-sm rounded border border-neuro-base/20 bg-white/50 font-sans text-neuro-primary focus:outline-none focus:border-neuro-lavender"
+                        />
+                      </td>
+                    </tr>
+
+                    {/* Reason(s) for not leasing Row */}
+                    <tr>
+                      <td className="py-2 px-3 text-xs font-medium text-neuro-secondary" colSpan={6}>Reason(s) for not leasing</td>
+                    </tr>
+                    <tr className="bg-transparent">
+                      <td className="py-2 px-3" colSpan={6}>
+                        <textarea
+                          value={eodData.reasonsNotLeasing}
+                          onChange={(e) => setEodData({ ...eodData, reasonsNotLeasing: e.target.value })}
+                          placeholder="N/A"
+                          rows={2}
+                          className="w-full px-2 py-1 text-sm rounded border border-neuro-base/20 bg-white/50 font-sans text-neuro-primary focus:outline-none focus:border-neuro-lavender resize-none"
+                        />
+                      </td>
+                    </tr>
+
+                    {/* Pending Applications Row */}
+                    <tr>
+                      <td className="py-2 px-3 text-xs font-medium text-neuro-secondary" colSpan={6}>Pending Applications and Status</td>
+                    </tr>
+                    <tr className="bg-white/40">
+                      <td className="py-2 px-3" colSpan={6}>
+                        <textarea
+                          value={eodData.pendingApplications}
+                          onChange={(e) => setEodData({ ...eodData, pendingApplications: e.target.value })}
+                          placeholder="N/A"
+                          rows={2}
+                          className="w-full px-2 py-1 text-sm rounded border border-neuro-base/20 bg-white/50 font-sans text-neuro-primary focus:outline-none focus:border-neuro-lavender resize-none"
+                        />
+                      </td>
+                    </tr>
+
+                    {/* Open Final Account Statements Row */}
+                    <tr>
+                      <td className="py-2 px-3 text-xs font-medium text-neuro-secondary" colSpan={6}>Open Final Account Statements</td>
+                    </tr>
+                    <tr className="bg-transparent">
+                      <td className="py-2 px-3" colSpan={6}>
+                        <textarea
+                          value={eodData.finalAccountStatements}
+                          onChange={(e) => setEodData({ ...eodData, finalAccountStatements: e.target.value })}
+                          placeholder="N/A"
+                          rows={2}
+                          className="w-full px-2 py-1 text-sm rounded border border-neuro-base/20 bg-white/50 font-sans text-neuro-primary focus:outline-none focus:border-neuro-lavender resize-none"
+                        />
+                      </td>
+                    </tr>
+
+                    {/* Cancelation Row */}
+                    <tr>
+                      <td className="py-2 px-3 text-xs font-medium text-neuro-secondary" colSpan={6}>Cancelation - reason</td>
+                    </tr>
+                    <tr className="bg-white/40">
+                      <td className="py-2 px-3" colSpan={6}>
+                        <textarea
+                          value={eodData.cancellationReason}
+                          onChange={(e) => setEodData({ ...eodData, cancellationReason: e.target.value })}
+                          placeholder="N/A"
+                          rows={2}
+                          className="w-full px-2 py-1 text-sm rounded border border-neuro-base/20 bg-white/50 font-sans text-neuro-primary focus:outline-none focus:border-neuro-lavender resize-none"
+                        />
+                      </td>
+                    </tr>
+
+
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         )}
       </Card>

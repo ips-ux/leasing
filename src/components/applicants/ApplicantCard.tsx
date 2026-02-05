@@ -69,6 +69,17 @@ export const ApplicantCard = ({ applicant, onClick }: ApplicantCardProps) => {
                   Applied: <span className="font-bold text-black/70">{formatDateUTC(profile.dateApplied)}</span>
                 </span>
               )}
+              {/* Agent Name */}
+              <div className="text-xs text-black/50 font-mono mt-1">
+                Agent: <span className="text-black/80 font-bold uppercase">
+                  {(() => {
+                    const agentId = tracking.assignedTo;
+                    if (!agentId) return 'N/A';
+                    const agent = users.find(u => u.uid === agentId);
+                    return agent ? (agent.Agent_Name || extractAgentName(agent.email)) : 'Unknown';
+                  })()}
+                </span>
+              </div>
             </div>
           </div>
 
@@ -136,21 +147,9 @@ export const ApplicantCard = ({ applicant, onClick }: ApplicantCardProps) => {
                   />
                 </div>
 
-                <p className="text-xs text-black/60 truncate mb-2">
+                <p className="text-xs text-black/60 truncate">
                   {WORKFLOW_STEPS[tracking.currentStep - 1]?.name || 'Complete'}
                 </p>
-
-                {/* Agent Name moved here */}
-                <div className="text-xs text-black/50 font-mono mt-1">
-                  Agent: <span className="text-black/80 font-bold uppercase">
-                    {(() => {
-                      const agentId = tracking.assignedTo;
-                      if (!agentId) return 'N/A';
-                      const agent = users.find(u => u.uid === agentId);
-                      return agent ? (agent.Agent_Name || extractAgentName(agent.email)) : 'Unknown';
-                    })()}
-                  </span>
-                </div>
               </>
             )}
           </div>
