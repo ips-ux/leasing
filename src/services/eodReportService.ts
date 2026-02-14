@@ -7,7 +7,6 @@
 
 import { db } from '../firebase/config';
 import { doc, getDoc, setDoc, Timestamp } from 'firebase/firestore';
-import { startOfDay, isAfter } from 'date-fns';
 
 export interface EODReportData {
     // Persistent fields (carry over day-to-day)
@@ -43,31 +42,8 @@ export async function getEODReport(): Promise<EODReportData> {
         if (eodSnap.exists()) {
             const data = eodSnap.data() as EODReportData;
 
-            // Check if we need to reset daily fields (new day)
-            const lastSubmittedDate = data.lastSubmitted.toDate();
-            const today = startOfDay(new Date());
-            const lastSubmittedDay = startOfDay(lastSubmittedDate);
-
-            if (isAfter(today, lastSubmittedDay)) {
-                // It's a new day, reset daily fields but keep persistent ones
-                return {
-                    // Keep persistent fields
-                    occupancy: data.occupancy,
-                    fourWeekTrend: data.fourWeekTrend,
-                    sixWeekTrend: data.sixWeekTrend,
-
-                    // Reset daily fields with auto-populated values
-                    traffic: '0',
-                    leases: '0',
-                    competition: 'N/A',
-                    reasonsNotLeasing: 'N/A',
-                    pendingApplications: 'N/A',
-                    finalAccountStatements: 'N/A',
-                    cancellationReason: 'N/A',
-
-                    lastSubmitted: data.lastSubmitted,
-                };
-            }
+            // Persistence: All fields now persist day-to-day as requested.
+            // Removed logic that reset daily fields based on date comparison.
 
             return data;
         }
