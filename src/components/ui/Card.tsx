@@ -19,20 +19,20 @@ export const Card = ({
   disableHoverAnimation = false
 }: CardProps) => {
   const priorityClasses = {
-    high: 'border-l-4 border-neuro-peach',
-    medium: 'border-l-4 border-neuro-yellow',
-    low: 'border-l-4 border-neuro-element-dark'
+    high: 'border-l-4 border-error',
+    medium: 'border-l-4 border-warning',
+    low: 'border-l-4 border-tertiary'
   };
 
   const priorityClass = priority ? priorityClasses[priority] : '';
-  const hoverClass = (hoverable || onClick) ? 'hover:shadow-neuro-raised cursor-pointer transition-all duration-300' : '';
+  const hoverClass = (hoverable || onClick) ? 'cursor-pointer' : '';
 
   return (
     <motion.div
-      className={`rounded-neuro-md bg-white/60 shadow-neuro-pressed p-3 ${priorityClass} ${hoverClass} ${className}`}
+      className={`neu-flat p-5 bg-surface ${priorityClass} ${hoverClass} ${className}`}
       onClick={onClick}
-      whileHover={(!disableHoverAnimation && (hoverable || onClick)) ? { y: -2 } : undefined}
-      transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+      whileHover={(!disableHoverAnimation && (hoverable || onClick)) ? { y: -4, boxShadow: '8px 8px 16px #D1D9E6, -8px -8px 16px #FFFFFF' } : undefined}
+      transition={{ duration: 0.3, ease: 'easeOut' }}
     >
       {children}
     </motion.div>

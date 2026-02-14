@@ -1,5 +1,4 @@
 import { Sidebar } from './Sidebar';
-import { GradientBackground } from '../ui';
 import { ContentContainer } from './ContentContainer';
 
 interface LayoutProps {
@@ -8,19 +7,16 @@ interface LayoutProps {
 
 export const Layout = ({ children }: LayoutProps) => {
   return (
-    <>
-      <GradientBackground />
-      <div className="min-h-screen flex bg-glass">
-        {/* Left Sidebar */}
-        <Sidebar />
+    <div className="min-h-screen flex bg-main">
+      {/* Left Sidebar */}
+      <Sidebar />
 
-        {/* Main Content Area */}
-        <main className="flex-1">
-          <ContentContainer>
-            {children}
-          </ContentContainer>
-        </main>
-      </div>
-    </>
+      {/* Main Content Area */}
+      <main className="flex-1 relative overflow-x-hidden">
+        <ContentContainer>
+          {children}
+        </ContentContainer>
+      </main>
+    </div>
   );
 };

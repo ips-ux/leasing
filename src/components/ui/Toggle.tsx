@@ -22,14 +22,10 @@ export const Toggle = ({
 }: ToggleProps) => {
     const [isPressed, setIsPressed] = useState(false);
 
-    const handleToggle = () => {
-        onChange(!value);
-    };
-
     return (
         <div
-            className={`relative flex items-center bg-neuro-base rounded-neuro-md shadow-neuro-pressed p-1 cursor-pointer select-none overflow-hidden ${className}`}
-            onClick={handleToggle}
+            className={`relative flex items-center neu-pressed p-1 cursor-pointer select-none overflow-hidden ${className}`}
+            onClick={() => onChange(!value)}
             onMouseDown={() => setIsPressed(true)}
             onMouseUp={() => setIsPressed(false)}
             onMouseLeave={() => setIsPressed(false)}
@@ -37,7 +33,7 @@ export const Toggle = ({
         >
             {/* Animated Background Pill */}
             <motion.div
-                className="absolute top-1 bottom-1 bg-neuro-lavender rounded-neuro-sm shadow-neuro-flat z-0"
+                className="absolute bg-surface shadow-sm rounded-lg border border-black/5 z-0"
                 initial={false}
                 animate={{
                     x: value ? '0%' : '100%',
@@ -49,26 +45,27 @@ export const Toggle = ({
                     damping: 30
                 }}
                 style={{
-                    width: 'calc(50% - 4px)', // Account for padding
-                    left: '4px', // Initial offset
-                    transformOrigin: value ? 'left center' : 'right center'
+                    width: 'calc(50% - 4px)',
+                    top: '4px',
+                    bottom: '4px',
+                    left: '4px',
                 }}
             />
 
             {/* Labels */}
             <div className="relative z-10 flex w-full">
                 <div
-                    className={`flex items-center justify-center gap-2 px-6 py-2 font-bold text-sm transition-colors duration-200 ${value ? 'text-neuro-primary' : 'text-neuro-secondary'
+                    className={`flex items-center justify-center gap-2 px-6 py-2 font-medium text-sm transition-colors duration-200 ${value ? 'text-primary' : 'text-secondary'
                         }`}
                 >
-                    {leftIcon && <span className="w-4 h-4">{leftIcon}</span>}
+                    {leftIcon && <span className="w-4 h-4 flex items-center justify-center">{leftIcon}</span>}
                     {leftLabel}
                 </div>
                 <div
-                    className={`flex items-center justify-center gap-2 px-6 py-2 font-bold text-sm transition-colors duration-200 ${!value ? 'text-neuro-primary' : 'text-neuro-secondary'
+                    className={`flex items-center justify-center gap-2 px-6 py-2 font-medium text-sm transition-colors duration-200 ${!value ? 'text-primary' : 'text-secondary'
                         }`}
                 >
-                    {rightIcon && <span className="w-4 h-4">{rightIcon}</span>}
+                    {rightIcon && <span className="w-4 h-4 flex items-center justify-center">{rightIcon}</span>}
                     {rightLabel}
                 </div>
             </div>

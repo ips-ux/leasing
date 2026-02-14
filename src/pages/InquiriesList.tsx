@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Button, Toggle } from '../components/ui';
+import { Button, Toggle, SegmentedControl } from '../components/ui';
 import { useInquiries } from '../hooks/useInquiries';
 import { useAuth } from '../hooks/useAuth';
 import { NewInquiryModal } from '../components/inquiries/NewInquiryModal';
@@ -127,23 +127,16 @@ export const InquiriesList = () => {
         {/* Controls: Month Tabs & Sorting */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white/60 p-4 rounded-neuro-md shadow-neuro-pressed">
           {/* Month Tabs */}
-          <div className="flex gap-2 flex-wrap">
-            {months.map((month) => (
-              <button
-                key={month}
-                onClick={() => setSelectedMonth(month)}
-                className={`
-                  px-4 py-2 font-semibold rounded-neuro-md transition-all text-sm
-                  ${selectedMonth === month
-                    ? 'bg-neuro-base text-neuro-primary shadow-neuro-pressed'
-                    : 'bg-neuro-base text-neuro-secondary shadow-neuro-flat hover:text-neuro-primary hover:shadow-neuro-raised'
-                  }
-                `}
-              >
-                {formatMonthDisplay(month)}
-              </button>
-            ))}
-          </div>
+          {/* Month Tabs */}
+          <SegmentedControl
+            options={months.map(month => ({
+              label: formatMonthDisplay(month),
+              value: month
+            }))}
+            value={selectedMonth}
+            onChange={setSelectedMonth}
+            className="flex-wrap"
+          />
 
           {/* Sorting */}
           <div className="flex items-center gap-2">

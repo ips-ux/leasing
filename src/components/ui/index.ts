@@ -10,6 +10,7 @@ export { Textarea } from './Textarea';
 export { Select } from './Select';
 export { DatePicker } from './DatePicker';
 export { Toggle } from './Toggle';
+export { SegmentedControl } from './SegmentedControl';
 export { ErrorBoundary } from './ErrorBoundary';
 export { FancyButton } from './FancyButton';
 export { UserSettingsPopover } from './UserSettingsPopover';

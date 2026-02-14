@@ -3,7 +3,7 @@ import { useApplicants } from '../hooks/useApplicants';
 import { useAuth } from '../hooks/useAuth';
 import { ApplicantList } from '../components/applicants/ApplicantList';
 import type { ApplicantStatus } from '../components/applicants/ApplicantList';
-import { Button, Card, Toggle } from '../components/ui';
+import { Button, Card, Toggle, SegmentedControl } from '../components/ui';
 import { NewApplicantModal } from '../components/applicants/NewApplicantModal';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUser, faUsers } from '@fortawesome/free-solid-svg-icons';
@@ -61,29 +61,17 @@ export const ApplicantsList = () => {
           </div>
 
           <div className="flex items-center gap-4">
-            <div className="flex gap-2 mr-4">
-              <button
-                onClick={() => setActiveStatus('in_progress')}
-                className={`px-4 py-2 text-sm font-bold rounded-neuro-md transition-all ${activeStatus === 'in_progress' ? 'bg-neuro-base text-neuro-primary shadow-neuro-pressed' : 'bg-transparent text-neuro-secondary hover:text-neuro-primary'
-                  }`}
-              >
-                In Progress
-              </button>
-              <button
-                onClick={() => setActiveStatus('completed')}
-                className={`px-4 py-2 text-sm font-bold rounded-neuro-md transition-all ${activeStatus === 'completed' ? 'bg-neuro-base text-neuro-primary shadow-neuro-pressed' : 'bg-transparent text-neuro-secondary hover:text-neuro-primary'
-                  }`}
-              >
-                Complete
-              </button>
-              <button
-                onClick={() => setActiveStatus('cancelled')}
-                className={`px-4 py-2 text-sm font-bold rounded-neuro-md transition-all ${activeStatus === 'cancelled' ? 'bg-neuro-base text-neuro-primary shadow-neuro-pressed' : 'bg-transparent text-neuro-secondary hover:text-neuro-primary'
-                  }`}
-              >
-                Cancelled
-              </button>
-            </div>
+            <SegmentedControl
+              options={[
+                { label: 'In Progress', value: 'in_progress' },
+                { label: 'Post Move-In', value: 'post_move_in' },
+                { label: 'Complete', value: 'completed' },
+                { label: 'Cancelled', value: 'cancelled' }
+              ]}
+              value={activeStatus}
+              onChange={(value) => setActiveStatus(value as ApplicantStatus)}
+              className="mr-4"
+            />
 
             <div className="h-8 w-px bg-black/10 mr-2"></div>
 

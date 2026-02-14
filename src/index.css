@@ -1,320 +1,173 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Space+Mono:wght@400;700&display=swap');
 @import "tailwindcss";
 
-/* Custom utility classes for Neumorphism theme */
+@theme {
+  /* Colors */
+  --color-main: #F5F5F7;
+  --color-surface: #FFFFFF;
+  --color-surface-highlight: #F5F5F7;
+
+  --color-primary: #1D1D1F;
+  --color-secondary: #86868B;
+  --color-tertiary: #D2D2D7;
+
+  --color-accent: #007AFF;
+  --color-success: #008805;
+  --color-error: #D70015;
+  --color-warning: #FF9F0A;
+
+  --color-sidebar-bg: #1C1C1E;
+  --color-sidebar-surface: #2C2C2E;
+  --color-sidebar-text: #E5E5EA;
+  --color-sidebar-muted: #8E8E93;
+  --color-sidebar-border: #38383A;
+
+  /* Shadows */
+  --shadow-soft: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  --shadow-soft-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025);
+  --shadow-soft-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 10px 10px -5px rgba(0, 0, 0, 0.02);
+  --shadow-inner-light: inset 0 1px 2px rgba(0, 0, 0, 0.05);
+
+  /* Border Radius */
+  --radius-xl: 0.75rem;
+  --radius-2xl: 1rem;
+  --radius-3xl: 1.5rem;
+
+  /* Fonts */
+  --font-sans: 'Inter', 'Public Sans', sans-serif;
+  --font-mono: 'Space Mono', 'JetBrains Mono', monospace;
+
+  /* Animations */
+  --animate-fade-in: fadeIn 0.3s ease-in-out;
+  --animate-slide-up: slideUp 0.4s ease-out;
+
+  @keyframes fadeIn {
+    0% {
+      opacity: 0;
+    }
+
+    100% {
+      opacity: 1;
+    }
+  }
+
+  @keyframes slideUp {
+    0% {
+      transform: translateY(10px);
+      opacity: 0;
+    }
+
+    100% {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+}
+
 @layer utilities {
+  /* Soft Apple-Like Neumorphism */
 
-  /* Neumorphic Base Colors */
-  .bg-neuro-base {
-    background-color: #7AB0DF30;
+  .neu-flat {
+    background-color: var(--color-main);
+    box-shadow:
+      6px 6px 12px #D1D9E6,
+      -6px -6px 12px #FFFFFF;
+    border-radius: .5rem;
+    border: 1px solid rgba(255, 255, 255, 0.4);
   }
 
-  .bg-glass {
-    background: rgba(255, 255, 255, 0.75);
+  .neu-pressed {
+    background-color: var(--color-main);
+    box-shadow:
+      inset 4px 4px 8px #D1D9E6,
+      inset -4px -4px 8px #FFFFFF;
+    border-radius: .5rem;
+    border: 1px solid rgba(209, 217, 230, 0.2);
+  }
+
+  .neu-action {
+    /* For primary buttons */
+    background-color: var(--color-surface);
+    color: var(--color-primary);
+    font-weight: 500;
+    box-shadow:
+      4px 4px 8px #D1D9E6,
+      -4px -4px 8px #FFFFFF;
+    transition: all 0.2s ease-in-out;
+    border-radius: 0.75rem;
+  }
+
+  .neu-action:hover {
+    transform: translateY(-2px);
+    box-shadow:
+      6px 6px 12px #D1D9E6,
+      -6px -6px 12px #FFFFFF;
+  }
+
+  .neu-action:active {
+    transform: translateY(0);
+    box-shadow:
+      inset 2px 2px 5px #D1D9E6,
+      inset -2px -2px 5px #FFFFFF;
+  }
+
+  /* Dark Neumorphism (For Sidebar) */
+  .neu-dark-flat {
+    background-color: var(--color-sidebar-bg);
+    box-shadow:
+      5px 5px 10px #151516,
+      -5px -5px 10px #232326;
+    border-radius: 1rem;
+  }
+
+  .neu-dark-pressed {
+    background-color: var(--color-sidebar-bg);
+    box-shadow:
+      inset 3px 3px 6px #151516,
+      inset -3px -3px 6px #232326;
+    border-radius: 1rem;
+  }
+
+  .neu-dark-action {
+    background-color: var(--color-sidebar-surface);
+    color: var(--color-sidebar-text);
+    box-shadow:
+      4px 4px 8px #151516,
+      -4px -4px 8px #232326;
+    border-radius: 0.75rem;
+    transition: all 0.2s ease-in-out;
+  }
+
+  .neu-dark-action:hover {
+    background-color: #3A3A3C;
+  }
+
+  /* Glassmorphism Utilities (Keep for overlays) */
+  .glass {
+    background: rgba(255, 255, 255, 0.7);
     backdrop-filter: blur(20px);
-  }
-
-  .bg-neuro-element {
-    background-color: #ECEFF4;
-  }
-
-  .bg-neuro-element-dark {
-    background-color: #D1D9E6;
-  }
-
-  /* Neumorphic Accent Colors (Desaturated) */
-  .bg-neuro-lavender {
-    background-color: #D4C5F9;
-  }
-
-  .bg-neuro-mint {
-    background-color: #C8E6D0;
-  }
-
-  .bg-neuro-peach {
-    background-color: #F5C6C6;
-  }
-
-  .bg-neuro-yellow {
-    background-color: #F5EEC8;
-  }
-
-  .bg-neuro-blue {
-    background-color: #C8D9F5;
-  }
-
-  /* Neumorphic Text Colors */
-  .text-neuro-primary {
-    color: #4A5568;
-  }
-
-  .text-neuro-secondary {
-    color: #718096;
-  }
-
-  .text-neuro-muted {
-    color: #A0AEC0;
-  }
-
-  /* Neumorphic Shadows - Dual Light */
-  .shadow-neuro-raised {
-    box-shadow: -2px -2px 4px rgba(255, 255, 255, 0.8),
-      2px 2px 4px rgba(0, 0, 0, 0.15);
-  }
-
-  .shadow-neuro-pressed {
-    box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.1),
-      inset -2px -2px 5px rgba(255, 255, 255, 0.7);
-  }
-
-  .shadow-neuro-flat {
-    box-shadow: -1px -1px 2px rgba(255, 255, 255, 0.6), 1px 1px 2px rgba(0, 0, 0, 0.1);
-  }
-
-  .shadow-neuro-hover {
-    box-shadow: -3px -3px 4px rgba(255, 255, 255, 0.9),
-      5px 5px 10px rgba(0, 0, 0, 0.2);
-  }
-
-  .shadow-neuro-active {
-    box-shadow: inset -2px -2px 4px rgba(255, 255, 255, 0.5),
-      inset 2px 2px 4px rgba(0, 0, 0, 0.1);
-  }
-
-  /* Neumorphic Border Radius */
-  .rounded-neuro-sm {
-    border-radius: 4px;
-  }
-
-  .rounded-neuro-md {
-    border-radius: 8px;
-  }
-
-  .rounded-neuro-lg {
-    border-radius: 12px;
-  }
-
-  .rounded-neuro-xl {
-    border-radius: 16px;
-  }
-
-  /* Neumorphic Animations */
-  .animate-pulse-glow {
-    animation: pulse-glow-neuro 3s infinite;
-  }
-
-  .animate-pulse-urgent {
-    animation: pulse-urgent-neuro 2.5s infinite;
-  }
-
-  /* Neumorphic Button Styles */
-  .btn-neuro {
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: -1px -1px 2px rgba(255, 255, 255, 0.6), 1px 1px 2px rgba(0, 0, 0, 0.1), inset 1px 1px 3px rgba(255, 255, 255, 0.5), inset -1px -1px 3px rgba(0, 0, 0, 0.1);
-    transform: scale(1);
-  }
-
-  .btn-neuro:hover {
-    /* 50% Pressed */
-    box-shadow: -2px -2px 3px rgba(255, 255, 255, 0.6), 2px 2px 3px rgba(0, 0, 0, 0.1), inset 2px 2px 3px rgba(255, 255, 255, 0.5), inset -2px -2px 3px rgba(0, 0, 0, 0.1);
-    transform: scale(0.99);
-  }
-
-  .btn-neuro:active {
-    /* 110% Pressed (Deep Inset) */
-    box-shadow: inset -4px -4px 8px rgba(255, 255, 255, 0.6), inset 4px 4px 8px rgba(0, 0, 0, 0.2);
-    transform: scale(0.97);
-  }
-
-  .btn-neuro.pressed {
-    /* 100% Pressed (Normal Inset) */
-    box-shadow: inset -2px -2px 4px rgba(255, 255, 255, 0.6), inset 2px 2px 4px rgba(0, 0, 0, 0.1);
-    transform: scale(0.98);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.5);
   }
 }
 
-@keyframes pulse-glow-neuro {
-
-  0%,
-  100% {
-    box-shadow: 0 0 10px rgba(245, 198, 198, 0.3);
-  }
-
-  50% {
-    box-shadow: 0 0 15px rgba(245, 198, 198, 0.5);
-  }
-}
-
-@keyframes pulse-urgent-neuro {
-
-  0%,
-  100% {
-    box-shadow: 0 0 12px rgba(245, 198, 198, 0.4);
-  }
-
-  50% {
-    box-shadow: 0 0 18px rgba(245, 198, 198, 0.6);
-  }
-}
-
-:root {
-  /* Gradient wave background colors - vibrant rainbow that changes with time */
-  --hue-start: 12;
-  --saturation-start: 30;
-  --lightness-start: 67;
-  --hue-end: 216;
-  --saturation-end: 100;
-  --lightness-end: 50;
-}
-
+/* Base Styles */
 body {
   font-family: 'Inter', sans-serif;
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  color: #4A5568;
+  color: var(--color-primary);
+  background-color: var(--color-main);
   position: relative;
   overflow-x: hidden;
-  background: url(https://github.com/supahfunk/gradientwaves-svg/blob/master/dist/img/bg-gradient-wave.png?raw=true) repeat center / cover;
-}
-
-svg {
-  /* width: 100vw;
-  height: 100vh; */
-
-  &.path {
-
-    path {
-      stroke: none;
-    }
-  }
-
-  &.stroke {
-
-    path {
-      fill: none;
-      stroke-width: 1px;
-    }
-  }
-
-  .circle {
-    fill: #fff;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
-}
-
-/* Neumorphic Inputs (Radio & Checkbox) */
-.neuro-input-group {
-  padding: 48px 64px;
-  border-radius: 16px;
-  background: #ecf0f3;
-  box-shadow: 4px 4px 4px 0px #d1d9e6 inset, -4px -4px 4px 0px #ffffff inset;
-}
-
-.neuro-input-wrapper {
-  margin: 8px 0;
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-
-.neuro-input-state {
-  position: absolute;
-  top: 0;
-  right: 0;
-  opacity: 0;
-  pointer-events: none;
-  width: 0;
-  height: 0;
-}
-
-.neuro-input-label {
-  display: inline-flex;
-  align-items: center;
-  cursor: pointer;
-  color: #394a56;
-  width: 100%;
-}
-
-.neuro-input-text {
-  margin-left: 16px;
-  opacity: 0.6;
-  transition: opacity 0.2s linear;
-  font-weight: 500;
-}
-
-.neuro-input-indicator {
-  position: relative;
-  border-radius: 50%;
-  /* Default to Radio (Round) */
-  height: 30px;
-  width: 30px;
-  min-width: 30px;
-  box-shadow: -3px -3px 4px 0px #ffffff, 3px 3px 6px 0px #d1d9e6ef;
-  overflow: hidden;
-  background: #ecf0f3;
-}
-
-/* Checkbox specific override */
-.neuro-input-indicator.checkbox {
-  border-radius: 12px;
-}
-
-.neuro-input-indicator.checkbox::before,
-.neuro-input-indicator.checkbox::after {
-  border-radius: 12px;
-}
-
-.neuro-input-indicator::before,
-.neuro-input-indicator::after {
-  content: "";
-  position: absolute;
-  top: 10%;
-  left: 10%;
-  height: 80%;
-  width: 80%;
-  border-radius: 50%;
-  /* Default to Radio */
-}
-
-.neuro-input-indicator::before {
-  box-shadow: -4px -2px 4px 0px #0000000a, 4px 2px 8px 0px #fff;
-}
-
-.neuro-input-indicator::after {
-  background-color: #f5fff669;
-  box-shadow: -4px -2px 4px 0px #fff, 4px 2px 8px 0px #d1d9e6;
-  transform: scale3d(1, 1, 1);
-  transition: opacity 0.25s ease-in-out, transform 0.25s ease-in-out;
-}
-
-.neuro-input-state:checked~.neuro-input-label .neuro-input-indicator::after {
-  transform: scale3d(0.975, 0.975, 1) translate3d(0, 10%, 0);
-  opacity: 0;
-}
-
-.neuro-input-state:focus~.neuro-input-label .neuro-input-text {
-  opacity: 1;
-}
-
-.neuro-input-label:hover .neuro-input-text {
-  opacity: 1;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
-  width: 12px;
-  height: 12px;
+  width: 10px;
+  height: 10px;
 }
 
 ::-webkit-scrollbar-track {
@@ -322,19 +175,23 @@ svg {
 }
 
 ::-webkit-scrollbar-thumb {
-  background-color: rgba(160, 174, 192, 0.6);
-  /* text-neuro-muted with opacity */
+  background-color: #C1C1C4;
   border-radius: 6px;
-  border: 3px solid transparent;
+  border: 2px solid var(--color-main);
   background-clip: content-box;
   transition: background-color 0.2s;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(113, 128, 150, 0.8);
-  /* text-neuro-secondary */
+  background-color: #A0A0A5;
 }
 
 ::-webkit-scrollbar-corner {
   background: transparent;
+}
+
+/* Smooth transitions for all interactive elements */
+button,
+a {
+  transition: all 0.2s ease-in-out;
 }

@@ -5,7 +5,7 @@ import { ApplicantCard } from './ApplicantCard';
 import { Input, Button } from '../ui';
 import type { Applicant } from '../../types/applicant';
 
-export type ApplicantStatus = 'in_progress' | 'completed' | 'cancelled';
+export type ApplicantStatus = 'in_progress' | 'post_move_in' | 'completed' | 'cancelled';
 
 interface ApplicantListProps {
   applicants: Applicant[];
@@ -35,7 +35,37 @@ export const ApplicantList = ({ applicants, loading, activeStatus }: ApplicantLi
 
     // Filter by Tab
     if (activeStatus === 'in_progress') {
-      result = result.filter(app => app["2_Tracking"].status === 'in_progress' || app["2_Tracking"].status === 'approved' || app["2_Tracking"].status === 'finalize_move_in');
+      result = result.filter(app => {
+        // Show if strict status is in_progress
+        if (app["2_Tracking"].status === 'in_progress' || app["2_Tracking"].status === 'approved') return true;
+
+        // Also show 'finalize_move_in' IF they haven't finished step 5 yet? 
+        // User said "Post Move-In" is "finished with steps 1-5". 
+        // So "In Progress" should be everything BEFORE that.
+        // Let's check step completion.
+        const workflow = app.workflow || {};
+        const steps1to5 = ['1', '2', '3', '4', '5'];
+        const finishedSteps1to5 = steps1to5.every(stepId => workflow[stepId]?.isCompleted);
+
+        // If status is 'finalize_move_in' but NOT finished steps 1-5, it's still "In Progress" (or technically pre-move-in)
+        if (app["2_Tracking"].status === 'finalize_move_in' && !finishedSteps1to5) return true;
+
+        return false;
+      });
+    } else if (activeStatus === 'post_move_in') {
+      // "finished with steps 1-5 but not fully complete"
+      result = result.filter(app => {
+        // Must be in finalize_move_in status (or potentially approved if they finished steps early?)
+        // Usually "Post Move-In" implies they moved in or are about to, and have follow-up tasks.
+
+        if (app["2_Tracking"].status === 'completed' || app["2_Tracking"].status === 'cancelled') return false;
+
+        const workflow = app.workflow || {};
+        const steps1to5 = ['1', '2', '3', '4', '5'];
+        const finishedSteps1to5 = steps1to5.every(stepId => workflow[stepId]?.isCompleted);
+
+        return finishedSteps1to5;
+      });
     } else if (activeStatus === 'completed') {
       result = result.filter(app => app["2_Tracking"].status === 'completed');
     } else if (activeStatus === 'cancelled') {

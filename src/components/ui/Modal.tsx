@@ -33,20 +33,20 @@ export const Modal = ({ isOpen, onClose, title, children }: ModalProps) => {
             style={{ top: 0, left: 0, right: 0, bottom: 0 }}
           >
             <motion.div
-              className="backdrop-blur-xl rounded-neuro-xl shadow-neuro-raised max-w-2xl w-full max-h-[90vh] overflow-y-auto"
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.8, opacity: 0 }}
+              className="neu-flat bg-surface/95 backdrop-blur-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+              initial={{ scale: 0.95, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 20 }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="p-6">
+              <div className="p-8">
                 {title && (
-                  <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-2xl font-semibold font-sans text-neuro-primary">{title}</h2>
+                  <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-2xl font-bold tracking-tight text-primary">{title}</h2>
                     <button
                       onClick={onClose}
-                      className="w-8 h-8 rounded-full shadow-neuro-flat hover:shadow-neuro-raised transition-all duration-200 flex items-center justify-center text-neuro-primary text-xl font-semibold"
+                      className="w-8 h-8 rounded-full hover:bg-black/5 transition-colors flex items-center justify-center text-secondary hover:text-primary text-xl"
                       aria-label="Close modal"
                     >
                       ×

@@ -13,7 +13,7 @@ interface NavLinkItemProps {
 const NavLinkItem = ({ to, children, disabled = false }: NavLinkItemProps) => {
   if (disabled) {
     return (
-      <div className="px-4 py-3 text-neuro-muted cursor-not-allowed border-l-4 border-transparent">
+      <div className="px-5 py-3 text-sidebar-muted cursor-not-allowed rounded-xl mx-2">
         {children}
       </div>
     );
@@ -23,9 +23,9 @@ const NavLinkItem = ({ to, children, disabled = false }: NavLinkItemProps) => {
     <NavLink
       to={to}
       className={({ isActive }) =>
-        `block px-4 py-3 border-l-4 transition-all duration-200 font-medium ${isActive
-          ? 'border-neuro-lavender bg-neuro-lavender/20 text-neuro-primary'
-          : 'border-transparent hover:bg-white/20 hover:border-neuro-blue/40 text-neuro-secondary'
+        `block px-5 py-3 rounded-xl transition-all duration-200 font-medium mx-2 ${isActive
+          ? 'bg-sidebar-surface text-white shadow-inner-light' // Active state
+          : 'text-sidebar-muted hover:text-white hover:bg-white/5' // Inactive state
         }`
       }
     >
@@ -50,38 +50,33 @@ export const Sidebar = () => {
 
   return (
     <aside
-      className="w-64 h-screen flex flex-col sticky top-0"
-      style={{
-        borderRight: '1px solid rgba(255, 255, 255, 0.4)'
-      }}
+      className="w-72 h-screen flex flex-col sticky top-0 bg-sidebar-bg text-sidebar-text shadow-xl z-50"
     >
       {/* Header/Logo */}
-      <div className="p-6 border-b border-white/20">
-        <h1 className="text-2xl font-semibold text-neuro-primary">Leasing Assist</h1>
+      <div className="p-8 border-b border-sidebar-border">
+        <h1 className="text-2xl font-bold tracking-tight text-white/90">Leasing Assist</h1>
       </div>
 
       {/* Navigation Links */}
-      <nav className="flex-1 py-4 overflow-y-auto">
-        <div className="space-y-1">
-          <NavLinkItem to="/dashboard">Dashboard</NavLinkItem>
-          <NavLinkItem to="/applicants">Applicants</NavLinkItem>
-          <NavLinkItem to="/inquiries">Inquiries</NavLinkItem>
-          <NavLinkItem to="/scheduler">Scheduler</NavLinkItem>
-          <NavLinkItem to="/reports">Reports</NavLinkItem>
-        </div>
+      <nav className="flex-1 py-6 px-4 overflow-y-auto space-y-2">
+        <NavLinkItem to="/dashboard">Dashboard</NavLinkItem>
+        <NavLinkItem to="/applicants">Applicants</NavLinkItem>
+        <NavLinkItem to="/inquiries">Inquiries</NavLinkItem>
+        <NavLinkItem to="/scheduler">Scheduler</NavLinkItem>
+        <NavLinkItem to="/reports">Reports</NavLinkItem>
       </nav>
 
       {/* User Profile Section */}
-      <div className="p-4 border-t border-white/20">
-        <div className="flex items-center gap-3 mb-3 relative">
+      <div className="p-4 border-t border-sidebar-border bg-sidebar-bg">
+        <div className="neu-dark p-4 mb-4 flex items-center gap-3 relative">
           <div ref={avatarRef} className="relative">
             <FancyButton
               onClick={() => setIsPopoverOpen(!isPopoverOpen)}
-              className="p-1.5 bg-neuro-base shadow-neuro-pressed"
+              className="p-1 rounded-full hover:bg-sidebar-surface transition-colors"
               isActive={isPopoverOpen}
             >
-              <div className="flex items-center justify-center w-10 h-10 rounded-full bg-neuro-lavender shadow-neuro-flat">
-                <span className="text-lg font-semibold text-neuro-primary">
+              <div className="flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-br from-sidebar-surface to-black shadow-inner border border-sidebar-border">
+                <span className="text-sm font-bold text-white">
                   {user?.displayName?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || 'U'}
                 </span>
               </div>
@@ -96,18 +91,19 @@ export const Sidebar = () => {
           </div>
 
           <div className="flex-1 min-w-0">
-            <div className="font-medium truncate text-sm text-neuro-primary">
+            <div className="font-semibold truncate text-sm text-white/90">
               {user?.Agent_Name || 'User'}
             </div>
-            <div className="text-xs text-neuro-secondary truncate">
+            <div className="text-xs text-sidebar-muted truncate">
               {user?.email}
             </div>
           </div>
         </div>
+
         <Button
-          variant="danger"
+          variant="danger-dark"
           onClick={handleSignOut}
-          className="w-full text-sm"
+          className="w-full text-sm py-3 rounded-xl border border-red-900/30"
         >
           Sign Out
         </Button>

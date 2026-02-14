@@ -7,12 +7,8 @@ interface ContentContainerProps {
 
 export const ContentContainer = ({ children, className = '' }: ContentContainerProps) => {
   return (
-    <div className="min-h-screen flex items-start justify-center">
-      <div
-        className={`w-full min-h-screen p-4 ${className}`}
-      >
-        {children}
-      </div>
+    <div className={`w-full max-w-7xl mx-auto p-8 ${className}`}>
+      {children}
     </div>
   );
 };
