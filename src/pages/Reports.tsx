@@ -12,7 +12,7 @@ type ReportType = 'move-in' | 'concession' | 'eod';
 export const Reports = () => {
   const { applicants, loading } = useApplicants();
   const { users } = useUsers();
-  const [selectedReport, setSelectedReport] = useState<ReportType>('move-in');
+  const [selectedReport, setSelectedReport] = useState<ReportType>('eod');
   const [currentViewDate, setCurrentViewDate] = useState(new Date());
   const [isMonthOpen, setIsMonthOpen] = useState(false);
   const [isReportTypeOpen, setIsReportTypeOpen] = useState(false);
@@ -374,9 +374,9 @@ export const Reports = () => {
               <div className="absolute top-full left-0 right-0 mt-3 py-2 bg-white/95 backdrop-blur-sm rounded-neuro-md shadow-neuro-floating z-50 animate-in fade-in zoom-in-95 duration-200 border border-neuro-white/50">
                 <div className="max-h-60 overflow-y-auto custom-scrollbar">
                   {[
+                    { value: 'eod', label: 'EOD Report' },
                     { value: 'move-in', label: 'Move-In Report' },
-                    { value: 'concession', label: 'Concession Report' },
-                    { value: 'eod', label: 'EOD Report' }
+                    { value: 'concession', label: 'Concession Report' }
                   ].map((option) => (
                     <button
                       key={option.value}
