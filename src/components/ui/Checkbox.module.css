@@ -1,0 +1,67 @@
+.checkboxWrapper input[type="checkbox"] {
+    visibility: hidden;
+    display: none;
+}
+
+.checkboxWrapper *,
+.checkboxWrapper ::after,
+.checkboxWrapper ::before {
+    box-sizing: border-box;
+    user-select: none;
+}
+
+.checkboxWrapper {
+    position: relative;
+    display: block;
+    overflow: hidden;
+}
+
+.checkboxWrapper .label {
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    /* Added gap to separate checkbox from text */
+}
+
+.checkboxWrapper .check {
+    width: 50px;
+    height: 50px;
+    position: absolute;
+    opacity: 0;
+}
+
+.checkboxWrapper .label svg {
+    vertical-align: middle;
+    width: 45px;
+    /* Explicit width from HTML */
+    height: 45px;
+    /* Explicit height from HTML */
+    flex-shrink: 0;
+    /* Prevent shrinking in flex container */
+}
+
+.checkboxWrapper .path1 {
+    stroke-dasharray: 400;
+    stroke-dashoffset: 400;
+    transition: .5s stroke-dashoffset;
+    opacity: 0;
+}
+
+/* 
+  Since the input is hidden and outside the label in the original CSS selector structure:
+  .checkbox-wrapper .check:checked + label svg g path
+  
+  In React, we might structure it slightly differently or stick to adjacent sibling.
+  I will ensure the input is placed before the label in the JSX.
+*/
+.checkboxWrapper input:checked+.label svg g path {
+    stroke-dashoffset: 0;
+    opacity: 1;
+}
+
+/* Added disabled state styling */
+.checkboxWrapper input:disabled+.label {
+    opacity: 0.5;
+    cursor: not-allowed;
+}

@@ -1,6 +1,6 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Card, Button, Badge, Input, DatePicker, Modal, Select, Textarea } from '../components/ui';
 import { WorkflowChecklist } from '../components/applicants/WorkflowChecklist';
 import { useApplicant } from '../hooks/useApplicant';
@@ -99,13 +99,55 @@ export const ApplicantDetail = () => {
     }
   }, [loading, applicant?.id, isEditing]);
 
+  // Sticky Header Logic
+  const [showStickyHeader, setShowStickyHeader] = useState(false);
+  const [headerStyle, setHeaderStyle] = useState<React.CSSProperties>({});
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleScrollAndResize = () => {
+      const cardElement = document.getElementById('applicant-card-container');
+      const containerElement = containerRef.current;
+
+      if (cardElement && containerElement) {
+        const rect = cardElement.getBoundingClientRect();
+        const containerRect = containerElement.getBoundingClientRect();
+
+        // Update visibility
+        setShowStickyHeader(rect.bottom < 120);
+
+        // Update measurement for fixed header
+        setHeaderStyle({
+          width: containerRect.width,
+          left: containerRect.left,
+        });
+      }
+    };
+
+    window.addEventListener('scroll', handleScrollAndResize);
+    window.addEventListener('resize', handleScrollAndResize);
+
+    // Initial check
+    handleScrollAndResize();
+
+    return () => {
+      window.removeEventListener('scroll', handleScrollAndResize);
+      window.removeEventListener('resize', handleScrollAndResize);
+    };
+  }, []);
+
   const handleEditClick = () => {
     initEditData();
     setIsEditing(true);
   };
 
-  const handleCancelEdit = () => {
-    setIsEditing(false);
+  const handleEditChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setEditData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleEditDateChange = (name: string) => (date: Date) => {
+    setEditData((prev) => ({ ...prev, [name]: date }));
   };
 
   const handleSaveEdit = async () => {
@@ -125,13 +167,8 @@ export const ApplicantDetail = () => {
     }
   };
 
-  const handleEditChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setEditData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleEditDateChange = (name: string) => (date: Date) => {
-    setEditData((prev) => ({ ...prev, [name]: date }));
+  const handleCancelEdit = () => {
+    setIsEditing(false);
   };
 
   const handlePromoteToResident = async () => {
@@ -244,10 +281,69 @@ export const ApplicantDetail = () => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
+      ref={containerRef}
     >
-      {/* Floating Back Button */}
-      {/* Sticky Back Button */}
-      <div className="sticky top-[78px] z-40 flex justify-end pointer-events-none">
+      {/* Sticky Top Bar (Fixed + Measured) */}
+      <AnimatePresence>
+        {showStickyHeader && (
+          <motion.div
+            className="fixed top-4 z-50 bg-white/80 backdrop-blur-xl shadow-neuro-raised border border-white/40 rounded-2xl px-6 py-3 flex items-center justify-between pointer-events-auto"
+            style={headerStyle}
+            initial={{ y: -100, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: -100, opacity: 0 }}
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+          >
+            <div className="flex items-center gap-6 overflow-x-auto no-scrollbar">
+              <div>
+                <h3 className="font-bold text-lg leading-tight">{profile.name}</h3>
+                <p className="text-xs font-mono text-black/50">Unit {profile.unit}</p>
+              </div>
+
+              <div className="hidden md:flex items-center gap-6">
+                <div>
+                  <p className="text-[10px] font-mono text-black/50 uppercase">Move-In</p>
+                  <p className="text-sm font-semibold">{formatDate(profile.moveInDate)}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] font-mono text-black/50 uppercase">Applied</p>
+                  <p className="text-sm font-semibold">{formatDate(profile.dateApplied)}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] font-mono text-black/50 uppercase">Concession</p>
+                  <p className="text-sm font-semibold">{profile.concessionApplied || 'None'}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] font-mono text-black/50 uppercase">Agent</p>
+                  <p className="text-sm font-semibold">
+                    {users.find(u => u.uid === tracking.assignedTo)?.Agent_Name ||
+                      extractAgentName(users.find(u => u.uid === tracking.assignedTo)?.email) || 'N/A'}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Badge variant={getStatusBadge(tracking.status)} className="scale-90">
+                {tracking.status.replace('_', ' ').toUpperCase()}
+              </Badge>
+              <Button
+                variant="secondary"
+                onClick={() => navigate('/applicants')}
+                className="!text-xs !px-3 !py-1.5"
+              >
+                Back
+              </Button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Sticky Back Button (only visible when sticky header is NOT visible) */}
+      <motion.div
+        className="sticky top-[78px] z-40 flex justify-end pointer-events-none"
+        animate={{ opacity: showStickyHeader ? 0 : 1, pointerEvents: showStickyHeader ? 'none' : 'auto' as any }}
+      >
         <Button
           variant="secondary"
           onClick={() => navigate('/applicants')}
@@ -255,7 +351,7 @@ export const ApplicantDetail = () => {
         >
           ← Back to List
         </Button>
-      </div>
+      </motion.div>
 
       {/* Header */}
       <div className="flex justify-between items-start flex-wrap gap-4">
@@ -266,31 +362,14 @@ export const ApplicantDetail = () => {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.3 }}
           >
-            {isEditing ? editData.name : profile.name}
+            Applicant Workflow Checklist
           </motion.h1>
-          <motion.div
-            className="flex items-center gap-3 flex-wrap"
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.3, delay: 0.1 }}
-          >
-            <span className="font-mono text-black/60">Unit {isEditing ? editData.unit : profile.unit}</span>
-            <Badge variant={getStatusBadge(tracking.status)}>
-              {tracking.status.replace('_', ' ').toUpperCase()}
-            </Badge>
-
-            {/* Tags from optional checkboxes */}
-            {applicant.tags && applicant.tags.map((tag, i) => (
-              <Badge key={i} variant="medium" className="text-[10px]">
-                {tag}
-              </Badge>
-            ))}
-          </motion.div>
         </div>
       </div>
 
       {/* Applicant Info Card */}
       <motion.div
+        id="applicant-card-container"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, delay: 0.2 }}
@@ -353,6 +432,25 @@ export const ApplicantDetail = () => {
           ) : (
             // View Mode
             <>
+              {/* Primary Applicant Info (Moved from Header) */}
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 pb-6 border-b-2 border-black/10">
+                <div>
+                  <h2 className="text-3xl font-bold mb-1">{profile.name}</h2>
+                  <p className="text-xl font-mono text-black/60">Unit {profile.unit}</p>
+                </div>
+                <div className="flex items-center gap-3 flex-wrap">
+                  <Badge variant={getStatusBadge(tracking.status)} className="!text-sm !px-3 !py-1">
+                    {tracking.status.replace('_', ' ').toUpperCase()}
+                  </Badge>
+                  {/* Tags from optional checkboxes */}
+                  {applicant.tags && applicant.tags.map((tag, i) => (
+                    <Badge key={i} variant="medium" className="text-[10px]">
+                      {tag}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+
               {/* Assigned Agent - Prominent Display */}
               <div className="mb-4 pb-4 border-b-2 border-black/20">
                 <p className="text-xs font-mono text-black/50 uppercase mb-1">Assigned To</p>

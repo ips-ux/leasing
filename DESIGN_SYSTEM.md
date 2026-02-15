@@ -71,7 +71,13 @@ Monospace:  'Space Mono', monospace
 - **Appearance**: Inset shadow to look "carved" into the surface.
 - **Focus**: Ring with accent color.
 
-### 4. Sidebar
+### 4. Checkboxes (`src/components/ui/Checkbox.tsx`)
+- **Style**: Scribbled Animation.
+- **Appearance**: Unique hand-drawn black SVG square that animates a checkmark when selected.
+- **Interaction**: Animated stroke on check.
+- **Usage**: De-facto standard for all boolean selections.
+
+### 5. Sidebar
 - **Theme**: Dark Neumorphism (`neu-dark-*`)
 - **Background**: Dark Grey (`#1C1C1E`)
 - **Separation**: Clear distinction from the light main content.

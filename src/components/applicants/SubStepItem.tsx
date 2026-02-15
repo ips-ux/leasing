@@ -111,48 +111,25 @@ export const SubStepItem = ({
                     {/* For checkbox and checkbox-na types */}
                     {(config.type === 'checkbox' || config.type === 'checkbox-na') && (
                         <>
-                            <motion.button
-                                type="button"
-                                onClick={handleCheckboxToggle}
+                            <Checkbox
+                                label={config.label}
+                                name={`step-${config.id}`}
+                                checked={data.isCompleted}
+                                onChange={handleCheckboxToggle}
                                 disabled={!isEnabled || data.isNA}
-                                className={`
-                  w-6 h-6 rounded-neuro-sm flex items-center justify-center flex-shrink-0
-                  ${data.isCompleted ? 'bg-neuro-mint shadow-neuro-pressed' : 'bg-neuro-base shadow-neuro-flat'}
-                  ${isEnabled && !data.isNA ? 'cursor-pointer hover:text-neuro-primary' : 'cursor-not-allowed opacity-50'}
-                  transition-all duration-200
-                `}
-                                whileTap={isEnabled && !data.isNA ? { scale: 0.9 } : {}}
-                            >
-                                <AnimatePresence>
-                                    {data.isCompleted && (
-                                        <motion.span
-                                            initial={{ scale: 0 }}
-                                            animate={{ scale: 1 }}
-                                            exit={{ scale: 0 }}
-                                            className="text-black font-bold text-sm leading-none"
-                                        >
-                                            ✓
-                                        </motion.span>
-                                    )}
-                                </AnimatePresence>
-                            </motion.button>
-
-                            <span className={`text-sm ${data.isCompleted || data.isNA ? 'line-through text-black/50' : 'text-black'}`}>
-                                {config.label}
-                            </span>
+                                className={data.isCompleted || data.isNA ? 'opacity-50' : ''}
+                            />
 
                             {/* N/A checkbox for checkbox-na type */}
                             {config.type === 'checkbox-na' && (
-                                <div className="mr-4">
-                                    <Checkbox
-                                        label="N/A"
-                                        name={`na-${config.id}`}
-                                        checked={data.isNA}
-                                        onChange={handleNAToggle}
-                                        disabled={!isEnabled}
-                                        className="scale-90"
-                                    />
-                                </div>
+                                <Checkbox
+                                    label="N/A"
+                                    name={`na-${config.id}`}
+                                    checked={data.isNA}
+                                    onChange={handleNAToggle}
+                                    disabled={!isEnabled}
+                                    className="scale-90 ml-2"
+                                />
                             )}
                         </>
                     )}
@@ -165,7 +142,7 @@ export const SubStepItem = ({
                             </span>
 
                             {config.id === '3a' || config.id === '3b' ? (
-                                <div className="flex-1 flex items-center gap-3 flex-wrap">
+                                <div className="flex items-center gap-3 flex-wrap">
                                     {(config.id === '3a' ? ['20', '35', '75'] : ['75', '85', '100', '125']).map(price => {
                                         // Parse current value to get count for this price
                                         // Format is "1x$20, 2x$35"
@@ -206,7 +183,7 @@ export const SubStepItem = ({
                                     })}
                                 </div>
                             ) : config.id === '3c' ? (
-                                <div className="flex-1 flex items-center gap-4 flex-wrap">
+                                <div className="flex items-center gap-4 flex-wrap">
                                     {['Dog', 'Cat', 'Other'].map(type => {
                                         const regex = new RegExp(`(\\d+)x${type}`);
                                         const match = data.textValue?.match(regex);
@@ -352,17 +329,10 @@ export const SubStepItem = ({
                                     checked={data.isNA}
                                     onChange={handleNAToggle}
                                     disabled={!isEnabled}
-                                    className="scale-90"
+                                    className={`scale-90 ml-2 ${data.isNA || data.isCompleted ? 'opacity-50' : ''}`}
                                 />
                             </div>
                         </>
-                    )}
-
-                    {/* Optional tag indicator */}
-                    {!config.required && (
-                        <span className="text-[10px] font-mono bg-soft-yellow/50 px-1 py-0.5 border border-black/30">
-                            optional
-                        </span>
                     )}
 
                     {/* Tag indicator */}

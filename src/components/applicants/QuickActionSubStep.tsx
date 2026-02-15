@@ -20,18 +20,9 @@ export const QuickActionSubStep = ({ applicant }: QuickActionSubStepProps) => {
     const [isUpdating, setIsUpdating] = useState(false);
     const [textValue, setTextValue] = useState('');
     const [multiValues, setMultiValues] = useState<Record<string, string>>({});
-
-    // Reset local state when sub-step changes
-    useEffect(() => {
-        setTextValue('');
-        setMultiValues({});
-    }, [applicant.id, applicant["2_Tracking"].currentStep]);
+    const [isCompleting, setIsCompleting] = useState(false);
 
     const tracking = applicant["2_Tracking"];
-
-    if (tracking.status === 'cancelled' || (tracking.status === 'completed' && tracking.promotedToResident)) {
-        return null;
-    }
 
     // Find the current sub-step to show
     const getCurrentSubStep = () => {
@@ -58,8 +49,25 @@ export const QuickActionSubStep = ({ applicant }: QuickActionSubStepProps) => {
 
     const current = getCurrentSubStep();
 
+    // Reset local state when sub-step changes
+    useEffect(() => {
+        setTextValue('');
+        setMultiValues({});
+        setIsCompleting(false);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [applicant.id, current?.stepNumber, current?.config.id]);
+
+    if (tracking.status === 'cancelled' || (tracking.status === 'completed' && tracking.promotedToResident)) {
+        return null;
+    }
+
     const handleToggleCheckbox = async () => {
-        if (!current || isUpdating) return;
+        if (!current || isUpdating || isCompleting) return;
+
+        setIsCompleting(true);
+
+        // Wait for animation to play
+        await new Promise(resolve => setTimeout(resolve, 800));
 
         setIsUpdating(true);
         try {
@@ -70,6 +78,7 @@ export const QuickActionSubStep = ({ applicant }: QuickActionSubStepProps) => {
         } catch (err) {
             console.error(err);
             toast.error('Failed to update');
+            setIsCompleting(false); // Only reset if failed, otherwise component unmounts/updates
         } finally {
             setIsUpdating(false);
         }
@@ -189,17 +198,16 @@ export const QuickActionSubStep = ({ applicant }: QuickActionSubStepProps) => {
                 <div className="flex gap-4 items-stretch">
                     {/* Left Action Button (Checkmark) - Only for non-textbox */}
                     {hasLeftButton && (
-                        <Button
-                            variant="secondary"
-                            onClick={(e) => {
-                                e?.stopPropagation();
-                                handleToggleCheckbox();
-                            }}
-                            disabled={isUpdating}
-                            className="flex-shrink-0 w-12 !p-0 flex items-center justify-center bg-lavender/20 hover:bg-lavender/40 border-lavender/50 rounded-neuro-md transition-colors"
-                        >
-                            <FontAwesomeIcon icon={faCheck} className="text-xl text-neuro-primary" />
-                        </Button>
+                        <div onClick={(e) => e.stopPropagation()} className="flex items-center">
+                            <Checkbox
+                                label=""
+                                name={`quick-action-${applicant.id}`}
+                                checked={isCompleting}
+                                onChange={handleToggleCheckbox}
+                                disabled={isUpdating || isCompleting}
+                                className="scale-125"
+                            />
+                        </div>
                     )}
 
                     <div className="flex-1 min-w-0 flex flex-col justify-center py-0.5">

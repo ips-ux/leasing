@@ -28,5 +28,7 @@ dist-ssr
 .claude/
 .shared/
 .github/workflows/
+.ignore/
+RESOURCES_DELETE_ME/
 
 nul
