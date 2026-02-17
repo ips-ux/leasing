@@ -6,3 +6,4 @@ export { InquiriesList } from './InquiriesList';
 export { Reports } from './Reports';
 export { Scheduler } from './Scheduler';
 export { DataMigration } from './DataMigration';
+export { WelcomeHome } from './WelcomeHome';

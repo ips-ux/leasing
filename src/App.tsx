@@ -9,6 +9,7 @@ import {
   Reports,
   Scheduler,
   DataMigration,
+  WelcomeHome,
 } from './pages';
 import { Layout, ProtectedRoute } from './components/layout';
 
@@ -129,6 +130,17 @@ function App() {
             <ProtectedRoute>
               <Layout>
                 <DataMigration />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/welcome-home"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <WelcomeHome />
               </Layout>
             </ProtectedRoute>
           }
