@@ -5,13 +5,15 @@ interface SegmentedControlProps<T extends string> {
     value: T;
     onChange: (value: T) => void;
     className?: string;
+    layoutId?: string;
 }
 
 export const SegmentedControl = <T extends string>({
     options,
     value,
     onChange,
-    className = ''
+    className = '',
+    layoutId = 'segmented-control-active'
 }: SegmentedControlProps<T>) => {
     return (
         <div className={`p-1 bg-main neu-pressed rounded-lg flex items-center ${className}`}>
@@ -27,7 +29,7 @@ export const SegmentedControl = <T extends string>({
                     >
                         {isSelected && (
                             <motion.div
-                                layoutId="segmented-control-active"
+                                layoutId={layoutId}
                                 className="absolute inset-0 bg-surface shadow-sm rounded-lg border border-black/5 z-[-1]"
                                 initial={false}
                                 transition={{
@@ -38,8 +40,8 @@ export const SegmentedControl = <T extends string>({
                             />
                         )}
                         <span className="relative z-10 flex items-center justify-center gap-2">
-                            {option.icon && <span>{option.icon}</span>}
                             {option.label}
+                            {option.icon && <span>{option.icon}</span>}
                         </span>
                     </button>
                 );

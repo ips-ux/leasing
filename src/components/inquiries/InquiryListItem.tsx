@@ -74,8 +74,6 @@ export const InquiryListItem = ({ inquiry, onUpdate, onClick }: InquiryListItemP
     return (
         <motion.div
             layout
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95 }}
             onClick={onClick}
             className="group relative grid grid-cols-12 gap-4 items-center p-4 bg-white/60 rounded-neuro-md shadow-neuro-pressed hover:shadow-neuro-raised transition-all cursor-pointer mb-3"
@@ -173,6 +171,11 @@ export const InquiryListItem = ({ inquiry, onUpdate, onClick }: InquiryListItemP
                         'bg-yellow-400'
                     }`} />
             </div>
+
+            <div
+                className="my-3 h-px py-2"
+                style={{ background: 'linear-gradient(to right, transparent, rgba(0,0,0,0.01) 20%, rgba(0,0,0,0.01) 80%, transparent)' }}
+            />
         </motion.div>
     );
 };

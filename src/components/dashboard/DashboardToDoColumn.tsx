@@ -1,4 +1,5 @@
-import { Card, Button } from '../ui';
+import { Card, Button, PageLoader } from '../ui';
+import { useDelayedLoading } from '../../hooks/useDelayedLoading';
 import { ToDoApplicantCard } from './ToDoApplicantCard';
 import { timestampToLocalDate } from '../../utils/date';
 import type { Applicant } from '../../types/applicant';
@@ -31,11 +32,13 @@ export const DashboardToDoColumn = ({ applicants, loading, onNewApplicant }: Das
     return dateA.getTime() - dateB.getTime();
   });
 
-  if (loading) {
+  const showLoader = useDelayedLoading(loading);
+
+  if (showLoader) {
     return (
       <Card>
         <h2 className="text-2xl font-semibold mb-4">Applicants</h2>
-        <div className="text-center py-8 text-neuro-muted">Loading...</div>
+        <PageLoader />
       </Card>
     );
   }
@@ -47,7 +50,7 @@ export const DashboardToDoColumn = ({ applicants, loading, onNewApplicant }: Das
       </div>
 
       {/* New Applicant Button */}
-      <Button variant="primary" onClick={onNewApplicant} className="w-full mb-4">
+      <Button variant="primary" onClick={onNewApplicant} className="w-full mb-4 !py-2.5 text-sm !font-bold">
         + New Applicant
       </Button>
 

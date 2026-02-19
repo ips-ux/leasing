@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { useApplicants } from '../hooks/useApplicants';
 import { useAuth } from '../hooks/useAuth';
+import { useViewMode } from '../context/ViewModeContext';
 import { ApplicantList } from '../components/applicants/ApplicantList';
 import type { ApplicantStatus } from '../components/applicants/ApplicantList';
-import { Button, Card, Toggle, SegmentedControl } from '../components/ui';
+import { Button, Card, Toggle, SegmentedControl, PageLoader } from '../components/ui';
+import { useDelayedLoading } from '../hooks/useDelayedLoading';
 import { NewApplicantModal } from '../components/applicants/NewApplicantModal';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUser, faUsers } from '@fortawesome/free-solid-svg-icons';
@@ -13,7 +15,7 @@ export const ApplicantsList = () => {
   const { user } = useAuth();
   const { applicants, loading, error } = useApplicants();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [showMineOnly, setShowMineOnly] = useState(true);
+  const { showMineOnly, setShowMineOnly } = useViewMode();
   const [activeStatus, setActiveStatus] = useState<ApplicantStatus>('in_progress');
 
   const filteredApplicants = useMemo(() => {
@@ -25,14 +27,12 @@ export const ApplicantsList = () => {
     });
   }, [applicants, showMineOnly, user?.uid]);
 
-  if (loading) {
+  const showLoader = useDelayedLoading(loading);
+
+  if (showLoader) {
     return (
       <div className="flex items-center justify-center py-12">
-        <Card>
-          <div className="text-center py-8 px-12">
-            <div className="text-xl font-semibold">Loading applicants...</div>
-          </div>
-        </Card>
+        <PageLoader />
       </div>
     );
   }
@@ -51,6 +51,33 @@ export const ApplicantsList = () => {
     );
   }
 
+  const tabCounts = useMemo(() => {
+    const inProgress = filteredApplicants.filter(app => {
+      const s = app['2_Tracking'].status;
+      if (s === 'in_progress' || s === 'approved') return true;
+      if (s === 'finalize_move_in') {
+        const wf = app.workflow || {};
+        return !['1', '2', '3', '4', '5'].every((id: string) => wf[id]?.isCompleted);
+      }
+      return false;
+    }).length;
+
+    const postMoveIn = filteredApplicants.filter(app => {
+      const s = app['2_Tracking'].status;
+      if (s === 'completed' || s === 'cancelled') return false;
+      const wf = app.workflow || {};
+      return ['1', '2', '3', '4', '5'].every((id: string) => wf[id]?.isCompleted);
+    }).length;
+
+    return { inProgress, postMoveIn };
+  }, [filteredApplicants]);
+
+  const CountBadge = ({ count }: { count: number }) => (
+    <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-blue-500 text-white text-[10px] font-bold leading-none">
+      {count}
+    </span>
+  );
+
   return (
     <>
       <div className="space-y-6">
@@ -62,18 +89,16 @@ export const ApplicantsList = () => {
 
           <div className="flex items-center gap-4">
             <SegmentedControl
+              layoutId="applicants-status-tabs"
               options={[
-                { label: 'In Progress', value: 'in_progress' },
-                { label: 'Post Move-In', value: 'post_move_in' },
+                { label: 'In Progress', value: 'in_progress', icon: <CountBadge count={tabCounts.inProgress} /> },
+                { label: 'Post Move-In', value: 'post_move_in', icon: <CountBadge count={tabCounts.postMoveIn} /> },
                 { label: 'Complete', value: 'completed' },
                 { label: 'Cancelled', value: 'cancelled' }
               ]}
               value={activeStatus}
               onChange={(value) => setActiveStatus(value as ApplicantStatus)}
-              className="mr-4"
             />
-
-            <div className="h-8 w-px bg-black/10 mr-2"></div>
 
             <Toggle
               value={showMineOnly}
@@ -81,7 +106,10 @@ export const ApplicantsList = () => {
               leftIcon={<FontAwesomeIcon icon={faUser} />}
               rightIcon={<FontAwesomeIcon icon={faUsers} />}
             />
-            <Button variant="primary" onClick={() => setIsModalOpen(true)}>
+
+            <div className="h-8 w-px bg-black/10"></div>
+
+            <Button variant="primary" onClick={() => setIsModalOpen(true)} className="!py-2.5 text-sm !font-bold min-w-[11rem] text-center">
               + New Applicant
             </Button>
           </div>

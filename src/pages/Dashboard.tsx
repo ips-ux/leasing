@@ -1,13 +1,13 @@
-import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { useState } from 'react';
+
 import { useAuth } from '../hooks/useAuth';
 import { useApplicants } from '../hooks/useApplicants';
 import { useInquiries } from '../hooks/useInquiries';
 import { useReservations } from '../hooks/useReservations';
 import { extractFirstName, getSchedulerStaffName } from '../utils/user';
 import { timestampToLocalDate } from '../utils/date';
-import { getCookie, setCookie } from '../utils/cookies';
 import { isAfter, isBefore, isEqual, startOfDay, endOfDay, startOfMonth, endOfMonth } from 'date-fns';
+import { useViewMode } from '../context/ViewModeContext';
 import { DashboardToDoColumn } from '../components/dashboard/DashboardToDoColumn';
 import { DashboardActivityColumn } from '../components/dashboard/DashboardActivityColumn';
 import { DashboardMetrics } from '../components/dashboard/DashboardMetrics';
@@ -20,39 +20,14 @@ import { NewInquiryModal } from '../components/inquiries/NewInquiryModal';
 import { EditInquiryModal } from '../components/inquiries/EditInquiryModal';
 import type { Inquiry } from '../types/inquiry';
 
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.1
-    }
-  }
-};
 
-const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.4 }
-  }
-};
 
 export const Dashboard = () => {
   const { user } = useAuth();
   const [isApplicantModalOpen, setIsApplicantModalOpen] = useState(false);
   const [isInquiryModalOpen, setIsInquiryModalOpen] = useState(false);
   const [selectedInquiry, setSelectedInquiry] = useState<Inquiry | null>(null);
-  const [showMineOnly, setShowMineOnly] = useState(() => {
-    const saved = getCookie('dashboard_mine_only');
-    return saved !== null ? saved === 'true' : true;
-  });
-
-  // Persist Mine/Everyone preference
-  useEffect(() => {
-    setCookie('dashboard_mine_only', String(showMineOnly));
-  }, [showMineOnly]);
+  const { showMineOnly, setShowMineOnly } = useViewMode();
 
   // Fetch all applicants, inquiries, and reservations
   const { applicants, loading: applicantsLoading } = useApplicants();
@@ -122,62 +97,49 @@ export const Dashboard = () => {
 
   return (
     <>
-      <motion.div
-        className="space-y-8"
-        variants={containerVariants}
-        initial="hidden"
-        animate="visible"
-      >
-        <motion.div variants={itemVariants}>
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-            <div>
-              <h1 className="text-4xl font-bold mb-2">Dashboard</h1>
-              <p className="text-neuro-secondary">Welcome back, {user?.Agent_Name?.split(' ')[0] || extractFirstName(user?.email)}!</p>
-            </div>
-
-            {/* Mine/Everyone Selector */}
-            <Toggle
-              value={showMineOnly}
-              onChange={setShowMineOnly}
-              leftIcon={<FontAwesomeIcon icon={faUser} />}
-              rightIcon={<FontAwesomeIcon icon={faUsers} />}
-            />
+      <div className="space-y-8">
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-4xl font-bold mb-2">Dashboard</h1>
+            <p className="text-black/60">Welcome back, {user?.Agent_Name?.split(' ')[0] || extractFirstName(user?.email)}!</p>
           </div>
-        </motion.div>
+
+          {/* Mine/Everyone Selector */}
+          <Toggle
+            value={showMineOnly}
+            onChange={setShowMineOnly}
+            leftIcon={<FontAwesomeIcon icon={faUser} />}
+            rightIcon={<FontAwesomeIcon icon={faUsers} />}
+          />
+        </div>
 
         {/* Full-Width Metrics */}
-        <motion.div variants={itemVariants}>
-          <DashboardMetrics
-            activeApplicants={activeApplicants}
-            openInquiries={openInquiries}
-            reservationsToday={reservationsToday}
-            monthlyMoveIns={monthlyMoveIns}
-            loading={loading}
-          />
-        </motion.div>
+        <DashboardMetrics
+          activeApplicants={activeApplicants}
+          openInquiries={openInquiries}
+          reservationsToday={reservationsToday}
+          monthlyMoveIns={monthlyMoveIns}
+          loading={loading}
+        />
 
         {/* 2-Column Grid: Applicants and Inquiries */}
-        <motion.div variants={itemVariants}>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Left Column - Applicants */}
-            <DashboardToDoColumn
-              applicants={filteredApplicants}
-              loading={loading}
-              onNewApplicant={handleOpenApplicantModal}
-            />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Left Column - Applicants */}
+          <DashboardToDoColumn
+            applicants={filteredApplicants}
+            loading={loading}
+            onNewApplicant={handleOpenApplicantModal}
+          />
 
-            {/* Right Column - Inquiries */}
-            <DashboardActivityColumn
-              inquiries={filteredInquiries}
-              loading={loading}
-              onNewInquiry={handleOpenInquiryModal}
-              onInquiryClick={handleInquiryClick}
-            />
-          </div>
-        </motion.div>
-
-
-      </motion.div>
+          {/* Right Column - Inquiries */}
+          <DashboardActivityColumn
+            inquiries={filteredInquiries}
+            loading={loading}
+            onNewInquiry={handleOpenInquiryModal}
+            onInquiryClick={handleInquiryClick}
+          />
+        </div>
+      </div>
 
       {/* Modals */}
       <NewApplicantModal

@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { motion } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCode, faFont, faCheck } from '@fortawesome/free-solid-svg-icons';
 import { Button } from '../ui';
@@ -100,35 +99,23 @@ export const EmailCopyButtons = ({
     <div className={`${compact ? '' : 'mt-3 ml-8'} flex items-center gap-2 flex-wrap`}>
       {!compact && <span className="text-xs font-mono text-black/60 mr-2">📧 {emailName}:</span>}
 
-      <motion.div
-        initial={{ opacity: 0, x: -10 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.2 }}
+      <Button
+        variant="secondary"
+        onClick={handleCopyHTML}
+        className="!text-xs !px-3 !py-1"
+        title={`${buttonPrefix} HTML`}
       >
-        <Button
-          variant="secondary"
-          onClick={handleCopyHTML}
-          className="!text-xs !px-3 !py-1"
-          title={`${buttonPrefix} HTML`}
-        >
-          <FontAwesomeIcon icon={copiedState === 'html' ? faCheck : faCode} />
-        </Button>
-      </motion.div>
+        <FontAwesomeIcon icon={copiedState === 'html' ? faCheck : faCode} />
+      </Button>
 
-      <motion.div
-        initial={{ opacity: 0, x: -10 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.2, delay: 0.05 }}
+      <Button
+        variant="secondary"
+        onClick={handleCopyRichText}
+        className="!text-xs !px-3 !py-1"
+        title={`${buttonPrefix} Rich Text`}
       >
-        <Button
-          variant="secondary"
-          onClick={handleCopyRichText}
-          className="!text-xs !px-3 !py-1"
-          title={`${buttonPrefix} Rich Text`}
-        >
-          <FontAwesomeIcon icon={copiedState === 'rich' ? faCheck : faFont} />
-        </Button>
-      </motion.div>
+        <FontAwesomeIcon icon={copiedState === 'rich' ? faCheck : faFont} />
+      </Button>
     </div>
   );
 };

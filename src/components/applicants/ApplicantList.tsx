@@ -2,7 +2,9 @@ import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ApplicantCard } from './ApplicantCard';
-import { Input, Button } from '../ui';
+import { Input, Button, PageLoader } from '../ui';
+import { useDelayedLoading } from '../../hooks/useDelayedLoading';
+import { useUsers } from '../../hooks/useUsers';
 import type { Applicant } from '../../types/applicant';
 
 export type ApplicantStatus = 'in_progress' | 'post_move_in' | 'completed' | 'cancelled';
@@ -17,6 +19,7 @@ type SortOption = 'dateApplied' | 'moveInDate' | 'name';
 
 export const ApplicantList = ({ applicants, loading, activeStatus }: ApplicantListProps) => {
   const navigate = useNavigate();
+  const { users, loading: usersLoading } = useUsers();
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState<SortOption>('moveInDate');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
@@ -104,14 +107,18 @@ export const ApplicantList = ({ applicants, loading, activeStatus }: ApplicantLi
     return result;
   }, [applicants, searchTerm, sortBy, sortDirection, activeStatus]);
 
-  if (loading) {
-    return (
-      <div className="space-y-4">
-        {[1, 2, 3].map((i) => (
-          <div key={i} className="h-32 bg-white/10 border-[3px] border-black/20 animate-pulse" />
-        ))}
-      </div>
-    );
+  const combinedLoading = loading || usersLoading;
+  // showLoader is debounced — only shows spinner if loading takes >150ms (prevents flicker)
+  // But we ALWAYS block card rendering on combinedLoading directly, so users are never empty
+  const showLoader = useDelayedLoading(combinedLoading);
+
+  if (showLoader) {
+    return <PageLoader />;
+  }
+
+  // Hard block: don't render cards until both fetches are done, even if debounced loader didn't show
+  if (combinedLoading) {
+    return null;
   }
 
   if (applicants.length === 0) {
@@ -129,19 +136,19 @@ export const ApplicantList = ({ applicants, loading, activeStatus }: ApplicantLi
   return (
     <div className="space-y-6">
       {/* Search & Filter Header */}
-      <div className="flex flex-col md:flex-row gap-4 justify-between items-end md:items-center rounded-neuro-md bg-white/60 shadow-neuro-pressed p-4 -mx-4 md:mx-0">
+      <div className="flex flex-col md:flex-row gap-4 justify-between items-end md:items-center neu-flat p-4 -mx-4 md:mx-0">
         <div className="w-full md:w-64">
           <Input
             label=""
             placeholder="Search name or unit..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="bg-neuro-base shadow-neuro-pressed border-none"
+            className="shadow-neuro-pressed border-none"
           />
         </div>
 
         <div className="flex items-center gap-2 overflow-x-auto w-full md:w-auto pb-2 md:pb-0">
-          <span className="text-xs font-bold uppercase text-neuro-secondary whitespace-nowrap">Sort by:</span>
+          <span className="text-xs font-bold uppercase text-neutral-500 whitespace-nowrap">Sort by:</span>
 
           <button
             onClick={() => handleSort('moveInDate')}
@@ -170,24 +177,23 @@ export const ApplicantList = ({ applicants, loading, activeStatus }: ApplicantLi
       </div>
 
       {/* List View */}
-      <div className="flex flex-col space-y-3">
+      <div className="flex flex-col">
         <AnimatePresence mode="popLayout">
-          {filteredAndSortedApplicants.map((applicant) => (
+          {filteredAndSortedApplicants.map((applicant, index) => (
             <motion.div
               key={applicant.id}
-              layout
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              transition={{
-                duration: 0.2,
-                layout: { duration: 0.3 }
-              }}
             >
               <ApplicantCard
                 applicant={applicant}
+                users={users}
                 onClick={() => navigate(`/applicants/${applicant.id}`)}
               />
+              {index < filteredAndSortedApplicants.length - 1 && (
+                <div
+                  className="my-3 h-px py-2"
+                  style={{ background: 'linear-gradient(to right, transparent, rgba(0,0,0,0.01) 20%, rgba(0,0,0,0.01) 80%, transparent)' }}
+                />
+              )}
             </motion.div>
           ))}
         </AnimatePresence>

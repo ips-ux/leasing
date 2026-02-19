@@ -2,7 +2,6 @@ import type { WelcomeHomeFormData, ComputedValues } from '../../types/welcomeHom
 import {
     formatCurrency,
     formatDate,
-    formatDateShort,
     getMonthlyFees,
     getOneTimeFees,
     calculateProratedAmount,

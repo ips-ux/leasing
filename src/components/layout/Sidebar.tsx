@@ -23,13 +23,18 @@ const NavLinkItem = ({ to, children, disabled = false }: NavLinkItemProps) => {
     <NavLink
       to={to}
       className={({ isActive }) =>
-        `block px-5 py-3 rounded-xl transition-all duration-200 font-medium mx-2 ${isActive
+        `flex items-center px-5 py-3 rounded-xl transition-all duration-200 font-medium mx-2 ${isActive
           ? 'bg-sidebar-surface text-white shadow-inner-light' // Active state
           : 'text-sidebar-muted hover:text-white hover:bg-white/5' // Inactive state
         }`
       }
     >
-      {children}
+      {({ isActive }) => (
+        <>
+          <div className={`sidebar-radio-input ${isActive ? 'active' : ''}`} />
+          <span>{children}</span>
+        </>
+      )}
     </NavLink>
   );
 };
@@ -54,7 +59,7 @@ export const Sidebar = () => {
     >
       {/* Header/Logo */}
       <div className="p-8 border-b border-sidebar-border">
-        <h1 className="text-2xl font-bold tracking-tight text-white/90">Leasing Assist</h1>
+        <h1 className="text-2xl font-bold tracking-tight text-white/90">Property Master Book</h1>
       </div>
 
       {/* Navigation Links */}
@@ -64,7 +69,7 @@ export const Sidebar = () => {
         <NavLinkItem to="/inquiries">Inquiries</NavLinkItem>
         <NavLinkItem to="/scheduler">Scheduler</NavLinkItem>
         <NavLinkItem to="/reports">Reports</NavLinkItem>
-        <NavLinkItem to="/welcome-home">Welcome Home</NavLinkItem>
+        <NavLinkItem to="/welcome-home" disabled>Welcome Home</NavLinkItem>
       </nav>
 
       {/* User Profile Section */}

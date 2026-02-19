@@ -4,8 +4,6 @@ import type { SubStepConfig } from '../../lib/workflow-steps';
 import type { Applicant } from '../../types/applicant';
 import { updateSubStep, updateApplicant } from '../../firebase/firestore';
 import { Button, Checkbox } from '../ui';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCheck } from '@fortawesome/free-solid-svg-icons';
 import toast from 'react-hot-toast';
 import { EmailCopyButtons } from './EmailCopyButtons';
 import requestIncomeEmail from '../../content/request-income.html?raw';

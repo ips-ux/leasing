@@ -4,7 +4,8 @@
  */
 
 import { useState, useRef, useEffect } from 'react';
-import { Button } from '../components/ui';
+import { Button, SegmentedControl, PageLoader } from '../components/ui';
+import { useDelayedLoading } from '../hooks/useDelayedLoading';
 import {
   SchedulerCalendar,
   SchedulerList,
@@ -257,26 +258,27 @@ export const Scheduler = () => {
   };
 
   const isLoading = loadingReservations || loadingItems;
+  const showLoader = useDelayedLoading(isLoading);
 
   return (
     <div className="space-y-6 h-[calc(100vh-2rem)] flex flex-col">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 flex-shrink-0">
-        <div className="flex items-center gap-6 flex-1">
-          <div>
-            <h1 className="text-3xl font-bold text-neuro-primary">Amenity Scheduler</h1>
-            <p className="text-neuro-secondary mt-1">Manage amenity reservations and items</p>
-          </div>
+      <div className="flex justify-between items-center flex-shrink-0">
+        <div>
+          <h1 className="text-4xl font-bold mb-2">Amenity Scheduler</h1>
+          <p className="text-black/60">Manage amenity reservations and items</p>
+        </div>
 
+        <div className="flex items-center gap-4">
           {/* Calendar Controls - Show in calendar and list views */}
           {view !== 'items' && (
-            <div className="flex items-center gap-4 ml-4 bg-neuro-element px-4 py-2 rounded-neuro-lg shadow-neuro-flat flex-1 justify-center max-w-xl">
-              <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3 bg-neuro-element px-4 py-2 rounded-neuro-lg shadow-neuro-flat">
+              <div className="flex items-center gap-1">
                 <button
                   onClick={handlePrev}
                   className="p-1.5 rounded-neuro-sm text-neuro-secondary hover:text-neuro-primary hover:bg-white/50 transition-colors"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="15 18 9 12 15 6"></polyline>
                   </svg>
                 </button>
@@ -284,13 +286,13 @@ export const Scheduler = () => {
                   onClick={handleNext}
                   className="p-1.5 rounded-neuro-sm text-neuro-secondary hover:text-neuro-primary hover:bg-white/50 transition-colors"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="9 18 15 12 9 6"></polyline>
                   </svg>
                 </button>
               </div>
 
-              <h2 className="text-lg font-semibold text-neuro-primary min-w-[180px] text-center">
+              <h2 className="text-sm font-semibold text-neuro-primary min-w-[130px] text-center">
                 {currentDateTitle}
               </h2>
 
@@ -302,43 +304,24 @@ export const Scheduler = () => {
               </button>
             </div>
           )}
-        </div>
 
-        <div className="flex items-center gap-3">
           {/* View Switcher */}
-          <div className="flex p-1 rounded-neuro-md bg-neuro-base shadow-neuro-pressed">
-            <button
-              onClick={() => setView('calendar')}
-              className={`px-4 py-2 rounded-neuro-sm text-sm font-medium transition-all duration-200 ${view === 'calendar'
-                ? 'bg-neuro-element shadow-neuro-flat text-neuro-primary'
-                : 'text-neuro-secondary hover:text-neuro-primary'
-                }`}
-            >
-              Calendar
-            </button>
-            <button
-              onClick={() => setView('list')}
-              className={`px-4 py-2 rounded-neuro-sm text-sm font-medium transition-all duration-200 ${view === 'list'
-                ? 'bg-neuro-element shadow-neuro-flat text-neuro-primary'
-                : 'text-neuro-secondary hover:text-neuro-primary'
-                }`}
-            >
-              List View
-            </button>
-            <button
-              onClick={() => setView('items')}
-              className={`px-4 py-2 rounded-neuro-sm text-sm font-medium transition-all duration-200 ${view === 'items'
-                ? 'bg-neuro-element shadow-neuro-flat text-neuro-primary'
-                : 'text-neuro-secondary hover:text-neuro-primary'
-                }`}
-            >
-              Items
-            </button>
-          </div>
+          <SegmentedControl
+            layoutId="scheduler-view-tabs"
+            options={[
+              { label: 'Calendar', value: 'calendar' },
+              { label: 'List View', value: 'list' },
+              { label: 'Items', value: 'items' },
+            ]}
+            value={view}
+            onChange={(value) => setView(value as ViewType)}
+          />
+
+          <div className="h-8 w-px bg-black/10"></div>
 
           {/* New Reservation Button */}
           {view !== 'items' && (
-            <Button variant="primary" onClick={handleNewReservation}>
+            <Button variant="primary" onClick={handleNewReservation} className="!py-2.5 text-sm !font-bold min-w-[11rem] text-center">
               + New Reservation
             </Button>
           )}
@@ -347,12 +330,9 @@ export const Scheduler = () => {
 
       {/* Content Area */}
       <div className="rounded-neuro-md bg-white/60 shadow-neuro-pressed flex-1 overflow-hidden flex flex-col">
-        {isLoading ? (
+        {showLoader ? (
           <div className="flex items-center justify-center h-full">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-neuro-primary mx-auto mb-4"></div>
-              <p className="text-neuro-secondary">Loading scheduler...</p>
-            </div>
+            <PageLoader />
           </div>
         ) : (
           <>

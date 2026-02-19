@@ -1,8 +1,10 @@
 import { useState, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Button, Toggle, SegmentedControl } from '../components/ui';
+import { AnimatePresence } from 'framer-motion';
+import { Button, Toggle, SegmentedControl, PageLoader } from '../components/ui';
+import { useDelayedLoading } from '../hooks/useDelayedLoading';
 import { useInquiries } from '../hooks/useInquiries';
 import { useAuth } from '../hooks/useAuth';
+import { useViewMode } from '../context/ViewModeContext';
 import { NewInquiryModal } from '../components/inquiries/NewInquiryModal';
 import { EditInquiryModal } from '../components/inquiries/EditInquiryModal';
 import { InquiryListItem } from '../components/inquiries/InquiryListItem';
@@ -41,13 +43,14 @@ export const InquiriesList = () => {
   const [selectedMonth, setSelectedMonth] = useState(currentMonth);
   const [isNewModalOpen, setIsNewModalOpen] = useState(false);
   const [selectedInquiry, setSelectedInquiry] = useState<Inquiry | null>(null);
-  const [showMineOnly, setShowMineOnly] = useState(true);
+  const { showMineOnly, setShowMineOnly } = useViewMode();
 
   // Sorting State
   const [sortField, setSortField] = useState<SortField>('createdAt');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
 
   const { inquiries, loading, updateInquiry } = useInquiries();
+  const showLoader = useDelayedLoading(loading);
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -101,15 +104,11 @@ export const InquiriesList = () => {
     <>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex justify-between items-center flex-wrap gap-4">
-          <motion.h1
-            className="text-4xl font-bold"
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.3 }}
-          >
-            Resident Inquiries
-          </motion.h1>
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-4xl font-bold mb-2">Resident Inquiries</h1>
+            <p className="text-black/60">Track resident &amp; prospect inquiries.</p>
+          </div>
 
           <div className="flex items-center gap-4">
             <Toggle
@@ -118,7 +117,10 @@ export const InquiriesList = () => {
               leftIcon={<FontAwesomeIcon icon={faUser} />}
               rightIcon={<FontAwesomeIcon icon={faUsers} />}
             />
-            <Button variant="primary" onClick={() => setIsNewModalOpen(true)}>
+
+            <div className="h-8 w-px bg-black/10"></div>
+
+            <Button variant="primary" onClick={() => setIsNewModalOpen(true)} className="!py-2.5 text-sm !font-bold min-w-[11rem] text-center">
               + New Inquiry
             </Button>
           </div>
@@ -129,6 +131,7 @@ export const InquiriesList = () => {
           {/* Month Tabs */}
           {/* Month Tabs */}
           <SegmentedControl
+            layoutId="inquiries-month-tabs"
             options={months.map(month => ({
               label: formatMonthDisplay(month),
               value: month
@@ -156,13 +159,9 @@ export const InquiriesList = () => {
           </div>
         </div>
 
-        {/* Loading State */}
-        {loading && (
-          <div className="space-y-4">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="h-24 bg-white/10 border-[3px] border-black/20 animate-pulse rounded-neuro-md" />
-            ))}
-          </div>
+        {/* Loading State - only shown after 150ms to avoid flash on fast loads */}
+        {showLoader && (
+          <PageLoader />
         )}
 
         {!loading && (
@@ -179,13 +178,9 @@ export const InquiriesList = () => {
               <div className="space-y-3">
                 <AnimatePresence mode="popLayout">
                   {activeInquiries.length === 0 ? (
-                    <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      className="text-center py-12 text-neuro-muted italic bg-neuro-base/50 rounded-neuro-md border-2 border-dashed border-neuro-secondary/20"
-                    >
+                    <div className="text-center py-12 text-neuro-muted italic bg-neuro-base/50 rounded-neuro-md border-2 border-dashed border-neuro-secondary/20">
                       No active inquiries.
-                    </motion.div>
+                    </div>
                   ) : (
                     activeInquiries.map((inquiry) => (
                       <InquiryListItem
@@ -212,13 +207,9 @@ export const InquiriesList = () => {
               <div className="space-y-3 opacity-80">
                 <AnimatePresence mode="popLayout">
                   {completedInquiries.length === 0 ? (
-                    <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      className="text-center py-8 text-neuro-muted italic"
-                    >
+                    <div className="text-center py-8 text-neuro-muted italic">
                       No completed inquiries.
-                    </motion.div>
+                    </div>
                   ) : (
                     completedInquiries.map((inquiry) => (
                       <InquiryListItem

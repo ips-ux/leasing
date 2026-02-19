@@ -1,4 +1,5 @@
-import { Card, Button } from '../ui';
+import { Card, Button, PageLoader } from '../ui';
+import { useDelayedLoading } from '../../hooks/useDelayedLoading';
 import { ToDoInquiryCard } from './ToDoInquiryCard';
 import type { Inquiry } from '../../types/inquiry';
 
@@ -17,18 +18,19 @@ export const DashboardActivityColumn = ({
 }: DashboardActivityColumnProps) => {
   // Filter active inquiries (not completed)
   const activeInquiries = inquiries.filter(i => i.status !== 'completed');
+  const showLoader = useDelayedLoading(loading);
 
   return (
     <Card>
       <h2 className="text-2xl font-semibold mb-4">Inquiries</h2>
 
       {/* New Inquiry Button */}
-      <Button onClick={onNewInquiry} variant="secondary" className="w-full mb-4">
+      <Button onClick={onNewInquiry} variant="primary" className="w-full mb-4 !py-2.5 text-sm !font-bold">
         + New Inquiry
       </Button>
 
-      {loading ? (
-        <div className="text-center py-8">Loading inquiries...</div>
+      {showLoader ? (
+        <PageLoader />
       ) : activeInquiries.length === 0 ? (
         <div className="text-neuro-muted text-center py-8">
           No active inquiries

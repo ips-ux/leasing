@@ -3,7 +3,7 @@ import type { Applicant } from '../../types/applicant';
 import { getLeaseInfoForCard, WORKFLOW_STEPS } from '../../lib/workflow-steps';
 import type { Timestamp } from 'firebase/firestore';
 import { QuickActionSubStep } from './QuickActionSubStep';
-import { useUsers } from '../../hooks/useUsers';
+import type { User } from '../../types/user';
 import { extractAgentName } from '../../utils/user';
 import { timestampToLocalDate } from '../../utils/date';
 
@@ -19,11 +19,11 @@ const formatDateUTC = (timestamp: Timestamp | null): string => {
 
 interface ApplicantCardProps {
   applicant: Applicant;
+  users: User[];
   onClick?: () => void;
 }
 
-export const ApplicantCard = ({ applicant, onClick }: ApplicantCardProps) => {
-  const { users } = useUsers();
+export const ApplicantCard = ({ applicant, users, onClick }: ApplicantCardProps) => {
 
   // Get lease info for at-a-glance display
   const leaseInfo = applicant.workflow ? getLeaseInfoForCard(applicant.workflow) : [];

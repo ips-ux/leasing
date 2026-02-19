@@ -3,7 +3,8 @@ import { useApplicants } from '../hooks/useApplicants';
 import { useUsers } from '../hooks/useUsers';
 import { extractAgentName } from '../utils/user';
 import { timestampToLocalDate } from '../utils/date';
-import { Card, Button } from '../components/ui';
+import { Card, Button, PageLoader } from '../components/ui';
+import { useDelayedLoading } from '../hooks/useDelayedLoading';
 import { format, subMonths, setDate, isAfter, isBefore, isEqual, startOfDay, endOfDay, startOfMonth, endOfMonth, isSameMonth } from 'date-fns';
 import { getEODReport, saveEODReport, type EODReportData } from '../services/eodReportService';
 
@@ -34,6 +35,8 @@ export const Reports = () => {
     cancellationReason: 'N/A',
   });
   const [eodLoading, setEodLoading] = useState(false);
+  const showApplicantsLoader = useDelayedLoading(loading);
+  const showEodLoader = useDelayedLoading(eodLoading);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -422,11 +425,8 @@ export const Reports = () => {
               </div>
             </div>
 
-            {loading ? (
-              <div className="text-center py-12">
-                <div className="animate-spin w-8 h-8 border-4 border-neuro-lavender border-t-transparent rounded-full mx-auto mb-4"></div>
-                <p className="text-neuro-muted">Loading data...</p>
-              </div>
+            {showApplicantsLoader ? (
+              <PageLoader />
             ) : filteredApplicants.length === 0 ? (
               <div className="text-center py-12 rounded-neuro-md bg-neuro-base/30">
                 <p className="text-neuro-muted font-medium">No move-ins found for {format(currentViewDate, 'MMMM yyyy')}.</p>
@@ -497,11 +497,8 @@ export const Reports = () => {
               </div>
             </div>
 
-            {eodLoading ? (
-              <div className="text-center py-12">
-                <div className="animate-spin w-8 h-8 border-4 border-neuro-lavender border-t-transparent rounded-full mx-auto mb-4"></div>
-                <p className="text-neuro-muted">Loading EOD data...</p>
-              </div>
+            {showEodLoader ? (
+              <PageLoader />
             ) : (
               <div className="overflow-x-auto rounded-neuro-md">
                 <table className="w-full text-left border-collapse">

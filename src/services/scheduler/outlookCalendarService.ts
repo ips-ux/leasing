@@ -81,7 +81,7 @@ function generateBody(reservation: Reservation): string {
     lines.push(``, `Notes: ${reservation.rental_notes}`);
   }
 
-  lines.push(``, `---`, `Created from Leasing Assistant`);
+  lines.push(``, `---`, `Created from Property Master Book`);
 
   return lines.join('\n');
 }
@@ -173,7 +173,7 @@ export function generateOutlookDeeplinkFromFormData(
       formData.rental_notes ? `\nNotes: ${formData.rental_notes}` : '',
       ``,
       `---`,
-      `Created from Leasing Assistant`,
+      `Created from Property Master Book`,
     ].filter(Boolean).join('\n'),
     location: RESOURCE_LOCATIONS[formData.resource_type],
     startdt: formatDateForOutlook(formData.start_time),
