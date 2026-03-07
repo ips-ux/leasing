@@ -24,8 +24,8 @@ export const WORKFLOW_STEPS: WorkflowStepConfig[] = [
     name: 'Begin Income Verification',
     subSteps: [
       { id: '1a', label: 'Submit income documents for approval', type: 'checkbox', required: true },
-      { id: '1b', label: 'Guarantor?', type: 'checkbox-na', required: false, tagOnComplete: 'Guarantor' },
-      { id: '1c', label: 'Transfer?', type: 'checkbox-na', required: false, tagOnComplete: 'x-fer' },
+      { id: '1b', label: 'Guarantor?', type: 'checkbox-na', required: true, tagOnComplete: 'Guarantor' },
+      { id: '1c', label: 'Transfer?', type: 'checkbox-na', required: true, tagOnComplete: 'x-fer' },
     ],
   },
   {
@@ -68,7 +68,7 @@ export const WORKFLOW_STEPS: WorkflowStepConfig[] = [
       { id: '5d', label: 'Confirm insurance compliance', type: 'checkbox', required: true },
       { id: '5e', label: '[HappyCo] Move-In Inspection', type: 'checkbox', required: true },
       { id: '5g', label: 'Move-In packet, keys and fob access', type: 'checkbox', required: true },
-      { id: '5h', label: 'Paid in advance?', type: 'checkbox-na', required: false, tagOnComplete: 'Paid MIB' },
+      { id: '5h', label: 'Paid in advance?', type: 'checkbox-na', required: true, tagOnComplete: 'Paid MIB' },
     ],
   },
   {
@@ -132,12 +132,11 @@ export const initializeWorkflow = () => {
   return workflow;
 };
 
-// Check if a step is complete (all required sub-steps fulfilled)
+// Check if a step is complete (all sub-steps must be fulfilled or marked N/A)
 export const isStepComplete = (stepData: any, stepConfig: WorkflowStepConfig): boolean => {
   if (!stepData?.subSteps) return false;
 
   return stepConfig.subSteps
-    .filter((ss) => ss.required)
     .every((ss) => {
       const subStepData = stepData.subSteps[ss.id];
       if (!subStepData) return false;
@@ -199,6 +198,57 @@ export const getLeaseInfoForCard = (workflow: any): { label: string; value: stri
     })
     .filter((item): item is { label: string; value: string } => item !== null);
 };
+
+// Result type for getNextIncompleteSubStep
+export type NextSubStepResult =
+  | { type: 'substep'; stepNumber: number; config: SubStepConfig }
+  | { type: 'needs_promotion' }
+  | null;
+
+// Find the next incomplete sub-step across all workflow steps.
+// Enforces promotion gate: steps 1-5 must be complete AND applicant promoted before step 6 is shown.
+export const getNextIncompleteSubStep = (workflow: any, promotedToResident: boolean): NextSubStepResult => {
+  // Scan steps 1-5 first
+  for (let stepNum = 1; stepNum <= 5; stepNum++) {
+    const stepConfig = WORKFLOW_STEPS.find(s => s.step === stepNum);
+    if (!stepConfig) continue;
+
+    const stepData = workflow[stepNum.toString()];
+    if (!stepData) continue;
+
+    const firstIncomplete = stepConfig.subSteps.find(ss => {
+      const data = stepData.subSteps[ss.id];
+      return !data?.isCompleted && !data?.isNA;
+    });
+
+    if (firstIncomplete) {
+      return { type: 'substep', stepNumber: stepNum, config: firstIncomplete };
+    }
+  }
+
+  // Steps 1-5 are all complete — check promotion gate
+  if (!promotedToResident) {
+    return { type: 'needs_promotion' };
+  }
+
+  // Promoted — scan step 6
+  const step6Config = WORKFLOW_STEPS.find(s => s.step === 6);
+  if (step6Config) {
+    const stepData = workflow['6'];
+    if (stepData) {
+      const firstIncomplete = step6Config.subSteps.find(ss => {
+        const data = stepData.subSteps[ss.id];
+        return !data?.isCompleted && !data?.isNA;
+      });
+      if (firstIncomplete) {
+        return { type: 'substep', stepNumber: 6, config: firstIncomplete };
+      }
+    }
+  }
+
+  return null;
+};
+
 // Normalize applicant data to ensure it follows the new nested structure
 export const normalizeApplicant = (data: any): any => {
   if (!data) return null;

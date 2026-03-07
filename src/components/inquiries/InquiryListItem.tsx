@@ -171,7 +171,6 @@ export const InquiryListItem = ({ inquiry, onUpdate, onClick }: InquiryListItemP
                         'bg-yellow-400'
                     }`} />
             </div>
-
             <div
                 className="my-3 h-px py-2"
                 style={{ background: 'linear-gradient(to right, transparent, rgba(0,0,0,0.01) 20%, rgba(0,0,0,0.01) 80%, transparent)' }}

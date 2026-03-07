@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { WORKFLOW_STEPS } from '../../lib/workflow-steps';
-import type { SubStepConfig } from '../../lib/workflow-steps';
+import { getNextIncompleteSubStep } from '../../lib/workflow-steps';
+import type { NextSubStepResult } from '../../lib/workflow-steps';
 import type { Applicant } from '../../types/applicant';
 import { updateSubStep, updateApplicant } from '../../firebase/firestore';
 import { Button, Checkbox } from '../ui';
@@ -22,30 +22,13 @@ export const QuickActionSubStep = ({ applicant }: QuickActionSubStepProps) => {
 
     const tracking = applicant["2_Tracking"];
 
-    // Find the current sub-step to show
-    const getCurrentSubStep = () => {
-        // Scan all steps (1-6) to find the first incomplete sub-step (even optional ones)
-        for (let stepNum = 1; stepNum <= 6; stepNum++) {
-            const stepConfig = WORKFLOW_STEPS.find(s => s.step === stepNum);
-            if (!stepConfig) continue;
+    // Use shared helper to find next action (enforces promotion gate between steps 5 and 6)
+    const nextAction: NextSubStepResult = getNextIncompleteSubStep(
+        applicant.workflow,
+        tracking.promotedToResident
+    );
 
-            const stepData = applicant.workflow[stepNum.toString()];
-            if (!stepData) continue;
-
-            const subSteps = stepConfig.subSteps;
-            const firstIncomplete = subSteps.find(ss => {
-                const data = stepData.subSteps[ss.id];
-                return !data?.isCompleted && !data?.isNA;
-            });
-
-            if (firstIncomplete) {
-                return { stepNumber: stepNum, config: firstIncomplete as SubStepConfig };
-            }
-        }
-        return null;
-    };
-
-    const current = getCurrentSubStep();
+    const current = nextAction?.type === 'substep' ? nextAction : null;
 
     // Reset local state when sub-step changes
     useEffect(() => {
@@ -53,7 +36,7 @@ export const QuickActionSubStep = ({ applicant }: QuickActionSubStepProps) => {
         setMultiValues({});
         setIsCompleting(false);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [applicant.id, current?.stepNumber, current?.config.id]);
+    }, [applicant.id, current?.stepNumber, current?.config?.id]);
 
     if (tracking.status === 'cancelled' || (tracking.status === 'completed' && tracking.promotedToResident)) {
         return null;
@@ -164,26 +147,27 @@ export const QuickActionSubStep = ({ applicant }: QuickActionSubStepProps) => {
         }
     };
 
+    // Promotion gate: steps 1-5 complete, needs promotion before step 6
+    if (nextAction?.type === 'needs_promotion') {
+        return (
+            <div className="mt-4 pt-4 border-t-2 border-black/10 flex items-center gap-4">
+                <Button
+                    variant="primary"
+                    onClick={(e) => {
+                        e?.stopPropagation();
+                        handlePromote();
+                    }}
+                    className="!py-1 !px-4 !text-sm flex-shrink-0"
+                    disabled={isUpdating}
+                >
+                    🎉 Promote to Resident
+                </Button>
+                <span className="text-sm font-bold text-mint">Steps 1-5 complete!</span>
+            </div>
+        );
+    }
+
     if (!current) {
-        // If no more sub-steps but not promoted yet
-        if (tracking.currentStep === 6 && !tracking.promotedToResident) {
-            return (
-                <div className="mt-4 pt-4 border-t-2 border-black/10 flex items-center gap-4">
-                    <Button
-                        variant="primary"
-                        onClick={(e) => {
-                            e?.stopPropagation();
-                            handlePromote();
-                        }}
-                        className="!py-1 !px-4 !text-sm flex-shrink-0"
-                        disabled={isUpdating}
-                    >
-                        Promote to Resident
-                    </Button>
-                    <span className="text-sm font-bold text-mint">All steps complete!</span>
-                </div>
-            );
-        }
         return null;
     }
 

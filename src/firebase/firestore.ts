@@ -114,7 +114,7 @@ export const updateApplicant = async (id: string, data: any): Promise<void> => {
     if (key === '1_Profile' || key === '2_Tracking') {
       // If updating the whole map
       processedData[key] = value;
-    } else if (key === 'name' || key === 'tags' || key === 'workflow' || key === 'documents' || key === 'rentables') {
+    } else if (key === 'tags' || key === 'workflow' || key === 'documents' || key === 'rentables') {
       processedData[key] = value;
     } else {
       // Legacy or convenience: if field is in Profile or Tracking, use dot notation

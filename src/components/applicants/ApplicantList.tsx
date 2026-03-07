@@ -148,7 +148,7 @@ export const ApplicantList = ({ applicants, loading, activeStatus }: ApplicantLi
         </div>
 
         <div className="flex items-center gap-2 overflow-x-auto w-full md:w-auto pb-2 md:pb-0">
-          <span className="text-xs font-bold uppercase text-neutral-500 whitespace-nowrap">Sort by:</span>
+          <span className="text-xs font-bold uppercase text-neuro-secondary whitespace-nowrap">Sort by:</span>
 
           <button
             onClick={() => handleSort('moveInDate')}
