@@ -62,7 +62,7 @@ export const ApplicantCard = ({ applicant, users, onClick }: ApplicantCardProps)
 
             <div className="flex flex-col justify-center gap-0.5">
               <h3 className="text-lg font-bold leading-tight">
-                {profile.name} <span className="text-black/40 mx-2">|</span> {profile.unit}
+                {profile.unit} <span className="text-black/40 mx-2">|</span> {profile.name}
               </h3>
               {profile.dateApplied && (
                 <span className="text-[10px] text-black/50 font-mono uppercase tracking-wide">

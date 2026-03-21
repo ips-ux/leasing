@@ -101,7 +101,12 @@ export const ApplicantList = ({ applicants, loading, activeStatus }: ApplicantLi
           break;
       }
 
-      return sortDirection === 'asc' ? comparison : -comparison;
+      // Reverse intuitive date sorting for the completed tab to show most recent first by default
+      const effectiveDirection = activeStatus === 'completed' && sortBy !== 'name'
+        ? (sortDirection === 'asc' ? 'desc' : 'asc')
+        : sortDirection;
+
+      return effectiveDirection === 'asc' ? comparison : -comparison;
     });
 
     return result;
