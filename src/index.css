@@ -21,6 +21,15 @@
   --color-sidebar-muted: #8E8E93;
   --color-sidebar-border: #38383A;
 
+  /* Neuro UI Theme Fallbacks */
+  --color-neuro-element: #FFFFFF;
+  --color-neuro-base: #F5F5F7;
+  --color-neuro-primary: #1D1D1F;
+  --color-neuro-secondary: #86868B;
+  --color-neuro-muted: #8E8E93;
+  --color-neuro-peach: #FF9F0A;
+  --color-neuro-lavender: #C4B5FD;
+
   /* Shadows */
   --shadow-soft: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.1);
   --shadow-soft-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.1);

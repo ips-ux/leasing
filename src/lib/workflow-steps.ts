@@ -26,6 +26,7 @@ export const WORKFLOW_STEPS: WorkflowStepConfig[] = [
       { id: '1a', label: 'Submit income documents for approval', type: 'checkbox', required: true },
       { id: '1b', label: 'Guarantor?', type: 'checkbox-na', required: true, tagOnComplete: 'Guarantor' },
       { id: '1c', label: 'Transfer?', type: 'checkbox-na', required: true, tagOnComplete: 'x-fer' },
+      { id: '1d', label: 'Conditional?', type: 'checkbox-na', required: true, tagOnComplete: 'Conditional' },
     ],
   },
   {

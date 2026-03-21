@@ -136,7 +136,7 @@ export const QuickActionSubStep = ({ applicant }: QuickActionSubStepProps) => {
             await updateApplicant(applicant.id, {
                 promotedToResident: true,
                 promotedToResidentAt: new Date() as any,
-                status: 'completed'
+                status: 'finalize_move_in'
             });
             toast.success('Promoted to resident!');
         } catch (err) {

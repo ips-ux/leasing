@@ -259,7 +259,10 @@ export const recalculateStepAndTags = async (
     [`workflow.${stepKey}.isCompleted`]: stepComplete,
     tags,
     "2_Tracking.currentStep": currentStep,
-    "2_Tracking.status": allComplete ? 'completed' : applicant["2_Tracking"].status === 'completed' ? 'in_progress' : applicant["2_Tracking"].status,
+    "2_Tracking.status": allComplete ? 'completed' : 
+                         (applicant["2_Tracking"].status === 'completed' ? 
+                             (applicant["2_Tracking"].promotedToResident ? 'finalize_move_in' : 'in_progress') : 
+                             applicant["2_Tracking"].status),
     "2_Tracking.updatedAt": serverTimestamp(),
   });
 };

@@ -20,6 +20,7 @@ export const Reports = () => {
   const [copySuccess, setCopySuccess] = useState(false);
   const monthParamsRef = useRef<HTMLDivElement>(null);
   const reportParamsRef = useRef<HTMLDivElement>(null);
+  const initialEodLoad = useRef(true);
 
   // EOD Report state
   const [eodData, setEodData] = useState<Omit<EODReportData, 'lastSubmitted'>>({
@@ -62,6 +63,7 @@ export const Reports = () => {
 
   const loadEODData = async () => {
     setEodLoading(true);
+    initialEodLoad.current = true;
     try {
       const data = await getEODReport();
       setEodData({
@@ -80,8 +82,26 @@ export const Reports = () => {
       console.error('Failed to load EOD data:', error);
     } finally {
       setEodLoading(false);
+      setTimeout(() => {
+        initialEodLoad.current = false;
+      }, 100);
     }
   };
+
+  // Auto-save EOD data when it changes
+  useEffect(() => {
+    if (selectedReport !== 'eod' || eodLoading || initialEodLoad.current) return;
+
+    const timeoutId = setTimeout(async () => {
+      try {
+        await saveEODReport(eodData);
+      } catch (error) {
+        console.error('Failed to auto-save EOD data:', error);
+      }
+    }, 1000);
+
+    return () => clearTimeout(timeoutId);
+  }, [eodData, selectedReport, eodLoading]);
 
   // Calculate available months based on data
   const availableMonths = useMemo(() => {
