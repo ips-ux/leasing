@@ -135,7 +135,10 @@ export const initializeWorkflow = () => {
 
 // Check if a step is complete (all sub-steps must be fulfilled or marked N/A)
 export const isStepComplete = (stepData: any, stepConfig: WorkflowStepConfig): boolean => {
-  if (!stepData?.subSteps) return false;
+  if (!stepData) return false;
+  // Backward compatibility: if the step was already locked in complete before a new sub-step was added
+  if (stepData.isCompleted === true) return true;
+  if (!stepData.subSteps) return false;
 
   return stepConfig.subSteps
     .every((ss) => {
@@ -216,6 +219,9 @@ export const getNextIncompleteSubStep = (workflow: any, promotedToResident: bool
 
     const stepData = workflow[stepNum.toString()];
     if (!stepData) continue;
+    
+    // Backward compatibility: Skip if the step is already completely checked off
+    if (stepData.isCompleted) continue;
 
     const firstIncomplete = stepConfig.subSteps.find(ss => {
       const data = stepData.subSteps[ss.id];
@@ -236,7 +242,7 @@ export const getNextIncompleteSubStep = (workflow: any, promotedToResident: bool
   const step6Config = WORKFLOW_STEPS.find(s => s.step === 6);
   if (step6Config) {
     const stepData = workflow['6'];
-    if (stepData) {
+    if (stepData && !stepData.isCompleted) {
       const firstIncomplete = step6Config.subSteps.find(ss => {
         const data = stepData.subSteps[ss.id];
         return !data?.isCompleted && !data?.isNA;

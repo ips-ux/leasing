@@ -29,6 +29,27 @@ export const ApplicantsList = () => {
 
   const showLoader = useDelayedLoading(loading);
 
+  const tabCounts = useMemo(() => {
+    const inProgress = filteredApplicants.filter(app => {
+      const s = app['2_Tracking'].status;
+      if (s === 'in_progress' || s === 'approved') return true;
+      if (s === 'finalize_move_in') {
+        const wf = app.workflow || {};
+        return !['1', '2', '3', '4', '5'].every((id: string) => wf[id]?.isCompleted);
+      }
+      return false;
+    }).length;
+
+    const postMoveIn = filteredApplicants.filter(app => {
+      const s = app['2_Tracking'].status;
+      if (s === 'completed' || s === 'cancelled') return false;
+      const wf = app.workflow || {};
+      return ['1', '2', '3', '4', '5'].every((id: string) => wf[id]?.isCompleted);
+    }).length;
+
+    return { inProgress, postMoveIn };
+  }, [filteredApplicants]);
+
   if (showLoader) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -51,26 +72,7 @@ export const ApplicantsList = () => {
     );
   }
 
-  const tabCounts = useMemo(() => {
-    const inProgress = filteredApplicants.filter(app => {
-      const s = app['2_Tracking'].status;
-      if (s === 'in_progress' || s === 'approved') return true;
-      if (s === 'finalize_move_in') {
-        const wf = app.workflow || {};
-        return !['1', '2', '3', '4', '5'].every((id: string) => wf[id]?.isCompleted);
-      }
-      return false;
-    }).length;
 
-    const postMoveIn = filteredApplicants.filter(app => {
-      const s = app['2_Tracking'].status;
-      if (s === 'completed' || s === 'cancelled') return false;
-      const wf = app.workflow || {};
-      return ['1', '2', '3', '4', '5'].every((id: string) => wf[id]?.isCompleted);
-    }).length;
-
-    return { inProgress, postMoveIn };
-  }, [filteredApplicants]);
 
   const CountBadge = ({ count }: { count: number }) => (
     <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-blue-500 text-white text-[10px] font-bold leading-none">
