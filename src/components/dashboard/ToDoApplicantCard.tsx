@@ -33,7 +33,7 @@ export const ToDoApplicantCard = ({ applicant, isUpcoming = false }: ToDoApplica
   return (
     <div
       onClick={() => navigate(`/applicants/${applicant.id}`)}
-      className="rounded-neuro-md bg-white/60 shadow-neuro-pressed p-3 transition-all cursor-pointer"
+      className="neu-pressed !rounded-2xl p-4 transition-all cursor-pointer hover:bg-white/40"
     >
       <div className="flex items-center justify-between mb-2">
         <div>

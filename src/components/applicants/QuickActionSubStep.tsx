@@ -198,14 +198,15 @@ export const QuickActionSubStep = ({ applicant }: QuickActionSubStepProps) => {
                                 Next Action (Step {current.stepNumber})
                             </span>
                         </div>
-                        <p className="text-sm font-semibold text-black/80 leading-tight mb-2">
-                            {current.config.label}
-                        </p>
+                        {/* Text and Actions inline */}
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+                            <p className="text-sm font-semibold text-black/80 leading-tight">
+                                {current.config.label}
+                            </p>
 
-                        {/* Inputs and Secondary Actions - Moved here to align with text */}
-                        <div className="flex flex-col gap-2 items-start">
+                            {/* Inputs and Secondary Actions */}
                             {current.config.type === 'textbox' ? (
-                                <div className="flex flex-col gap-2 w-full" onClick={(e) => e.stopPropagation()}>
+                                <div className="flex items-center flex-wrap gap-2" onClick={(e) => e.stopPropagation()}>
                                     {current.config.id === '3a' ? (
                                         <>
                                             <div className="flex items-center gap-2">

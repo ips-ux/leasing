@@ -23,7 +23,7 @@ export const ToDoInquiryCard = ({ inquiry, onClick }: ToDoInquiryCardProps) => {
   return (
     <div
       onClick={onClick}
-      className="rounded-neuro-md bg-white/60 shadow-neuro-pressed p-3 transition-all cursor-pointer hover:bg-white/80"
+      className="neu-pressed !rounded-2xl p-4 transition-all cursor-pointer hover:bg-white/40"
     >
       <div className="flex items-start justify-between gap-4">
         <div className="flex-1 min-w-0">
