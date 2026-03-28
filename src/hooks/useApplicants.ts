@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { onSnapshot } from 'firebase/firestore';
-import { getApplicants, createApplicant as createApplicantService, updateApplicant as updateApplicantService, deleteApplicant as deleteApplicantService } from '../firebase/firestore';
-import type { Applicant, ApplicantFormData } from '../types/applicant';
+import { getApplicants, createApplicant as createApplicantService, createTransferApplicant as createTransferService, updateApplicant as updateApplicantService, deleteApplicant as deleteApplicantService } from '../firebase/firestore';
+import type { Applicant, ApplicantFormData, TransferFormData } from '../types/applicant';
 import { normalizeApplicant } from '../lib/workflow-steps';
 import toast from 'react-hot-toast';
 
@@ -49,6 +49,18 @@ export const useApplicants = () => {
     }
   };
 
+  const createTransferApplicant = async (formData: TransferFormData): Promise<string | null> => {
+    try {
+      const id = await createTransferService(formData);
+      toast.success('Transfer applicant created successfully!');
+      return id;
+    } catch (err: any) {
+      console.error('Error creating transfer applicant:', err);
+      toast.error(err.message || 'Failed to create transfer applicant');
+      return null;
+    }
+  };
+
   const updateApplicant = async (id: string, data: any): Promise<boolean> => {
     try {
       await updateApplicantService(id, data);
@@ -78,6 +90,7 @@ export const useApplicants = () => {
     loading,
     error,
     createApplicant,
+    createTransferApplicant,
     updateApplicant,
     deleteApplicant,
   };

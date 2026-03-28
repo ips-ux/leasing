@@ -6,6 +6,7 @@ import { Input, Button, PageLoader } from '../ui';
 import { useDelayedLoading } from '../../hooks/useDelayedLoading';
 import { useUsers } from '../../hooks/useUsers';
 import type { Applicant } from '../../types/applicant';
+import { getWorkflowSteps } from '../../lib/workflow-steps';
 
 export type ApplicantStatus = 'in_progress' | 'post_move_in' | 'completed' | 'cancelled';
 
@@ -47,11 +48,13 @@ export const ApplicantList = ({ applicants, loading, activeStatus }: ApplicantLi
         // So "In Progress" should be everything BEFORE that.
         // Let's check step completion.
         const workflow = app.workflow || {};
-        const steps1to5 = ['1', '2', '3', '4', '5'];
-        const finishedSteps1to5 = steps1to5.every(stepId => workflow[stepId]?.isCompleted);
+        const appType = (app["1_Profile"] as any)?.applicantType || 'new';
+        const wfSteps = getWorkflowSteps(appType);
+        const prePromotionSteps = wfSteps.slice(0, -1);
+        const finishedPrePromotion = prePromotionSteps.every(step => workflow[step.step.toString()]?.isCompleted);
 
-        // If status is 'finalize_move_in' but NOT finished steps 1-5, it's still "In Progress" (or technically pre-move-in)
-        if (app["2_Tracking"].status === 'finalize_move_in' && !finishedSteps1to5) return true;
+        // If status is 'finalize_move_in' but NOT finished pre-promotion steps, it's still "In Progress"
+        if (app["2_Tracking"].status === 'finalize_move_in' && !finishedPrePromotion) return true;
 
         return false;
       });
@@ -64,10 +67,12 @@ export const ApplicantList = ({ applicants, loading, activeStatus }: ApplicantLi
         if (app["2_Tracking"].status === 'completed' || app["2_Tracking"].status === 'cancelled') return false;
 
         const workflow = app.workflow || {};
-        const steps1to5 = ['1', '2', '3', '4', '5'];
-        const finishedSteps1to5 = steps1to5.every(stepId => workflow[stepId]?.isCompleted);
+        const appType = (app["1_Profile"] as any)?.applicantType || 'new';
+        const wfSteps = getWorkflowSteps(appType);
+        const prePromotionSteps = wfSteps.slice(0, -1);
+        const finishedPrePromotion = prePromotionSteps.every(step => workflow[step.step.toString()]?.isCompleted);
 
-        return finishedSteps1to5;
+        return finishedPrePromotion;
       });
     } else if (activeStatus === 'completed') {
       result = result.filter(app => app["2_Tracking"].status === 'completed');

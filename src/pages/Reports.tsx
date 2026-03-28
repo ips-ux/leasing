@@ -317,74 +317,26 @@ export const Reports = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      {/* Header row — title left, month selector right (desktop only inline) */}
+      <div className="flex justify-between items-start gap-4">
         <div>
           <h1 className="text-3xl font-bold text-neuro-primary mb-1">Reports</h1>
           <p className="text-neuro-muted">Generate and view property reports</p>
         </div>
 
-        <div className="flex gap-4">
-          {/* Month Selector */}
-          {(selectedReport === 'move-in' || selectedReport === 'concession') && (
-            <div className="relative w-64" ref={monthParamsRef}>
-              <button
-                onClick={() => {
-                  setIsMonthOpen(!isMonthOpen);
-                  setIsReportTypeOpen(false);
-                }}
-                className="w-full flex items-center justify-between px-4 py-2.5 rounded-neuro-md shadow-neuro-pressed bg-white/50 font-sans text-neuro-primary font-medium cursor-pointer focus:outline-none"
-              >
-                <span>{format(currentViewDate, 'MMMM yyyy')}</span>
-                <svg
-                  className={`w-5 h-5 text-neuro-secondary transition-transform duration-200 ${isMonthOpen ? 'rotate-180' : ''}`}
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-
-              {isMonthOpen && (
-                <div className="absolute top-full left-0 right-0 mt-3 py-2 bg-white/95 backdrop-blur-sm rounded-neuro-md shadow-neuro-floating z-50 animate-in fade-in zoom-in-95 duration-200 border border-neuro-white/50">
-                  <div className="max-h-60 overflow-y-auto custom-scrollbar">
-                    {availableMonths.map((date) => (
-                      <button
-                        key={date.toISOString()}
-                        onClick={() => {
-                          setCurrentViewDate(date);
-                          setIsMonthOpen(false);
-                        }}
-                        className={`w-full text-left px-4 py-2.5 text-sm transition-all ${isSameMonth(date, currentViewDate)
-                          ? 'bg-neuro-lavender/30 text-neuro-primary font-bold'
-                          : 'text-neuro-muted hover:bg-neuro-lavender/10 hover:text-neuro-primary'
-                          }`}
-                      >
-                        {format(date, 'MMMM yyyy')}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Report Type Selector */}
-          <div className="relative w-64" ref={reportParamsRef}>
+        {/* Month Selector — only shown for move-in/concession, pinned right */}
+        {(selectedReport === 'move-in' || selectedReport === 'concession') && (
+          <div className="relative w-48 shrink-0" ref={monthParamsRef}>
             <button
               onClick={() => {
-                setIsReportTypeOpen(!isReportTypeOpen);
-                setIsMonthOpen(false);
+                setIsMonthOpen(!isMonthOpen);
+                setIsReportTypeOpen(false);
               }}
               className="w-full flex items-center justify-between px-4 py-2.5 rounded-neuro-md shadow-neuro-pressed bg-white/50 font-sans text-neuro-primary font-medium cursor-pointer focus:outline-none"
             >
-              <span>
-                {selectedReport === 'move-in' && 'Move-In Report'}
-                {selectedReport === 'concession' && 'Concession Report'}
-                {selectedReport === 'eod' && 'EOD Report'}
-              </span>
+              <span>{format(currentViewDate, 'MMMM yyyy')}</span>
               <svg
-                className={`w-5 h-5 text-neuro-secondary transition-transform duration-200 ${isReportTypeOpen ? 'rotate-180' : ''}`}
+                className={`w-5 h-5 text-neuro-secondary transition-transform duration-200 ${isMonthOpen ? 'rotate-180' : ''}`}
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -393,33 +345,80 @@ export const Reports = () => {
               </svg>
             </button>
 
-            {isReportTypeOpen && (
+            {isMonthOpen && (
               <div className="absolute top-full left-0 right-0 mt-3 py-2 bg-white/95 backdrop-blur-sm rounded-neuro-md shadow-neuro-floating z-50 animate-in fade-in zoom-in-95 duration-200 border border-neuro-white/50">
                 <div className="max-h-60 overflow-y-auto custom-scrollbar">
-                  {[
-                    { value: 'eod', label: 'EOD Report' },
-                    { value: 'move-in', label: 'Move-In Report' },
-                    { value: 'concession', label: 'Concession Report' }
-                  ].map((option) => (
+                  {availableMonths.map((date) => (
                     <button
-                      key={option.value}
+                      key={date.toISOString()}
                       onClick={() => {
-                        setSelectedReport(option.value as ReportType);
-                        setIsReportTypeOpen(false);
+                        setCurrentViewDate(date);
+                        setIsMonthOpen(false);
                       }}
-                      className={`w-full text-left px-4 py-2.5 text-sm transition-all ${selectedReport === option.value
+                      className={`w-full text-left px-4 py-2.5 text-sm transition-all ${isSameMonth(date, currentViewDate)
                         ? 'bg-neuro-lavender/30 text-neuro-primary font-bold'
                         : 'text-neuro-muted hover:bg-neuro-lavender/10 hover:text-neuro-primary'
                         }`}
                     >
-                      {option.label}
+                      {format(date, 'MMMM yyyy')}
                     </button>
                   ))}
                 </div>
               </div>
             )}
           </div>
-        </div>
+        )}
+      </div>
+
+      {/* Report Type Selector — full width row below header */}
+      <div className="relative w-full sm:w-64" ref={reportParamsRef}>
+        <button
+          onClick={() => {
+            setIsReportTypeOpen(!isReportTypeOpen);
+            setIsMonthOpen(false);
+          }}
+          className="w-full flex items-center justify-between px-4 py-2.5 rounded-neuro-md shadow-neuro-pressed bg-white/50 font-sans text-neuro-primary font-medium cursor-pointer focus:outline-none"
+        >
+          <span>
+            {selectedReport === 'move-in' && 'Move-In Report'}
+            {selectedReport === 'concession' && 'Concession Report'}
+            {selectedReport === 'eod' && 'EOD Report'}
+          </span>
+          <svg
+            className={`w-5 h-5 text-neuro-secondary transition-transform duration-200 ${isReportTypeOpen ? 'rotate-180' : ''}`}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+
+        {isReportTypeOpen && (
+          <div className="absolute top-full left-0 right-0 mt-3 py-2 bg-white/95 backdrop-blur-sm rounded-neuro-md shadow-neuro-floating z-50 animate-in fade-in zoom-in-95 duration-200 border border-neuro-white/50">
+            <div className="max-h-60 overflow-y-auto custom-scrollbar">
+              {[
+                { value: 'eod', label: 'EOD Report' },
+                { value: 'move-in', label: 'Move-In Report' },
+                { value: 'concession', label: 'Concession Report' }
+              ].map((option) => (
+                <button
+                  key={option.value}
+                  onClick={() => {
+                    setSelectedReport(option.value as ReportType);
+                    setIsReportTypeOpen(false);
+                  }}
+                  className={`w-full text-left px-4 py-2.5 text-sm transition-all ${selectedReport === option.value
+                    ? 'bg-neuro-lavender/30 text-neuro-primary font-bold'
+                    : 'text-neuro-muted hover:bg-neuro-lavender/10 hover:text-neuro-primary'
+                    }`}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       <Card className="p-5">
@@ -521,65 +520,67 @@ export const Reports = () => {
               <PageLoader />
             ) : (
               <div className="overflow-x-auto rounded-neuro-md">
+                {/* EOD top metrics — responsive grid (2-col mobile → 5-col sm+) */}
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 mb-3">
+                  {/* Occupancy */}
+                  <div className="flex flex-col gap-1 p-2 bg-white/40 rounded">
+                    <span className="text-xs font-medium text-neuro-secondary">Occupancy</span>
+                    <input
+                      type="text"
+                      value={eodData.occupancy}
+                      onChange={(e) => setEodData({ ...eodData, occupancy: e.target.value })}
+                      placeholder="89.5"
+                      className="w-full px-2 py-1 text-sm rounded border border-neuro-base/20 bg-white/50 font-sans text-neuro-primary focus:outline-none focus:border-neuro-lavender"
+                    />
+                  </div>
+                  {/* 4 Week Trend */}
+                  <div className="flex flex-col gap-1 p-2 bg-white/40 rounded">
+                    <span className="text-xs font-medium text-neuro-secondary">4 Week Trend</span>
+                    <input
+                      type="text"
+                      value={eodData.fourWeekTrend}
+                      onChange={(e) => setEodData({ ...eodData, fourWeekTrend: e.target.value })}
+                      placeholder="88.33"
+                      className="w-full px-2 py-1 text-sm rounded border border-neuro-base/20 bg-white/50 font-sans text-neuro-primary focus:outline-none focus:border-neuro-lavender"
+                    />
+                  </div>
+                  {/* 6 Week Trend */}
+                  <div className="flex flex-col gap-1 p-2 bg-white/40 rounded">
+                    <span className="text-xs font-medium text-neuro-secondary">6 Week Trend</span>
+                    <input
+                      type="text"
+                      value={eodData.sixWeekTrend}
+                      onChange={(e) => setEodData({ ...eodData, sixWeekTrend: e.target.value })}
+                      placeholder="88.04"
+                      className="w-full px-2 py-1 text-sm rounded border border-neuro-base/20 bg-white/50 font-sans text-neuro-primary focus:outline-none focus:border-neuro-lavender"
+                    />
+                  </div>
+                  {/* Traffic */}
+                  <div className="flex flex-col gap-1 p-2 bg-white/40 rounded">
+                    <span className="text-xs font-medium text-neuro-secondary">Traffic (daily)</span>
+                    <input
+                      type="text"
+                      value={eodData.traffic}
+                      onChange={(e) => setEodData({ ...eodData, traffic: e.target.value })}
+                      placeholder="0"
+                      className="w-full px-2 py-1 text-sm rounded border border-neuro-base/20 bg-white/50 font-sans text-neuro-primary focus:outline-none focus:border-neuro-lavender"
+                    />
+                  </div>
+                  {/* Leases */}
+                  <div className="flex flex-col gap-1 p-2 bg-white/40 rounded col-span-2 sm:col-span-1">
+                    <span className="text-xs font-medium text-neuro-secondary">Leases (daily)</span>
+                    <input
+                      type="text"
+                      value={eodData.leases}
+                      onChange={(e) => setEodData({ ...eodData, leases: e.target.value })}
+                      placeholder="0"
+                      className="w-full px-2 py-1 text-sm rounded border border-neuro-base/20 bg-white/50 font-sans text-neuro-primary focus:outline-none focus:border-neuro-lavender"
+                    />
+                  </div>
+                </div>
+
                 <table className="w-full text-left border-collapse">
                   <tbody>
-                    {/* Combined Metrics Row */}
-                    <tr>
-                      <td className="py-2 px-3 text-xs font-medium text-neuro-secondary w-[18%]">Occupancy</td>
-                      <td className="py-2 px-3 text-xs font-medium text-neuro-secondary w-[18%]">4 Week Trend</td>
-                      <td className="py-2 px-3 text-xs font-medium text-neuro-secondary w-[18%]">6 Week Trend</td>
-                      <td className="w-[1px] bg-neuro-base/20 p-0"></td>
-                      <td className="py-2 px-3 text-xs font-medium text-neuro-secondary w-[22%]">Traffic (daily)</td>
-                      <td className="py-2 px-3 text-xs font-medium text-neuro-secondary w-[22%]">Leases (daily)</td>
-                    </tr>
-                    <tr className="bg-white/40">
-                      <td className="py-2 px-3">
-                        <input
-                          type="text"
-                          value={eodData.occupancy}
-                          onChange={(e) => setEodData({ ...eodData, occupancy: e.target.value })}
-                          placeholder="89.5"
-                          className="w-full px-2 py-1 text-sm rounded border border-neuro-base/20 bg-white/50 font-sans text-neuro-primary focus:outline-none focus:border-neuro-lavender"
-                        />
-                      </td>
-                      <td className="py-2 px-3">
-                        <input
-                          type="text"
-                          value={eodData.fourWeekTrend}
-                          onChange={(e) => setEodData({ ...eodData, fourWeekTrend: e.target.value })}
-                          placeholder="88.33"
-                          className="w-full px-2 py-1 text-sm rounded border border-neuro-base/20 bg-white/50 font-sans text-neuro-primary focus:outline-none focus:border-neuro-lavender"
-                        />
-                      </td>
-                      <td className="py-2 px-3">
-                        <input
-                          type="text"
-                          value={eodData.sixWeekTrend}
-                          onChange={(e) => setEodData({ ...eodData, sixWeekTrend: e.target.value })}
-                          placeholder="88.04"
-                          className="w-full px-2 py-1 text-sm rounded border border-neuro-base/20 bg-white/50 font-sans text-neuro-primary focus:outline-none focus:border-neuro-lavender"
-                        />
-                      </td>
-                      <td className="w-[1px] bg-neuro-base/20 p-0"></td>
-                      <td className="py-2 px-3">
-                        <input
-                          type="text"
-                          value={eodData.traffic}
-                          onChange={(e) => setEodData({ ...eodData, traffic: e.target.value })}
-                          placeholder="0"
-                          className="w-full px-2 py-1 text-sm rounded border border-neuro-base/20 bg-white/50 font-sans text-neuro-primary focus:outline-none focus:border-neuro-lavender"
-                        />
-                      </td>
-                      <td className="py-2 px-3">
-                        <input
-                          type="text"
-                          value={eodData.leases}
-                          onChange={(e) => setEodData({ ...eodData, leases: e.target.value })}
-                          placeholder="0"
-                          className="w-full px-2 py-1 text-sm rounded border border-neuro-base/20 bg-white/50 font-sans text-neuro-primary focus:outline-none focus:border-neuro-lavender"
-                        />
-                      </td>
-                    </tr>
 
                     {/* Competition Row */}
                     <tr>

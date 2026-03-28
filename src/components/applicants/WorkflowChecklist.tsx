@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { WorkflowStep } from './WorkflowStep';
-import { WORKFLOW_STEPS, isStepComplete } from '../../lib/workflow-steps';
+import { getWorkflowSteps, isStepComplete } from '../../lib/workflow-steps';
 import type { Applicant, SubStepData } from '../../types/applicant';
 import { Button } from '../ui';
 
@@ -22,31 +22,37 @@ export const WorkflowChecklist = ({
     const { workflow } = applicant;
     const tracking = applicant["2_Tracking"];
     const promotedToResident = tracking.promotedToResident;
+    const applicantType = applicant["1_Profile"]?.applicantType || 'new';
+    const steps = getWorkflowSteps(applicantType);
+    const lastStep = steps[steps.length - 1];
+    const prePromotionSteps = steps.filter(s => s.step !== lastStep.step);
 
     // Sequential logic: step N is only enabled if step N-1 is completed
     const isStepEnabled = (stepNumber: number): boolean => {
-        // Step 6 (Post Move-In) requires promotion
-        if (stepNumber === 6) {
+        // Last step requires promotion
+        if (stepNumber === lastStep.step) {
             return promotedToResident;
         }
 
-        if (stepNumber === 1) return true;
-        const prevStepConfig = WORKFLOW_STEPS.find((s) => s.step === stepNumber - 1);
-        const prevStepData = workflow[String(stepNumber - 1)];
+        if (stepNumber === steps[0].step) return true;
+        const prevStep = steps.find((_, i) => i > 0 && steps[i].step === stepNumber);
+        const prevIndex = steps.findIndex(s => s.step === stepNumber) - 1;
+        if (prevIndex < 0) return true;
+        const prevStepConfig = steps[prevIndex];
+        const prevStepData = workflow[String(prevStepConfig.step)];
         if (!prevStepConfig || !prevStepData) return false;
         return isStepComplete(prevStepData, prevStepConfig);
     };
 
-    // Check if steps 1-5 are all complete (needed for promotion)
-    const canPromote = !promotedToResident && WORKFLOW_STEPS
-        .filter(s => s.step <= 5)
+    // Check if all pre-promotion steps are complete
+    const canPromote = !promotedToResident && prePromotionSteps
         .every(step => {
             const stepData = workflow[String(step.step)];
             return stepData && isStepComplete(stepData, step);
         });
 
     // Calculate overall progress
-    const completedSteps = WORKFLOW_STEPS.filter((step) => {
+    const completedSteps = steps.filter((step) => {
         const stepData = workflow[String(step.step)];
         return stepData && isStepComplete(stepData, step);
     }).length;
@@ -54,7 +60,7 @@ export const WorkflowChecklist = ({
     // Calculate total sub-steps progress
     let totalSubSteps = 0;
     let completedSubSteps = 0;
-    WORKFLOW_STEPS.forEach((step) => {
+    steps.forEach((step) => {
         totalSubSteps += step.subSteps.length;
         const stepData = workflow[String(step.step)];
         if (stepData?.subSteps) {
@@ -74,6 +80,7 @@ export const WorkflowChecklist = ({
     });
 
     const progressPercentage = totalSubSteps > 0 ? (completedSubSteps / totalSubSteps) * 100 : 0;
+    const lastPreStepNum = prePromotionSteps[prePromotionSteps.length - 1]?.step;
 
     return (
         <div className="space-y-6">
@@ -83,7 +90,7 @@ export const WorkflowChecklist = ({
                     <h3 className="font-bold text-lg">Workflow Progress</h3>
                     <div className="text-right">
                         <span className="font-mono font-bold text-sm block">
-                            {completedSteps} / {WORKFLOW_STEPS.length} Steps
+                            {completedSteps} / {steps.length} Steps
                         </span>
                         <span className="font-mono text-xs text-black/50">
                             {completedSubSteps} / {totalSubSteps} items
@@ -105,10 +112,10 @@ export const WorkflowChecklist = ({
                 {/* Status Text */}
                 <p className="mt-2 text-sm font-mono text-black/60">
                     {completedSteps === 0 && 'Ready to begin workflow'}
-                    {completedSteps > 0 && completedSteps < WORKFLOW_STEPS.length && (
-                        <>Currently on Step {tracking.currentStep}: {WORKFLOW_STEPS[tracking.currentStep - 1]?.name || 'Next Step'}</>
+                    {completedSteps > 0 && completedSteps < steps.length && (
+                        <>Currently on Step {tracking.currentStep}: {steps[tracking.currentStep - 1]?.name || 'Next Step'}</>
                     )}
-                    {completedSteps === WORKFLOW_STEPS.length && '🎉 All steps completed!'}
+                    {completedSteps === steps.length && '🎉 All steps completed!'}
                 </p>
             </div>
 
@@ -126,7 +133,7 @@ export const WorkflowChecklist = ({
                     },
                 }}
             >
-                {WORKFLOW_STEPS.map((stepConfig) => {
+                {steps.map((stepConfig) => {
                     const stepData = workflow[String(stepConfig.step)] || {
                         stepName: stepConfig.name,
                         isCompleted: false,
@@ -148,7 +155,7 @@ export const WorkflowChecklist = ({
                                     stepData={stepData}
                                     applicant={applicant}
                                     isEnabled={isStepEnabled(stepConfig.step)}
-                                    isLocked={promotedToResident && stepConfig.step <= 5}
+                                    isLocked={promotedToResident && stepConfig.step !== lastStep.step}
                                     onSubStepUpdate={(subStepId, updates) =>
                                         onSubStepUpdate(stepConfig.step, subStepId, updates)
                                     }
@@ -159,8 +166,8 @@ export const WorkflowChecklist = ({
                                 />
                             </motion.div>
 
-                            {/* Promote to Resident button between Step 5 and 6 */}
-                            {stepConfig.step === 5 && (
+                            {/* Promote to Resident button between second-to-last and last step */}
+                            {stepConfig.step === lastPreStepNum && (
                                 <motion.div
                                     key="promote-button"
                                     variants={{
@@ -183,7 +190,9 @@ export const WorkflowChecklist = ({
                                             disabled={!canPromote}
                                             className="!px-12 !py-4 text-lg"
                                         >
-                                            {canPromote ? '🎉 Promote to Resident' : '⏳ Complete Steps 1-5 to Promote'}
+                                            {canPromote
+                                                ? '🎉 Promote to Resident'
+                                                : `⏳ Complete Steps 1-${lastPreStepNum} to Promote`}
                                         </Button>
                                     )}
                                 </motion.div>
@@ -194,7 +203,7 @@ export const WorkflowChecklist = ({
             </motion.div>
 
             {/* Completion Banner */}
-            {completedSteps === WORKFLOW_STEPS.length && (
+            {completedSteps === steps.length && (
                 <motion.div
                     className="bg-mint border-[3px] border-black p-6 text-center"
                     initial={{ opacity: 0, scale: 0.9 }}

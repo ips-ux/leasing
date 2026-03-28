@@ -1,4 +1,5 @@
 import { Sidebar } from './Sidebar';
+import { MobileNav } from './MobileNav';
 import { ContentContainer } from './ContentContainer';
 
 interface LayoutProps {
@@ -7,12 +8,17 @@ interface LayoutProps {
 
 export const Layout = ({ children }: LayoutProps) => {
   return (
-    <div className="min-h-screen flex bg-main">
-      {/* Left Sidebar */}
+    <div className="min-h-screen flex flex-col md:flex-row bg-main">
+      {/* Left Sidebar — desktop only */}
       <Sidebar />
 
       {/* Main Content Area */}
-      <main className="flex-1 relative overflow-x-hidden">
+      <main className="flex-1 relative overflow-x-hidden flex flex-col">
+        {/* Top icon bar — mobile only */}
+        <div className="md:hidden">
+          <MobileNav />
+        </div>
+
         <ContentContainer>
           {children}
         </ContentContainer>

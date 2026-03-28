@@ -3,6 +3,7 @@ import { Badge } from '../ui';
 import { QuickActionSubStep } from '../applicants/QuickActionSubStep';
 import { timestampToLocalDate } from '../../utils/date';
 import type { Applicant } from '../../types/applicant';
+import { getWorkflowSteps, computeAllTags, getTagStyle } from '../../lib/workflow-steps';
 import { differenceInCalendarDays } from 'date-fns';
 
 interface ToDoApplicantCardProps {
@@ -29,6 +30,7 @@ const formatMoveInDays = (date: Date) => {
 export const ToDoApplicantCard = ({ applicant, isUpcoming = false }: ToDoApplicantCardProps) => {
   const navigate = useNavigate();
   const moveInDate = applicant['1_Profile'].moveInDate ? timestampToLocalDate(applicant['1_Profile'].moveInDate) : null;
+  const tags = computeAllTags(applicant);
 
   return (
     <div
@@ -46,13 +48,30 @@ export const ToDoApplicantCard = ({ applicant, isUpcoming = false }: ToDoApplica
             </div>
           )}
         </div>
-        {isUpcoming ? (
-          <Badge variant="success">Ready for Move-In</Badge>
-        ) : (
-          <Badge variant={getStatusVariant(applicant['2_Tracking'].status)}>
-            Step {applicant['2_Tracking'].currentStep}/6
-          </Badge>
-        )}
+        <div className="flex items-center gap-2">
+          {tags.length > 0 && (
+            <div className="flex items-center gap-1 flex-wrap justify-end">
+              {tags.map((tag) => {
+                const style = getTagStyle(tag);
+                return (
+                  <span
+                    key={tag}
+                    className={`text-xs font-mono font-bold px-2 py-0.5 rounded-sm border whitespace-nowrap ${style.bg} ${style.border} ${style.text}`}
+                  >
+                    {tag}
+                  </span>
+                );
+              })}
+            </div>
+          )}
+          {isUpcoming ? (
+            <Badge variant="success">Ready for Move-In</Badge>
+          ) : (
+            <Badge variant={getStatusVariant(applicant['2_Tracking'].status)}>
+              Step {applicant['2_Tracking'].currentStep}/{getWorkflowSteps(applicant['1_Profile']?.applicantType || 'new').length}
+            </Badge>
+          )}
+        </div>
       </div>
 
       {/* Inline Quick Action - prevent click propagation */}

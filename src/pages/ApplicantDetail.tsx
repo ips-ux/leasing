@@ -8,7 +8,7 @@ import { useApplicants } from '../hooks/useApplicants';
 import { useUsers } from '../hooks/useUsers';
 import { extractAgentName } from '../utils/user';
 import { timestampToLocalDate } from '../utils/date';
-import { getLeaseInfoForCard } from '../lib/workflow-steps';
+import { getLeaseInfoForCard, getWorkflowSteps, computeAllTags, getTagStyle } from '../lib/workflow-steps';
 import type { Timestamp } from 'firebase/firestore';
 
 const formatDate = (timestamp: Timestamp | null): string => {
@@ -271,7 +271,7 @@ export const ApplicantDetail = () => {
   }
 
   // Get lease info for display
-  const leaseInfo = getLeaseInfoForCard(applicant.workflow);
+  const leaseInfo = getLeaseInfoForCard(applicant.workflow, applicant["1_Profile"]?.applicantType || 'new');
   const profile = applicant["1_Profile"];
   const tracking = applicant["2_Tracking"];
 
@@ -323,7 +323,18 @@ export const ApplicantDetail = () => {
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap justify-end">
+              {computeAllTags(applicant).map((tag, i) => {
+                const style = getTagStyle(tag);
+                return (
+                  <span
+                    key={i}
+                    className={`text-xs font-mono font-bold px-2 py-0.5 rounded-sm border ${style.bg} ${style.border} ${style.text}`}
+                  >
+                    {tag}
+                  </span>
+                );
+              })}
               <Badge variant={getStatusBadge(tracking.status)} className="scale-90">
                 {tracking.status.replace('_', ' ').toUpperCase()}
               </Badge>
@@ -438,27 +449,25 @@ export const ApplicantDetail = () => {
                   <h2 className="text-3xl font-bold mb-1">{profile.name}</h2>
                   <p className="text-xl font-mono text-black/60">Unit {profile.unit}</p>
                 </div>
-                <div className="flex items-center gap-3 flex-wrap">
-                  <Badge variant={getStatusBadge(tracking.status)} className="!text-sm !px-3 !py-1">
-                    {tracking.status.replace('_', ' ').toUpperCase()}
-                  </Badge>
-                  {/* Tags from optional checkboxes */}
-                  {applicant.tags && applicant.tags.map((tag, i) => (
-                    <Badge key={i} variant="medium" className="text-[10px]">
-                      {tag}
-                    </Badge>
-                  ))}
-                </div>
+                <Badge variant={getStatusBadge(tracking.status)} className="!text-sm !px-3 !py-1">
+                  {tracking.status.replace('_', ' ').toUpperCase()}
+                </Badge>
               </div>
 
-              {/* Assigned Agent - Prominent Display */}
-              <div className="mb-4 pb-4 border-b-2 border-black/20">
-                <p className="text-xs font-mono text-black/50 uppercase mb-1">Assigned To</p>
-                <p className="text-lg font-bold text-lavender">
-                  {users.find(u => u.uid === tracking.assignedTo)?.Agent_Name ||
-                    extractAgentName(users.find(u => u.uid === tracking.assignedTo)?.email) ||
-                    'Not Set'}
-                </p>
+              {/* Assigned Agent + Current Step - Same Line */}
+              <div className="mb-4 pb-4 border-b-2 border-black/20 flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-mono text-black/50 uppercase mb-1">Assigned To</p>
+                  <p className="text-lg font-bold text-lavender">
+                    {users.find(u => u.uid === tracking.assignedTo)?.Agent_Name ||
+                      extractAgentName(users.find(u => u.uid === tracking.assignedTo)?.email) ||
+                      'Not Set'}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs font-mono text-black/50 uppercase mb-1">Current Step</p>
+                  <p className="text-lg font-bold">Step {tracking.currentStep} of {getWorkflowSteps(applicant?.["1_Profile"]?.applicantType || 'new').length}</p>
+                </div>
               </div>
 
               {/* Cancellation Reason - Prominent Display if Cancelled */}
@@ -471,7 +480,7 @@ export const ApplicantDetail = () => {
                 </div>
               )}
 
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
                 <div>
                   <p className="text-xs font-mono text-black/50 uppercase mb-1">Date Applied</p>
                   <p className="font-semibold">{formatDate(profile.dateApplied)}</p>
@@ -484,11 +493,27 @@ export const ApplicantDetail = () => {
                   <p className="text-xs font-mono text-black/50 uppercase mb-1">Concession</p>
                   <p className="font-semibold">{profile.concessionApplied || 'None'}</p>
                 </div>
-                <div>
-                  <p className="text-xs font-mono text-black/50 uppercase mb-1">Current Step</p>
-                  <p className="font-semibold">Step {tracking.currentStep} of 6</p>
-                </div>
               </div>
+
+              {/* Tags inline */}
+              {(() => {
+                const allTags = computeAllTags(applicant);
+                return allTags.length > 0 && (
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {allTags.map((tag, i) => {
+                      const style = getTagStyle(tag);
+                      return (
+                        <span
+                          key={i}
+                          className={`text-xs font-mono font-bold px-2.5 py-1 rounded-sm border ${style.bg} ${style.border} ${style.text}`}
+                        >
+                          {tag}
+                        </span>
+                      );
+                    })}
+                  </div>
+                );
+              })()}
             </>
           )}
 

@@ -1,4 +1,14 @@
 import { NavLink } from 'react-router-dom';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import {
+  faGauge,
+  faUsers,
+  faComments,
+  faCalendarDays,
+  faChartBar,
+  faHouseChimney,
+} from '@fortawesome/free-solid-svg-icons';
+import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
 import { useAuth } from '../../hooks/useAuth';
 import { Button, FancyButton, UserSettingsPopover, ChangePasswordModal } from '../ui';
 import { changePassword } from '../../firebase/auth';
@@ -6,15 +16,17 @@ import { useState, useRef } from 'react';
 
 interface NavLinkItemProps {
   to: string;
+  icon: IconDefinition;
   children: React.ReactNode;
   disabled?: boolean;
 }
 
-const NavLinkItem = ({ to, children, disabled = false }: NavLinkItemProps) => {
+const NavLinkItem = ({ to, icon, children, disabled = false }: NavLinkItemProps) => {
   if (disabled) {
     return (
-      <div className="px-5 py-3 text-sidebar-muted cursor-not-allowed rounded-xl mx-2">
-        {children}
+      <div className="px-5 py-3 text-sidebar-muted cursor-not-allowed rounded-xl mx-2 flex items-center gap-3">
+        <FontAwesomeIcon icon={icon} className="w-4 h-4 shrink-0" />
+        <span>{children}</span>
       </div>
     );
   }
@@ -23,15 +35,16 @@ const NavLinkItem = ({ to, children, disabled = false }: NavLinkItemProps) => {
     <NavLink
       to={to}
       className={({ isActive }) =>
-        `flex items-center px-5 py-3 rounded-xl transition-all duration-200 font-medium mx-2 ${isActive
-          ? 'bg-sidebar-surface text-white shadow-inner-light' // Active state
-          : 'text-sidebar-muted hover:text-white hover:bg-white/5' // Inactive state
+        `flex items-center px-5 py-3 rounded-xl transition-all duration-200 font-medium mx-2 gap-3 ${isActive
+          ? 'bg-sidebar-surface text-white shadow-inner-light'
+          : 'text-sidebar-muted hover:text-white hover:bg-white/5'
         }`
       }
     >
       {({ isActive }) => (
         <>
           <div className={`sidebar-radio-input ${isActive ? 'active' : ''}`} />
+          <FontAwesomeIcon icon={icon} className="w-4 h-4 shrink-0" />
           <span>{children}</span>
         </>
       )}
@@ -55,7 +68,7 @@ export const Sidebar = () => {
 
   return (
     <aside
-      className="w-72 h-screen flex flex-col sticky top-0 bg-sidebar-bg text-sidebar-text shadow-xl z-50"
+      className="hidden md:flex w-72 h-screen flex-col sticky top-0 bg-sidebar-bg text-sidebar-text shadow-xl z-50"
     >
       {/* Header/Logo */}
       <div className="p-8 border-b border-sidebar-border">
@@ -64,12 +77,12 @@ export const Sidebar = () => {
 
       {/* Navigation Links */}
       <nav className="flex-1 py-6 px-4 overflow-y-auto space-y-2">
-        <NavLinkItem to="/dashboard">Dashboard</NavLinkItem>
-        <NavLinkItem to="/applicants">Applicants</NavLinkItem>
-        <NavLinkItem to="/inquiries">Inquiries</NavLinkItem>
-        <NavLinkItem to="/scheduler">Scheduler</NavLinkItem>
-        <NavLinkItem to="/reports">Reports</NavLinkItem>
-        <NavLinkItem to="/welcome-home" disabled>Welcome Home</NavLinkItem>
+        <NavLinkItem to="/dashboard"  icon={faGauge}>Dashboard</NavLinkItem>
+        <NavLinkItem to="/applicants" icon={faUsers}>Applicants</NavLinkItem>
+        <NavLinkItem to="/inquiries"  icon={faComments}>Inquiries</NavLinkItem>
+        <NavLinkItem to="/scheduler"  icon={faCalendarDays}>Scheduler</NavLinkItem>
+        <NavLinkItem to="/reports"    icon={faChartBar}>Reports</NavLinkItem>
+        <NavLinkItem to="/welcome-home" icon={faHouseChimney} disabled>Welcome Home</NavLinkItem>
       </nav>
 
       {/* User Profile Section */}

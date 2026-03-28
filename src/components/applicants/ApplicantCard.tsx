@@ -1,6 +1,6 @@
 
 import type { Applicant } from '../../types/applicant';
-import { getLeaseInfoForCard, WORKFLOW_STEPS } from '../../lib/workflow-steps';
+import { getWorkflowSteps, computeAllTags, getTagStyle } from '../../lib/workflow-steps';
 import type { Timestamp } from 'firebase/firestore';
 import { QuickActionSubStep } from './QuickActionSubStep';
 import type { User } from '../../types/user';
@@ -51,8 +51,11 @@ interface ApplicantCardProps {
 
 export const ApplicantCard = ({ applicant, users, onClick }: ApplicantCardProps) => {
 
+  const applicantType = applicant["1_Profile"]?.applicantType || 'new';
+  const steps = getWorkflowSteps(applicantType);
+  const totalSteps = steps.length;
+
   // Get lease info for at-a-glance display
-  const leaseInfo = applicant.workflow ? getLeaseInfoForCard(applicant.workflow) : [];
 
   const profile = applicant["1_Profile"];
   const tracking = applicant["2_Tracking"];
@@ -118,43 +121,25 @@ export const ApplicantCard = ({ applicant, users, onClick }: ApplicantCardProps)
 
         {/* Center Column: Lease Info & Tags */}
         <div className="flex-1 min-w-[200px] border-l-0 md:border-l-2 border-black/10 md:pl-4 flex flex-col justify-center">
-          {/* Lease Info Preview + Concession */}
-          {(leaseInfo.length > 0 || profile.concessionApplied) && (
-            <div className="flex flex-wrap gap-1.5 mb-2">
-              {profile.concessionApplied && (
-                <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 bg-neuro-lavender rounded-neuro-sm shadow-neuro-pressed text-neuro-primary">
-                  Concession: {profile.concessionApplied}
-                </span>
-              )}
-              {leaseInfo.slice(0, 3).map((item, index) => (
-                <span
-                  key={index}
-                  className="text-[10px] font-mono px-1.5 py-0.5 bg-neuro-base rounded-neuro-sm shadow-neuro-pressed whitespace-nowrap text-neuro-primary"
-                >
-                  {item.label}: {item.value}
-                </span>
-              ))}
-              {leaseInfo.length > 3 && (
-                <span className="text-[10px] font-mono text-black/50">
-                  +{leaseInfo.length - 3}
-                </span>
-              )}
-            </div>
-          )}
-
-          {/* Tags moved to center */}
-          {applicant.tags && applicant.tags.length > 0 && (
-            <div className="flex flex-wrap gap-1">
-              {applicant.tags.map((tag, i) => (
-                <span
-                  key={i}
-                  className="text-[10px] font-mono font-bold px-1.5 py-0.5 bg-neuro-lavender rounded-neuro-sm shadow-neuro-pressed text-neuro-primary"
-                >
-                  {tag}
-                </span>
-              ))}
-            </div>
-          )}
+          {/* Tags (now include concession, parking, storage, pets values) */}
+          {(() => {
+            const tags = computeAllTags(applicant);
+            return tags.length > 0 && (
+              <div className="flex flex-wrap gap-1">
+                {tags.map((tag, i) => {
+                  const style = getTagStyle(tag);
+                  return (
+                    <span
+                      key={i}
+                      className={`text-xs font-mono font-bold px-2 py-0.5 rounded-neuro-sm shadow-neuro-pressed border ${style.bg} ${style.border} ${style.text}`}
+                    >
+                      {tag}
+                    </span>
+                  );
+                })}
+              </div>
+            );
+          })()}
         </div>
 
         {/* Right Column: Progress & Agent */}
@@ -170,18 +155,18 @@ export const ApplicantCard = ({ applicant, users, onClick }: ApplicantCardProps)
             <>
               <div className="flex items-center justify-between mb-1">
                 <span className="text-xs font-bold uppercase text-black/50">Progress</span>
-                <span className="font-mono font-bold text-sm">{tracking.currentStep}/6</span>
+                <span className="font-mono font-bold text-sm">{tracking.currentStep}/{totalSteps}</span>
               </div>
 
               <div className="w-full h-4 bg-neuro-base rounded-full shadow-[inset_2px_2px_4px_#D1D9E6,inset_-2px_-2px_4px_#FFFFFF] p-1 mb-2">
                 <div
                   className="h-full bg-neuro-primary rounded-full transition-all duration-500 shadow-neuro-flat"
-                  style={{ width: `${(tracking.currentStep / 6) * 100}%`, backgroundColor: 'orange' }}
+                  style={{ width: `${(tracking.currentStep / totalSteps) * 100}%`, backgroundColor: 'orange' }}
                 />
               </div>
 
               <p className="text-xs text-black/60 truncate">
-                {WORKFLOW_STEPS[tracking.currentStep - 1]?.name || 'Complete'}
+                {steps[tracking.currentStep - 1]?.name || 'Complete'}
               </p>
             </>
           )}

@@ -16,10 +16,11 @@ import {
 } from 'firebase/firestore';
 import { db } from './config';
 import { getCurrentUser } from './auth';
-import type { Applicant, ApplicantFormData, SubStepData } from '../types/applicant';
+import type { Applicant, ApplicantFormData, TransferFormData, SubStepData } from '../types/applicant';
 import type { Inquiry, InquiryFormData } from '../types/inquiry';
 import type { User } from '../types/user';
-import { initializeWorkflow, WORKFLOW_STEPS, isStepComplete, getApplicantTags } from '../lib/workflow-steps';
+import { initializeWorkflow, isStepComplete, getApplicantTags, getWorkflowSteps, getSubStepConfig, computeTransferFeeTags } from '../lib/workflow-steps';
+import type { ApplicantType } from '../types/applicant';
 import { extractFirstName, extractAgentName } from '../utils/user';
 
 // ==================== HELPER FUNCTIONS ====================
@@ -89,6 +90,84 @@ export const createApplicant = async (formData: ApplicantFormData): Promise<stri
   return docRef.id;
 };
 
+export const createTransferApplicant = async (formData: TransferFormData): Promise<string> => {
+  const currentUser = getCurrentUser();
+  if (!currentUser) throw new Error('User not authenticated');
+
+  const workflow = initializeWorkflow('transfer');
+
+  // Pre-fill transfer detail textboxes from form data
+  if (formData.leaseEndDate) {
+    const dateStr = formData.leaseEndDate.toLocaleDateString('en-US');
+    workflow['1'].subSteps['t1b'] = {
+      isCompleted: true,
+      isNA: false,
+      completedAt: serverTimestamp(),
+      completedBy: currentUser.uid,
+      textValue: dateStr,
+    };
+  }
+  if (formData.requestedTransferDate) {
+    const dateStr = formData.requestedTransferDate.toLocaleDateString('en-US');
+    workflow['1'].subSteps['t1c'] = {
+      isCompleted: true,
+      isNA: false,
+      completedAt: serverTimestamp(),
+      completedBy: currentUser.uid,
+      textValue: dateStr,
+    };
+  }
+  if (formData.transferringApartment) {
+    workflow['1'].subSteps['t1d'] = {
+      isCompleted: true,
+      isNA: false,
+      completedAt: serverTimestamp(),
+      completedBy: currentUser.uid,
+      textValue: formData.transferringApartment,
+    };
+  }
+
+  // Calculate transfer fee tags
+  const transferFeeTags = computeTransferFeeTags(
+    formData.leaseEndDate?.toISOString() || '',
+    formData.requestedTransferDate?.toISOString() || ''
+  );
+
+  const initialTags = ['x-fer', ...transferFeeTags];
+
+  const applicantData = {
+    "1_Profile": {
+      name: formData.name,
+      applicantType: 'transfer' as const,
+      unit: formData.unit,
+      dateApplied: dateToMidnightUTC(new Date()), // Transfer request date = today
+      moveInDate: dateToMidnightUTC(formData.moveInDate),
+      concessionApplied: formData.isConcession ? formData.concessionApplied : 'N/A',
+      leaseEndDate: dateToMidnightUTC(formData.leaseEndDate),
+      requestedTransferDate: dateToMidnightUTC(formData.requestedTransferDate),
+      transferringApartment: formData.transferringApartment,
+    },
+    "2_Tracking": {
+      currentStep: 1,
+      status: 'in_progress' as const,
+      promotedToResident: false,
+      promotedToResidentAt: null,
+      leaseCompletedTime: null,
+      createdBy: currentUser.uid,
+      assignedTo: formData.assignedTo || currentUser.uid,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    },
+    workflow,
+    tags: initialTags,
+    rentables: [],
+    documents: {},
+  };
+
+  const docRef = await addDoc(collection(db, 'applicants'), applicantData);
+  return docRef.id;
+};
+
 export const getApplicants = (constraints: QueryConstraint[] = []) => {
   const applicantsQuery = query(
     collection(db, 'applicants'),
@@ -118,12 +197,12 @@ export const updateApplicant = async (id: string, data: any): Promise<void> => {
       processedData[key] = value;
     } else {
       // Legacy or convenience: if field is in Profile or Tracking, use dot notation
-      const profileFields = ['name', 'unit', 'dateApplied', 'moveInDate', 'concessionApplied'];
+      const profileFields = ['name', 'unit', 'dateApplied', 'moveInDate', 'concessionApplied', 'applicantType', 'leaseEndDate', 'requestedTransferDate', 'transferringApartment', 'preliminaryInspectionDate', 'moveOutInspectionDate'];
       const trackingFields = ['status', 'currentStep', 'promotedToResident', 'promotedToResidentAt', 'leaseCompletedTime', 'createdAt', 'createdBy', 'assignedTo', 'updatedAt', 'cancellationReason', 'cancelledAt', 'cancelledBy'];
 
       if (profileFields.includes(key)) {
         let val = value;
-        if ((key === 'dateApplied' || key === 'moveInDate') && value instanceof Date) {
+        if (['dateApplied', 'moveInDate', 'leaseEndDate', 'requestedTransferDate', 'preliminaryInspectionDate', 'moveOutInspectionDate'].includes(key) && value instanceof Date) {
           val = dateToMidnightUTC(value);
         }
         processedData[`1_Profile.${key}`] = val;
@@ -192,10 +271,81 @@ export const updateSubStep = async (
     updateData[`${subStepPath}.completedBy`] = null;
   }
 
+  // Auto-N/A target: if this substep has autoNATarget and is being completed, mark target as N/A
+  const applicantType = (applicant["1_Profile"] as any)?.applicantType || 'new';
+  const subStepConfig = getSubStepConfig(subStepId, applicantType as ApplicantType);
+  if (subStepConfig?.autoNATarget && updates.isCompleted === true) {
+    // Find which step contains the target substep
+    const steps = getWorkflowSteps(applicantType as ApplicantType);
+    for (const step of steps) {
+      const targetSS = step.subSteps.find(ss => ss.id === subStepConfig.autoNATarget);
+      if (targetSS) {
+        const targetPath = `workflow.${step.step}.subSteps.${subStepConfig.autoNATarget}`;
+        updateData[`${targetPath}.isNA`] = true;
+        updateData[`${targetPath}.isCompleted`] = false;
+        updateData[`${targetPath}.completedAt`] = serverTimestamp();
+        updateData[`${targetPath}.completedBy`] = currentUser.uid;
+        break;
+      }
+    }
+  }
+
+  // If auto-N/A was previously set and user unchecks the source, undo the auto-N/A
+  if (subStepConfig?.autoNATarget && updates.isCompleted === false) {
+    const steps = getWorkflowSteps(applicantType as ApplicantType);
+    for (const step of steps) {
+      const targetSS = step.subSteps.find(ss => ss.id === subStepConfig.autoNATarget);
+      if (targetSS) {
+        const targetPath = `workflow.${step.step}.subSteps.${subStepConfig.autoNATarget}`;
+        updateData[`${targetPath}.isNA`] = false;
+        updateData[`${targetPath}.completedAt`] = null;
+        updateData[`${targetPath}.completedBy`] = null;
+        break;
+      }
+    }
+  }
+
+  // ESA → RA auto-select: when pets (3c/t4f) textValue contains "ESA:", auto-set RA (3e/t4g) to "Yes"
+  const petsToRA: Record<string, string> = { '3c': '3e', 't4f': 't4g' };
+  const raSubStepId = petsToRA[subStepId];
+  if (raSubStepId && updates.textValue !== undefined) {
+    const hasESA = updates.textValue.includes('ESA:');
+    const steps = getWorkflowSteps(applicantType as ApplicantType);
+    for (const step of steps) {
+      const targetSS = step.subSteps.find(ss => ss.id === raSubStepId);
+      if (targetSS) {
+        const targetPath = `workflow.${step.step}.subSteps.${raSubStepId}`;
+        if (hasESA) {
+          updateData[`${targetPath}.textValue`] = 'Yes';
+          updateData[`${targetPath}.isCompleted`] = true;
+          updateData[`${targetPath}.completedAt`] = serverTimestamp();
+          updateData[`${targetPath}.completedBy`] = currentUser.uid;
+        }
+        break;
+      }
+    }
+  }
+
   await updateDoc(docRef, updateData);
 
   // After updating, recalculate step completion and tags
   await recalculateStepAndTags(applicantId, stepNumber);
+
+  // If ESA change affected RA in a different step's recalculation
+  if (raSubStepId) {
+    const steps = getWorkflowSteps(applicantType as ApplicantType);
+    for (const step of steps) {
+      if (step.subSteps.find(ss => ss.id === raSubStepId)) {
+        await recalculateStepAndTags(applicantId, step.step);
+        break;
+      }
+    }
+  }
+
+  // For transfer fee recalculation when t1b or t1c are updated
+  if ((subStepId === 't1b' || subStepId === 't1c') && applicantType === 'transfer') {
+    await recalculateTransferFeeTags(applicantId);
+  }
 };
 
 // Update completion date for a sub-step
@@ -225,9 +375,12 @@ export const recalculateStepAndTags = async (
   if (!docSnap.exists()) throw new Error('Applicant not found');
 
   const applicant = { id: docSnap.id, ...docSnap.data() } as Applicant;
+  const applicantType = ((applicant["1_Profile"] as any)?.applicantType || 'new') as ApplicantType;
+  const steps = getWorkflowSteps(applicantType);
+
   const stepKey = stepNumber.toString();
   const stepData = applicant.workflow[stepKey];
-  const stepConfig = WORKFLOW_STEPS.find((s) => s.step === stepNumber);
+  const stepConfig = steps.find((s) => s.step === stepNumber);
 
   if (!stepData || !stepConfig) return;
 
@@ -235,11 +388,24 @@ export const recalculateStepAndTags = async (
   const stepComplete = isStepComplete(stepData, stepConfig);
 
   // Calculate tags from all steps
-  const tags = getApplicantTags(applicant.workflow);
+  const tags = getApplicantTags(applicant.workflow, applicantType);
+
+  // Preserve transfer fee tags (computed separately, not from substep completion)
+  if (applicantType === 'transfer') {
+    const existingTags = applicant.tags || [];
+    const transferFeeTag = existingTags.find(t => t === 'TRANSFER FEE' || t === '30-DAY FREE XFER');
+    if (transferFeeTag && !tags.includes(transferFeeTag)) {
+      tags.push(transferFeeTag);
+    }
+    // Always keep x-fer tag for transfers
+    if (!tags.includes('x-fer')) {
+      tags.push('x-fer');
+    }
+  }
 
   // Find current step (first incomplete required step)
   let currentStep = 1;
-  for (const step of WORKFLOW_STEPS) {
+  for (const step of steps) {
     const sData = applicant.workflow[step.step.toString()];
     if (isStepComplete(sData, step)) {
       currentStep = step.step + 1;
@@ -247,10 +413,10 @@ export const recalculateStepAndTags = async (
       break;
     }
   }
-  currentStep = Math.min(currentStep, WORKFLOW_STEPS.length);
+  currentStep = Math.min(currentStep, steps.length);
 
   // Check if all steps are complete
-  const allComplete = WORKFLOW_STEPS.every((step) => {
+  const allComplete = steps.every((step) => {
     const sData = applicant.workflow[step.step.toString()];
     return isStepComplete(sData, step);
   });
@@ -259,12 +425,37 @@ export const recalculateStepAndTags = async (
     [`workflow.${stepKey}.isCompleted`]: stepComplete,
     tags,
     "2_Tracking.currentStep": currentStep,
-    "2_Tracking.status": allComplete ? 'completed' : 
-                         (applicant["2_Tracking"].status === 'completed' ? 
-                             (applicant["2_Tracking"].promotedToResident ? 'finalize_move_in' : 'in_progress') : 
+    "2_Tracking.status": allComplete ? 'completed' :
+                         (applicant["2_Tracking"].status === 'completed' ?
+                             (applicant["2_Tracking"].promotedToResident ? 'finalize_move_in' : 'in_progress') :
                              applicant["2_Tracking"].status),
     "2_Tracking.updatedAt": serverTimestamp(),
   });
+};
+
+// Recalculate transfer fee tags based on substep t1b and t1c values
+const recalculateTransferFeeTags = async (applicantId: string): Promise<void> => {
+  const docRef = doc(db, 'applicants', applicantId);
+  const docSnap = await getDoc(docRef);
+  if (!docSnap.exists()) return;
+
+  const data = docSnap.data();
+  const workflow = data.workflow || {};
+  const step1 = workflow['1'];
+  if (!step1?.subSteps) return;
+
+  const leaseEndDate = step1.subSteps['t1b']?.textValue || '';
+  const transferDate = step1.subSteps['t1c']?.textValue || '';
+
+  // Remove old transfer fee tags
+  let tags: string[] = data.tags || [];
+  tags = tags.filter(t => t !== 'TRANSFER FEE' && t !== '30-DAY FREE XFER');
+
+  // Compute new transfer fee tags
+  const feeTags = computeTransferFeeTags(leaseEndDate, transferDate);
+  tags.push(...feeTags);
+
+  await updateDoc(docRef, { tags });
 };
 
 // Update notes for a workflow step

@@ -1,6 +1,7 @@
 import type { Timestamp } from 'firebase/firestore';
 
 export type ApplicantStatus = 'in_progress' | 'approved' | 'finalize_move_in' | 'completed' | 'cancelled';
+export type ApplicantType = 'new' | 'transfer';
 
 // Sub-step data for individual checkboxes/textboxes within a workflow step
 export interface SubStepData {
@@ -41,10 +42,17 @@ export interface Applicant {
 
   "1_Profile": {
     name: string;
+    applicantType?: ApplicantType;
     concessionApplied: string;
     dateApplied: Timestamp;
     moveInDate: Timestamp;
     unit: string;
+    // Transfer-specific fields
+    leaseEndDate?: Timestamp;
+    requestedTransferDate?: Timestamp;
+    transferringApartment?: string;
+    preliminaryInspectionDate?: Timestamp;
+    moveOutInspectionDate?: Timestamp;
   };
 
   "2_Tracking": {
@@ -86,6 +94,19 @@ export interface ApplicantFormData {
   dateApplied: Date;
   moveInDate: Date;
   isTransfer: boolean;
+  isConcession: boolean;
+  concessionApplied: string;
+  assignedTo: string;
+}
+
+// Form data type for transfer applicants
+export interface TransferFormData {
+  name: string;
+  unit: string;                    // New unit transferring TO
+  moveInDate: Date;
+  leaseEndDate: Date;
+  requestedTransferDate: Date;
+  transferringApartment: string;   // Unit transferring FROM
   isConcession: boolean;
   concessionApplied: string;
   assignedTo: string;

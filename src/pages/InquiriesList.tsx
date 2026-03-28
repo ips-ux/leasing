@@ -104,42 +104,62 @@ export const InquiriesList = () => {
     <>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex justify-between items-center">
+        <div className="flex justify-between items-start gap-4">
           <div>
             <h1 className="text-4xl font-bold mb-2">Resident Inquiries</h1>
             <p className="text-black/60">Track resident &amp; prospect inquiries.</p>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3 shrink-0">
             <Toggle
               value={showMineOnly}
               onChange={setShowMineOnly}
               leftIcon={<FontAwesomeIcon icon={faUser} />}
               rightIcon={<FontAwesomeIcon icon={faUsers} />}
+              className="!px-3"
             />
 
-            <div className="h-8 w-px bg-black/10"></div>
-
-            <Button variant="primary" onClick={() => setIsNewModalOpen(true)} className="!py-2.5 text-sm !font-bold min-w-[11rem] text-center">
+            <Button variant="primary" onClick={() => setIsNewModalOpen(true)} className="!py-2.5 text-sm !font-bold text-center hidden sm:block">
               + New Inquiry
             </Button>
           </div>
         </div>
 
-        {/* Controls: Month Tabs & Sorting */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white/60 p-4 rounded-neuro-md shadow-neuro-pressed">
-          {/* Month Tabs */}
-          {/* Month Tabs */}
-          <SegmentedControl
-            layoutId="inquiries-month-tabs"
-            options={months.map(month => ({
-              label: formatMonthDisplay(month),
-              value: month
-            }))}
-            value={selectedMonth}
-            onChange={setSelectedMonth}
-            className="flex-wrap"
-          />
+        {/* Mobile-only New button (full-width) */}
+        <Button variant="primary" onClick={() => setIsNewModalOpen(true)} className="!py-2.5 text-sm !font-bold w-full text-center sm:hidden">
+          + New Inquiry
+        </Button>
+
+        {/* Controls: Month Selector & Sorting */}
+        <div className="flex flex-col gap-4 bg-white/60 p-4 rounded-neuro-md shadow-neuro-pressed">
+
+          {/* Month selector — dropdown on mobile, tabs on desktop */}
+          <div>
+            {/* Mobile: native select */}
+            <select
+              value={selectedMonth}
+              onChange={(e) => setSelectedMonth(e.target.value)}
+              className="md:hidden w-full px-3 py-2 rounded-neuro-md shadow-neuro-pressed bg-white/50 font-sans text-neuro-primary font-medium cursor-pointer focus:outline-none focus:border-neuro-lavender border border-neuro-base/20 text-sm"
+            >
+              {months.map(month => (
+                <option key={month} value={month}>{formatMonthDisplay(month)}</option>
+              ))}
+            </select>
+
+            {/* Desktop: tab bar */}
+            <div className="hidden md:block">
+              <SegmentedControl
+                layoutId="inquiries-month-tabs"
+                options={months.map(month => ({
+                  label: formatMonthDisplay(month),
+                  value: month
+                }))}
+                value={selectedMonth}
+                onChange={setSelectedMonth}
+                className="flex-wrap"
+              />
+            </div>
+          </div>
 
           {/* Sorting */}
           <div className="flex items-center gap-2">

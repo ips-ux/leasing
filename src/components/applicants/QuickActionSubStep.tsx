@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getNextIncompleteSubStep } from '../../lib/workflow-steps';
+import { getNextIncompleteSubStep, getWorkflowSteps } from '../../lib/workflow-steps';
 import type { NextSubStepResult } from '../../lib/workflow-steps';
 import type { Applicant } from '../../types/applicant';
 import { updateSubStep, updateApplicant } from '../../firebase/firestore';
@@ -9,6 +9,19 @@ import { EmailCopyButtons } from './EmailCopyButtons';
 import requestIncomeEmail from '../../content/request-income.html?raw';
 import applicationApprovedEmail from '../../content/application-approved-email.html?raw';
 import finalStepsEmail from '../../content/final-steps-email.html?raw';
+import transferRequestEmail from '../../content/transfer-request-form.html?raw';
+import transferIncomeEmail from '../../content/transfer-income-request.html?raw';
+import transferInfoEmail from '../../content/transfer-info-update.html?raw';
+
+// Map email template keys to their HTML content
+const EMAIL_TEMPLATES: Record<string, { html: string; type: string; prefix?: string }> = {
+    'request-income': { html: requestIncomeEmail, type: 'request-income', prefix: 'Copy' },
+    'application-approved': { html: applicationApprovedEmail, type: 'application-approved' },
+    'final-steps': { html: finalStepsEmail, type: 'final-steps' },
+    'transfer-request': { html: transferRequestEmail, type: 'transfer-request', prefix: 'Copy' },
+    'transfer-income-request': { html: transferIncomeEmail, type: 'transfer-income-request', prefix: 'Copy' },
+    'transfer-info-update': { html: transferInfoEmail, type: 'transfer-info-update', prefix: 'Copy' },
+};
 
 interface QuickActionSubStepProps {
     applicant: Applicant;
@@ -21,11 +34,16 @@ export const QuickActionSubStep = ({ applicant }: QuickActionSubStepProps) => {
     const [isCompleting, setIsCompleting] = useState(false);
 
     const tracking = applicant["2_Tracking"];
+    const applicantType = applicant["1_Profile"]?.applicantType || 'new';
+    const steps = getWorkflowSteps(applicantType);
+    const lastStep = steps[steps.length - 1];
+    const prePromotionSteps = steps.filter(s => s.step !== lastStep.step);
 
-    // Use shared helper to find next action (enforces promotion gate between steps 5 and 6)
+    // Use shared helper to find next action (enforces promotion gate)
     const nextAction: NextSubStepResult = getNextIncompleteSubStep(
         applicant.workflow,
-        tracking.promotedToResident
+        tracking.promotedToResident,
+        applicantType
     );
 
     const current = nextAction?.type === 'substep' ? nextAction : null;
@@ -59,7 +77,7 @@ export const QuickActionSubStep = ({ applicant }: QuickActionSubStepProps) => {
         } catch (err) {
             console.error(err);
             toast.error('Failed to update');
-            setIsCompleting(false); // Only reset if failed, otherwise component unmounts/updates
+            setIsCompleting(false);
         } finally {
             setIsUpdating(false);
         }
@@ -68,16 +86,17 @@ export const QuickActionSubStep = ({ applicant }: QuickActionSubStepProps) => {
     const handleSaveText = async () => {
         if (!current || isUpdating) return;
         let finalValue = textValue.trim();
+        const variant = current.config.uiVariant;
 
-        // Handle special multi-input for parking/storage/pets
-        if (current?.config.id === '3a' || current?.config.id === '3b') {
+        // Handle special multi-input for parking/storage
+        if (variant === 'parking' || variant === 'storage') {
             const parts = Object.entries(multiValues)
                 .filter(([_, val]) => val.trim() !== '' && val.trim() !== '0')
                 .map(([price, val]) => `${val}x$${price}`);
 
             if (parts.length === 0) return;
             finalValue = parts.join(', ');
-        } else if (current?.config.id === '3c') {
+        } else if (variant === 'pets') {
             const parts = Object.entries(multiValues)
                 .filter(([key, val]) => val.trim() !== '' && val.trim() !== '0' && key !== 'ESA' && key !== 'ESA_count')
                 .map(([type, val]) => `${val}x${type}`);
@@ -90,7 +109,7 @@ export const QuickActionSubStep = ({ applicant }: QuickActionSubStepProps) => {
             finalValue = parts.join(', ');
         }
 
-        if (!finalValue && current?.config.id !== '3e') return;
+        if (!finalValue && variant !== 'reasonable_acc') return;
 
         setIsUpdating(true);
         try {
@@ -147,8 +166,9 @@ export const QuickActionSubStep = ({ applicant }: QuickActionSubStepProps) => {
         }
     };
 
-    // Promotion gate: steps 1-5 complete, needs promotion before step 6
+    // Promotion gate
     if (nextAction?.type === 'needs_promotion') {
+        const lastPreStep = prePromotionSteps[prePromotionSteps.length - 1]?.step || 5;
         return (
             <div className="mt-4 pt-4 border-t-2 border-black/10 flex items-center gap-4">
                 <Button
@@ -162,7 +182,7 @@ export const QuickActionSubStep = ({ applicant }: QuickActionSubStepProps) => {
                 >
                     🎉 Promote to Resident
                 </Button>
-                <span className="text-sm font-bold text-mint">Steps 1-5 complete!</span>
+                <span className="text-sm font-bold text-mint">Steps 1-{lastPreStep} complete!</span>
             </div>
         );
     }
@@ -171,7 +191,290 @@ export const QuickActionSubStep = ({ applicant }: QuickActionSubStepProps) => {
         return null;
     }
 
-    const hasLeftButton = current.config.type !== 'textbox';
+    const isPaymentMethod = current.config.uiVariant === 'payment_method';
+    const hasLeftButton = current.config.type !== 'textbox' && !isPaymentMethod;
+    const variant = current.config.uiVariant;
+
+    // Render save/N/A buttons for textbox variants
+    const renderSaveNAButtons = () => (
+        <div className="flex items-center gap-2">
+            <Button
+                variant="primary"
+                onClick={(e) => {
+                    e?.stopPropagation();
+                    handleSaveText();
+                }}
+                disabled={isUpdating}
+                className="!py-1 !px-3 !text-xs"
+            >
+                Save
+            </Button>
+            <Button
+                variant="secondary"
+                onClick={(e) => {
+                    e?.stopPropagation();
+                    handleSkip();
+                }}
+                disabled={isUpdating}
+                className="!py-1 !px-2 !text-[10px] bg-peach/10 hover:bg-peach/20 border-peach/40 text-black/60 uppercase font-bold"
+            >
+                N/A
+            </Button>
+        </div>
+    );
+
+    // Render the textbox input based on uiVariant
+    const renderTextboxInput = () => {
+        if (variant === 'parking') {
+            return (
+                <>
+                    <div className="flex items-center gap-2">
+                        {['20', '35', '75'].map(price => (
+                            <div key={price} className="flex items-center gap-1">
+                                <input
+                                    type="text"
+                                    value={multiValues[price] || ''}
+                                    onChange={(e) => setMultiValues(prev => ({ ...prev, [price]: e.target.value }))}
+                                    className="w-8 h-8 text-center text-xs rounded-neuro-sm bg-neuro-base shadow-neuro-pressed focus:outline-none focus:ring-2 focus:ring-neuro-lavender"
+                                    placeholder="0"
+                                />
+                                <span className="text-[10px] font-bold text-black/60">${price}</span>
+                            </div>
+                        ))}
+                    </div>
+                    {renderSaveNAButtons()}
+                </>
+            );
+        }
+
+        if (variant === 'storage') {
+            return (
+                <>
+                    <div className="flex items-center gap-2">
+                        {['75', '85', '100', '125'].map(price => (
+                            <div key={price} className="flex items-center gap-1">
+                                <input
+                                    type="text"
+                                    value={multiValues[price] || ''}
+                                    onChange={(e) => setMultiValues(prev => ({ ...prev, [price]: e.target.value }))}
+                                    className="w-8 h-8 text-center text-xs rounded-neuro-sm bg-neuro-base shadow-neuro-pressed focus:outline-none focus:ring-2 focus:ring-neuro-lavender"
+                                    placeholder="0"
+                                />
+                                <span className="text-[10px] font-bold text-black/60">${price}</span>
+                            </div>
+                        ))}
+                    </div>
+                    {renderSaveNAButtons()}
+                </>
+            );
+        }
+
+        if (variant === 'pets') {
+            return (
+                <>
+                    <div className="flex items-center gap-3">
+                        {['Dog', 'Cat', 'Other'].map(type => (
+                            <div key={type} className="flex items-center gap-1">
+                                <input
+                                    type="text"
+                                    value={multiValues[type] || ''}
+                                    onChange={(e) => setMultiValues(prev => ({ ...prev, [type]: e.target.value }))}
+                                    className="w-8 h-8 text-center text-xs rounded-neuro-sm bg-neuro-base shadow-neuro-pressed focus:outline-none focus:ring-2 focus:ring-neuro-lavender"
+                                    placeholder="0"
+                                />
+                                <span className="text-[10px] font-bold text-black/60">{type}(s)</span>
+                            </div>
+                        ))}
+                        <div className="flex items-center gap-1 border-l border-black/20 pl-2">
+                            <div className="flex items-center">
+                                <Checkbox
+                                    label="ESA?"
+                                    name="esa-quick"
+                                    checked={!!multiValues['ESA']}
+                                    onChange={(e) => setMultiValues(prev => ({ ...prev, ESA: e.target.checked ? '1' : '' }))}
+                                    className="scale-75 origin-left"
+                                />
+                            </div>
+                            {multiValues['ESA'] && (
+                                <input
+                                    type="text"
+                                    value={multiValues['ESA_count'] || '1'}
+                                    onChange={(e) => setMultiValues(prev => ({ ...prev, ESA_count: e.target.value }))}
+                                    className="w-8 h-8 text-center text-xs rounded-neuro-sm bg-neuro-base shadow-neuro-pressed focus:outline-none focus:ring-2 focus:ring-neuro-lavender"
+                                    placeholder="1"
+                                />
+                            )}
+                        </div>
+                    </div>
+                    {renderSaveNAButtons()}
+                </>
+            );
+        }
+
+        if (variant === 'payment_method') {
+            const options = [
+                { label: "Scan Cashier's Check to Files", value: 'cashiers_check' },
+                { label: 'Resident Paid Online', value: 'paid_online' },
+            ];
+            return (
+                <div className="flex items-center gap-2">
+                    {options.map(opt => (
+                        <button
+                            key={opt.value}
+                            type="button"
+                            onClick={async () => {
+                                setIsUpdating(true);
+                                try {
+                                    await updateSubStep(applicant.id, current.stepNumber, current.config.id, {
+                                        isCompleted: true,
+                                        textValue: opt.value
+                                    });
+                                    toast.success('Step updated');
+                                } catch (err) {
+                                    toast.error('Failed to update');
+                                } finally {
+                                    setIsUpdating(false);
+                                }
+                            }}
+                            disabled={isUpdating}
+                            className={`
+                                px-3 py-1 text-xs font-bold rounded-neuro-sm transition-all
+                                ${textValue === opt.value
+                                    ? 'bg-neuro-lavender text-neuro-primary shadow-neuro-pressed'
+                                    : 'bg-neuro-base text-neuro-secondary shadow-neuro-flat hover:text-neuro-primary'}
+                            `}
+                        >
+                            {opt.label}
+                        </button>
+                    ))}
+                </div>
+            );
+        }
+
+        if (variant === 'reasonable_acc') {
+            // Check if ESA is active in sibling pets substep
+            const petsId = current.config.id === '3e' ? '3c' : current.config.id === 't4g' ? 't4f' : null;
+            let esaActive = false;
+            if (petsId) {
+                const wf = applicant.workflow;
+                for (const stepKey of Object.keys(wf)) {
+                    const petsData = wf[stepKey]?.subSteps?.[petsId];
+                    if (petsData?.textValue?.includes('ESA:')) {
+                        esaActive = true;
+                        break;
+                    }
+                }
+            }
+
+            return (
+                <div className="flex items-center gap-3" onClick={(e) => e.stopPropagation()}>
+                    <Checkbox
+                        label="Yes"
+                        name={`quick-ra-yes-${applicant.id}`}
+                        checked={false}
+                        onChange={async () => {
+                            if (isUpdating) return;
+                            setIsUpdating(true);
+                            try {
+                                await updateSubStep(applicant.id, current.stepNumber, current.config.id, {
+                                    isCompleted: true,
+                                    textValue: 'Yes'
+                                });
+                                toast.success('Step updated');
+                            } catch (err) {
+                                toast.error('Failed to update');
+                            } finally {
+                                setIsUpdating(false);
+                            }
+                        }}
+                        disabled={isUpdating}
+                    />
+                    <span className="text-xs font-mono text-black/30 font-bold">OR</span>
+                    <Checkbox
+                        label="No"
+                        name={`quick-ra-no-${applicant.id}`}
+                        checked={false}
+                        onChange={async () => {
+                            if (isUpdating || esaActive) return;
+                            setIsUpdating(true);
+                            try {
+                                await updateSubStep(applicant.id, current.stepNumber, current.config.id, {
+                                    isCompleted: true,
+                                    textValue: 'No'
+                                });
+                                toast.success('Step updated');
+                            } catch (err) {
+                                toast.error('Failed to update');
+                            } finally {
+                                setIsUpdating(false);
+                            }
+                        }}
+                        disabled={isUpdating || esaActive}
+                    />
+                    {esaActive && (
+                        <span className="text-[10px] font-mono text-red-600 font-bold">ESA on file</span>
+                    )}
+                </div>
+            );
+        }
+
+        // Default textbox
+        return (
+            <>
+                <input
+                    type="text"
+                    value={textValue}
+                    onChange={(e) => setTextValue(e.target.value)}
+                    placeholder="Enter value..."
+                    className="text-xs p-2 rounded-neuro-sm bg-neuro-base shadow-neuro-pressed focus:outline-none focus:ring-2 focus:ring-neuro-lavender w-32"
+                />
+                <div className="flex items-center gap-2">
+                    <Button
+                        variant="primary"
+                        onClick={(e) => {
+                            e?.stopPropagation();
+                            handleSaveText();
+                        }}
+                        disabled={isUpdating || !textValue.trim()}
+                        className="!py-1 !px-3 !text-xs"
+                    >
+                        Save
+                    </Button>
+                    <Button
+                        variant="secondary"
+                        onClick={(e) => {
+                            e?.stopPropagation();
+                            handleSkip();
+                        }}
+                        disabled={isUpdating}
+                        className="!py-1 !px-2 !text-[10px] bg-peach/10 hover:bg-peach/20 border-peach/40 text-black/60 uppercase font-bold"
+                    >
+                        N/A
+                    </Button>
+                </div>
+            </>
+        );
+    };
+
+    // Render email copy button if this substep has an email template
+    const renderEmailButton = () => {
+        const templateKey = current.config.emailTemplate;
+        if (!templateKey) return null;
+        const template = EMAIL_TEMPLATES[templateKey];
+        if (!template) return null;
+
+        return (
+            <div onClick={(e) => e.stopPropagation()}>
+                <EmailCopyButtons
+                    emailHtml={template.html}
+                    emailType={template.type}
+                    buttonPrefix={template.prefix}
+                    compact
+                    applicant={applicant}
+                />
+            </div>
+        );
+    };
 
     return (
         <div className="pt-4 border-t-2 border-black/10">
@@ -200,270 +503,100 @@ export const QuickActionSubStep = ({ applicant }: QuickActionSubStepProps) => {
                         </div>
                         {/* Text and Actions inline */}
                         <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-                            <p className="text-sm font-semibold text-black/80 leading-tight">
-                                {current.config.label}
-                            </p>
-
-                            {/* Inputs and Secondary Actions */}
-                            {current.config.type === 'textbox' ? (
-                                <div className="flex items-center flex-wrap gap-2" onClick={(e) => e.stopPropagation()}>
-                                    {current.config.id === '3a' ? (
-                                        <>
-                                            <div className="flex items-center gap-2">
-                                                {['20', '35', '75'].map(price => (
-                                                    <div key={price} className="flex items-center gap-1">
-                                                        <input
-                                                            type="text"
-                                                            value={multiValues[price] || ''}
-                                                            onChange={(e) => setMultiValues(prev => ({ ...prev, [price]: e.target.value }))}
-                                                            className="w-8 h-8 text-center text-xs rounded-neuro-sm bg-neuro-base shadow-neuro-pressed focus:outline-none focus:ring-2 focus:ring-neuro-lavender"
-                                                            placeholder="0"
-                                                        />
-                                                        <span className="text-[10px] font-bold text-black/60">${price}</span>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <Button
-                                                    variant="primary"
-                                                    onClick={(e) => {
-                                                        e?.stopPropagation();
-                                                        handleSaveText();
-                                                    }}
-                                                    disabled={isUpdating}
-                                                    className="!py-1 !px-3 !text-xs"
-                                                >
-                                                    Save
-                                                </Button>
-                                                <Button
-                                                    variant="secondary"
-                                                    onClick={(e) => {
-                                                        e?.stopPropagation();
-                                                        handleSkip();
-                                                    }}
-                                                    disabled={isUpdating}
-                                                    className="!py-1 !px-2 !text-[10px] bg-peach/10 hover:bg-peach/20 border-peach/40 text-black/60 uppercase font-bold"
-                                                >
-                                                    N/A
-                                                </Button>
-                                            </div>
-                                        </>
-                                    ) : current.config.id === '3b' ? (
-                                        <>
-                                            <div className="flex items-center gap-2">
-                                                {['75', '85', '100', '125'].map(price => (
-                                                    <div key={price} className="flex items-center gap-1">
-                                                        <input
-                                                            type="text"
-                                                            value={multiValues[price] || ''}
-                                                            onChange={(e) => setMultiValues(prev => ({ ...prev, [price]: e.target.value }))}
-                                                            className="w-8 h-8 text-center text-xs rounded-neuro-sm bg-neuro-base shadow-neuro-pressed focus:outline-none focus:ring-2 focus:ring-neuro-lavender"
-                                                            placeholder="0"
-                                                        />
-                                                        <span className="text-[10px] font-bold text-black/60">${price}</span>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <Button
-                                                    variant="primary"
-                                                    onClick={(e) => {
-                                                        e?.stopPropagation();
-                                                        handleSaveText();
-                                                    }}
-                                                    disabled={isUpdating}
-                                                    className="!py-1 !px-3 !text-xs"
-                                                >
-                                                    Save
-                                                </Button>
-                                                <Button
-                                                    variant="secondary"
-                                                    onClick={(e) => {
-                                                        e?.stopPropagation();
-                                                        handleSkip();
-                                                    }}
-                                                    disabled={isUpdating}
-                                                    className="!py-1 !px-2 !text-[10px] bg-peach/10 hover:bg-peach/20 border-peach/40 text-black/60 uppercase font-bold"
-                                                >
-                                                    N/A
-                                                </Button>
-                                            </div>
-                                        </>
-                                    ) : current.config.id === '3c' ? (
-                                        <>
-                                            <div className="flex items-center gap-3">
-                                                {['Dog', 'Cat', 'Other'].map(type => (
-                                                    <div key={type} className="flex items-center gap-1">
-                                                        <input
-                                                            type="text"
-                                                            value={multiValues[type] || ''}
-                                                            onChange={(e) => setMultiValues(prev => ({ ...prev, [type]: e.target.value }))}
-                                                            className="w-8 h-8 text-center text-xs rounded-neuro-sm bg-neuro-base shadow-neuro-pressed focus:outline-none focus:ring-2 focus:ring-neuro-lavender"
-                                                            placeholder="0"
-                                                        />
-                                                        <span className="text-[10px] font-bold text-black/60">{type}(s)</span>
-                                                    </div>
-                                                ))}
-                                                <div className="flex items-center gap-1 border-l border-black/20 pl-2">
-                                                    <div className="flex items-center">
-                                                        <Checkbox
-                                                            label="ESA?"
-                                                            name="esa-quick"
-                                                            checked={!!multiValues['ESA']}
-                                                            onChange={(e) => setMultiValues(prev => ({ ...prev, ESA: e.target.checked ? '1' : '' }))}
-                                                            className="scale-75 origin-left"
-                                                        />
-                                                    </div>
-                                                    {multiValues['ESA'] && (
-                                                        <input
-                                                            type="text"
-                                                            value={multiValues['ESA_count'] || '1'}
-                                                            onChange={(e) => setMultiValues(prev => ({ ...prev, ESA_count: e.target.value }))}
-                                                            className="w-8 h-8 text-center text-xs rounded-neuro-sm bg-neuro-base shadow-neuro-pressed focus:outline-none focus:ring-2 focus:ring-neuro-lavender"
-                                                            placeholder="1"
-                                                        />
-                                                    )}
-                                                </div>
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <Button
-                                                    variant="primary"
-                                                    onClick={(e) => {
-                                                        e?.stopPropagation();
-                                                        handleSaveText();
-                                                    }}
-                                                    disabled={isUpdating}
-                                                    className="!py-1 !px-3 !text-xs"
-                                                >
-                                                    Save
-                                                </Button>
-                                                <Button
-                                                    variant="secondary"
-                                                    onClick={(e) => {
-                                                        e?.stopPropagation();
-                                                        handleSkip();
-                                                    }}
-                                                    disabled={isUpdating}
-                                                    className="!py-1 !px-2 !text-[10px] bg-peach/10 hover:bg-peach/20 border-peach/40 text-black/60 uppercase font-bold"
-                                                >
-                                                    N/A
-                                                </Button>
-                                            </div>
-                                        </>
-                                    ) : current.config.id === '3e' ? (
-                                        <div className="flex items-center gap-2">
-                                            {['Yes', 'No'].map(val => (
-                                                <button
-                                                    key={val}
-                                                    type="button"
-                                                    onClick={async () => {
-                                                        setIsUpdating(true);
-                                                        try {
-                                                            await updateSubStep(applicant.id, current.stepNumber, current.config.id, {
-                                                                isCompleted: true,
-                                                                textValue: val
-                                                            });
-                                                            toast.success('Step updated');
-                                                        } catch (err) {
-                                                            toast.error('Failed to update');
-                                                        } finally {
-                                                            setIsUpdating(false);
-                                                        }
-                                                    }}
-                                                    disabled={isUpdating}
-                                                    className={`
-                                                        px-3 py-1 text-xs font-bold rounded-neuro-sm transition-all
-                                                        ${textValue === val
-                                                            ? 'bg-neuro-lavender text-neuro-primary shadow-neuro-pressed'
-                                                            : 'bg-neuro-base text-neuro-secondary shadow-neuro-flat hover:text-neuro-primary'}
-                                                    `}
-                                                >
-                                                    {val}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    ) : (
-                                        <>
-                                            <input
-                                                type="text"
-                                                value={textValue}
-                                                onChange={(e) => setTextValue(e.target.value)}
-                                                placeholder="Enter value..."
-                                                className="text-xs p-2 rounded-neuro-sm bg-neuro-base shadow-neuro-pressed focus:outline-none focus:ring-2 focus:ring-neuro-lavender w-32"
-                                            />
-                                            <div className="flex items-center gap-2">
-                                                <Button
-                                                    variant="primary"
-                                                    onClick={(e) => {
-                                                        e?.stopPropagation();
-                                                        handleSaveText();
-                                                    }}
-                                                    disabled={isUpdating || !textValue.trim()}
-                                                    className="!py-1 !px-3 !text-xs"
-                                                >
-                                                    Save
-                                                </Button>
-                                                <Button
-                                                    variant="secondary"
-                                                    onClick={(e) => {
-                                                        e?.stopPropagation();
-                                                        handleSkip();
-                                                    }}
-                                                    disabled={isUpdating}
-                                                    className="!py-1 !px-2 !text-[10px] bg-peach/10 hover:bg-peach/20 border-peach/40 text-black/60 uppercase font-bold"
-                                                >
-                                                    N/A
-                                                </Button>
-                                            </div>
-                                        </>
-                                    )}
+                            {/* Payment method — radio-style checkboxes, no label */}
+                            {isPaymentMethod ? (
+                                <div className="flex items-center gap-3" onClick={(e) => e.stopPropagation()}>
+                                    <Checkbox
+                                        label="Scan Cashier's Check to Files"
+                                        name={`quick-payment-cashier-${applicant.id}`}
+                                        checked={false}
+                                        onChange={async () => {
+                                            if (isUpdating) return;
+                                            setIsUpdating(true);
+                                            try {
+                                                await updateSubStep(applicant.id, current.stepNumber, current.config.id, {
+                                                    isCompleted: true,
+                                                    textValue: 'cashiers_check'
+                                                });
+                                                toast.success('Step updated');
+                                            } catch (err) {
+                                                toast.error('Failed to update');
+                                            } finally {
+                                                setIsUpdating(false);
+                                            }
+                                        }}
+                                        disabled={isUpdating}
+                                    />
+                                    <span className="text-xs font-mono text-black/30 font-bold">OR</span>
+                                    <Checkbox
+                                        label="Resident Paid Online"
+                                        name={`quick-payment-online-${applicant.id}`}
+                                        checked={false}
+                                        onChange={async () => {
+                                            if (isUpdating) return;
+                                            setIsUpdating(true);
+                                            try {
+                                                await updateSubStep(applicant.id, current.stepNumber, current.config.id, {
+                                                    isCompleted: true,
+                                                    textValue: 'paid_online'
+                                                });
+                                                toast.success('Step updated');
+                                            } catch (err) {
+                                                toast.error('Failed to update');
+                                            } finally {
+                                                setIsUpdating(false);
+                                            }
+                                        }}
+                                        disabled={isUpdating}
+                                    />
                                 </div>
                             ) : (
-                                <div className="flex items-center gap-2 flex-wrap">
-                                    {/* N/A Option for checkbox-na */}
-                                    {current.config.type === 'checkbox-na' && (
-                                        <Button
-                                            variant="secondary"
-                                            onClick={(e) => {
-                                                e?.stopPropagation();
-                                                handleSkip();
-                                            }}
-                                            disabled={isUpdating}
-                                            className="!py-1 !px-2 !text-[10px] bg-peach/10 hover:bg-peach/20 border-peach/40 text-black/60 uppercase font-bold"
-                                        >
-                                            N/A
-                                        </Button>
-                                    )}
+                                <>
+                                    {(() => {
+                                        const parenMatch = current.config.label.match(/^(.+?)\s*(\(.*\))$/);
+                                        const mainLabel = parenMatch ? parenMatch[1] : current.config.label;
+                                        const hintText = parenMatch ? parenMatch[2] : null;
+                                        return (
+                                            <>
+                                                <p className="text-sm font-semibold text-black/80 leading-tight">
+                                                    {mainLabel}
+                                                </p>
+                                                {hintText && (
+                                                    <p className="text-[11px] text-black/40 font-mono w-full -mt-1">{hintText}</p>
+                                                )}
+                                            </>
+                                        );
+                                    })()}
 
-                                    {/* Email copy buttons for specific sub-steps */}
-                                    <div onClick={(e) => e.stopPropagation()}>
-                                        {current.config.id === '1a' && (
-                                            <EmailCopyButtons
-                                                emailHtml={requestIncomeEmail}
-                                                emailType="request-income"
-                                                buttonPrefix="Copy"
-                                                compact
-                                                applicant={applicant}
-                                            />
-                                        )}
-                                        {current.config.id === '2d' && (
-                                            <EmailCopyButtons
-                                                emailHtml={applicationApprovedEmail}
-                                                emailType="application-approved"
-                                                compact
-                                                applicant={applicant}
-                                            />
-                                        )}
-                                        {current.config.id === '4c' && (
-                                            <EmailCopyButtons
-                                                emailHtml={finalStepsEmail}
-                                                emailType="final-steps"
-                                                compact
-                                                applicant={applicant}
-                                            />
-                                        )}
-                                    </div>
-                                </div>
+                                    {/* Inputs and Secondary Actions */}
+                                    {current.config.type === 'textbox' ? (
+                                        <div className="flex items-center flex-wrap gap-2" onClick={(e) => e.stopPropagation()}>
+                                            {renderTextboxInput()}
+                                        </div>
+                                    ) : (
+                                        <div className="flex items-center gap-2 flex-wrap">
+                                            {/* N/A Option for checkbox-na */}
+                                            {current.config.type === 'checkbox-na' && (
+                                                <>
+                                                    <span className="text-xs font-mono text-black/30 font-bold">OR</span>
+                                                    <div onClick={(e) => e.stopPropagation()}>
+                                                        <Checkbox
+                                                            label="N/A"
+                                                            name={`quick-na-${applicant.id}`}
+                                                            checked={false}
+                                                            onChange={() => handleSkip()}
+                                                            disabled={isUpdating}
+                                                            className="scale-90"
+                                                        />
+                                                    </div>
+                                                </>
+                                            )}
+
+                                            {/* Email copy buttons */}
+                                            {renderEmailButton()}
+                                        </div>
+                                    )}
+                                </>
                             )}
                         </div>
                     </div>
