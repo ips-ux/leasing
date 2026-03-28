@@ -4,6 +4,7 @@ import type { SubStepData, Applicant } from '../../types/applicant';
 import type { SubStepConfig } from '../../lib/workflow-steps';
 import type { Timestamp } from 'firebase/firestore';
 import { EmailCopyButtons } from './EmailCopyButtons';
+import type { EmailTemplateType } from '../../services/scheduler/outlookEmailService';
 import { Checkbox } from '../ui';
 import requestIncomeEmail from '../../content/request-income.html?raw';
 import applicationApprovedEmail from '../../content/application-approved-email.html?raw';
@@ -13,7 +14,7 @@ import transferIncomeEmail from '../../content/transfer-income-request.html?raw'
 import transferInfoEmail from '../../content/transfer-info-update.html?raw';
 
 // Map email template keys to their HTML content
-const EMAIL_TEMPLATES: Record<string, { html: string; type: string; prefix?: string }> = {
+const EMAIL_TEMPLATES: Record<string, { html: string; type: EmailTemplateType; prefix?: 'Copy' | 'Copy Request' }> = {
     'request-income': { html: requestIncomeEmail, type: 'request-income', prefix: 'Copy' },
     'application-approved': { html: applicationApprovedEmail, type: 'application-approved' },
     'final-steps': { html: finalStepsEmail, type: 'final-steps' },

@@ -35,7 +35,6 @@ export const WorkflowChecklist = ({
         }
 
         if (stepNumber === steps[0].step) return true;
-        const prevStep = steps.find((_, i) => i > 0 && steps[i].step === stepNumber);
         const prevIndex = steps.findIndex(s => s.step === stepNumber) - 1;
         if (prevIndex < 0) return true;
         const prevStepConfig = steps[prevIndex];
