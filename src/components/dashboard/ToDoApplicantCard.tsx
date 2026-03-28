@@ -74,11 +74,29 @@ export const ToDoApplicantCard = ({ applicant, isUpcoming = false }: ToDoApplica
         </div>
       </div>
 
-      {/* Inline Quick Action - prevent click propagation */}
+      {/* Divider + Quick Action + Notes inline */}
       {!isUpcoming && (
-        <div onClick={(e) => e.stopPropagation()}>
-          <QuickActionSubStep applicant={applicant} />
-        </div>
+        <>
+          <hr className="border-t-2 border-black/10 -mx-4 w-[calc(100%+2rem)]" />
+          <div onClick={(e) => e.stopPropagation()} className="flex items-start gap-4 mt-2">
+            <div className="flex-1 min-w-0">
+              <QuickActionSubStep applicant={applicant} />
+            </div>
+            {(() => {
+              const currentStepData = applicant.workflow?.[applicant['2_Tracking'].currentStep.toString()];
+              const notes = currentStepData?.notes;
+              if (!notes) return null;
+              return (
+                <div className="flex-shrink-0 w-[220px]">
+                  <span className="text-[10px] font-bold uppercase text-black/40 tracking-wide">Notes</span>
+                  <p className="text-xs text-black/70 font-mono mt-0.5 whitespace-pre-wrap line-clamp-2">
+                    {notes}
+                  </p>
+                </div>
+              );
+            })()}
+          </div>
+        </>
       )}
     </div>
   );

@@ -477,7 +477,7 @@ export const QuickActionSubStep = ({ applicant }: QuickActionSubStepProps) => {
     };
 
     return (
-        <div className="pt-4 border-t-2 border-black/10">
+        <div className="pt-4">
             <div className="flex flex-col" id="apps-quickstep-container">
                 {/* Header Row: Button + Text */}
                 <div className="flex gap-4 items-stretch">

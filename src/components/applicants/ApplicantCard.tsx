@@ -173,9 +173,27 @@ export const ApplicantCard = ({ applicant, users, onClick }: ApplicantCardProps)
         </div>
       </div>
 
-      {/* Quick Action Sub-step */}
-      <div onClick={(e) => onClick ? e.stopPropagation() : undefined}>
-        <QuickActionSubStep applicant={applicant} />
+      {/* Divider + Quick Action Sub-step + Notes */}
+      <hr className="border-t-2 border-black/10 -mx-5 w-[calc(100%+2.5rem)]" />
+      <div onClick={(e) => onClick ? e.stopPropagation() : undefined} className="flex items-start">
+        <div className="flex-[2_1_0%] min-w-0">
+          <QuickActionSubStep applicant={applicant} />
+        </div>
+
+        {/* Current step notes — aligned under progress column */}
+        {(() => {
+          const currentStepData = applicant.workflow?.[tracking.currentStep.toString()];
+          const notes = currentStepData?.notes;
+          if (!notes) return null;
+          return (
+            <div className="flex-[1_1_0%] min-w-[200px] border-l-2 border-black/10 pl-4">
+              <span className="text-[10px] font-bold uppercase text-black/40 tracking-wide">Notes</span>
+              <p className="text-xs text-black/70 font-mono mt-0.5 whitespace-pre-wrap line-clamp-3">
+                {notes}
+              </p>
+            </div>
+          );
+        })()}
       </div>
     </div>
   );
