@@ -4,6 +4,7 @@ import { Badge } from '../ui';
 import { SubStepItem } from './SubStepItem';
 import type { WorkflowStepData, SubStepData, Applicant } from '../../types/applicant';
 import type { WorkflowStepConfig } from '../../lib/workflow-steps';
+import type { EmailTemplate } from '../../types/emailTemplate';
 import { isStepComplete } from '../../lib/workflow-steps';
 
 interface WorkflowStepProps {
@@ -12,6 +13,7 @@ interface WorkflowStepProps {
     applicant: Applicant;
     isEnabled: boolean;
     isLocked?: boolean;
+    emailTemplates?: EmailTemplate[];
     onSubStepUpdate: (subStepId: string, updates: Partial<SubStepData>) => void;
     onSubStepDateChange: (subStepId: string, date: Date | null) => void;
     onNotesChange: (notes: string) => void;
@@ -23,6 +25,7 @@ export const WorkflowStep = ({
     applicant,
     isEnabled,
     isLocked = false,
+    emailTemplates = [],
     onSubStepUpdate,
     onSubStepDateChange,
     onNotesChange,
@@ -226,6 +229,7 @@ export const WorkflowStep = ({
                                             data={subStepData}
                                             applicant={applicant}
                                             isEnabled={isEnabled && !isLocked}
+                                            emailTemplates={emailTemplates.filter(t => t.linkedSubStepIds.includes(subStepConfig.id))}
                                             onUpdate={(updates) => onSubStepUpdate(subStepConfig.id, updates)}
                                             onDateChange={(date) => onSubStepDateChange(subStepConfig.id, date)}
                                         />

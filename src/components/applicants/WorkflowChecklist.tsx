@@ -1,7 +1,11 @@
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { onSnapshot } from 'firebase/firestore';
 import { WorkflowStep } from './WorkflowStep';
 import { getWorkflowSteps, isStepComplete } from '../../lib/workflow-steps';
 import type { Applicant, SubStepData } from '../../types/applicant';
+import type { EmailTemplate } from '../../types/emailTemplate';
+import { getEmailTemplates } from '../../firebase/firestore';
 import { Button } from '../ui';
 
 interface WorkflowChecklistProps {
@@ -26,6 +30,16 @@ export const WorkflowChecklist = ({
     const steps = getWorkflowSteps(applicantType);
     const lastStep = steps[steps.length - 1];
     const prePromotionSteps = steps.filter(s => s.step !== lastStep.step);
+
+    // Fetch all email templates once
+    const [emailTemplates, setEmailTemplates] = useState<EmailTemplate[]>([]);
+    useEffect(() => {
+        const q = getEmailTemplates();
+        const unsub = onSnapshot(q, (snap) => {
+            setEmailTemplates(snap.docs.map(d => ({ id: d.id, ...d.data() } as EmailTemplate)));
+        });
+        return unsub;
+    }, []);
 
     // Sequential logic: step N is only enabled if step N-1 is completed
     const isStepEnabled = (stepNumber: number): boolean => {
@@ -155,6 +169,7 @@ export const WorkflowChecklist = ({
                                     applicant={applicant}
                                     isEnabled={isStepEnabled(stepConfig.step)}
                                     isLocked={promotedToResident && stepConfig.step !== lastStep.step}
+                                    emailTemplates={emailTemplates}
                                     onSubStepUpdate={(subStepId, updates) =>
                                         onSubStepUpdate(stepConfig.step, subStepId, updates)
                                     }

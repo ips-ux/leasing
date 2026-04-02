@@ -17,6 +17,7 @@ import {
 import { db } from './config';
 import { getCurrentUser } from './auth';
 import type { Applicant, ApplicantFormData, TransferFormData, SubStepData } from '../types/applicant';
+import type { EmailTemplate, EmailTemplateFormData } from '../types/emailTemplate';
 import type { Inquiry, InquiryFormData } from '../types/inquiry';
 import type { User } from '../types/user';
 import { initializeWorkflow, isStepComplete, getApplicantTags, getWorkflowSteps, getSubStepConfig, computeTransferFeeTags } from '../lib/workflow-steps';
@@ -743,4 +744,55 @@ export const getUsers = async (onlyActive: boolean = false): Promise<User[]> => 
 export const deleteUserRecord = async (uid: string): Promise<void> => {
   const userRef = doc(db, 'users', uid);
   await deleteDoc(userRef);
+};
+
+// ==================== EMAIL TEMPLATES ====================
+
+export const createEmailTemplate = async (formData: EmailTemplateFormData): Promise<string> => {
+  const currentUser = getCurrentUser();
+  if (!currentUser) throw new Error('User not authenticated');
+
+  const templateData = {
+    title: formData.title,
+    buttonText: formData.buttonText,
+    htmlContent: formData.htmlContent,
+    linkedSubStepIds: formData.linkedSubStepIds,
+    createdBy: currentUser.uid,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  };
+
+  const docRef = await addDoc(collection(db, 'emailTemplates'), templateData);
+  return docRef.id;
+};
+
+export const updateEmailTemplate = async (id: string, data: Partial<EmailTemplateFormData>): Promise<void> => {
+  const docRef = doc(db, 'emailTemplates', id);
+  await updateDoc(docRef, {
+    ...data,
+    updatedAt: serverTimestamp(),
+  });
+};
+
+export const deleteEmailTemplate = async (id: string): Promise<void> => {
+  const docRef = doc(db, 'emailTemplates', id);
+  await deleteDoc(docRef);
+};
+
+export const getEmailTemplates = () => {
+  return query(
+    collection(db, 'emailTemplates'),
+    orderBy('title', 'asc')
+  );
+};
+
+export const getEmailTemplate = (id: string) => {
+  return doc(db, 'emailTemplates', id);
+};
+
+export const getTemplatesForSubStep = (subStepId: string) => {
+  return query(
+    collection(db, 'emailTemplates'),
+    where('linkedSubStepIds', 'array-contains', subStepId)
+  );
 };

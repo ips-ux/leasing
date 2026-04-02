@@ -6,10 +6,6 @@
 import type { Applicant } from '../../types/applicant';
 import type { Timestamp } from 'firebase/firestore';
 
-/**
- * Email template types
- */
-export type EmailTemplateType = 'application-approved' | 'final-steps' | 'request-income' | 'transfer-request' | 'transfer-income-request' | 'transfer-info-update';
 
 /**
  * Formats a Firestore Timestamp to a readable date string

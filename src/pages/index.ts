@@ -7,3 +7,6 @@ export { Reports } from './Reports';
 export { Scheduler } from './Scheduler';
 export { DataMigration } from './DataMigration';
 export { WelcomeHome } from './WelcomeHome';
+export { TemplatesList } from './TemplatesList';
+export { TemplateEditor } from './TemplateEditor';
+

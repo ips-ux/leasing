@@ -5,24 +5,10 @@ import type { Applicant } from '../../types/applicant';
 import { updateSubStep, updateApplicant } from '../../firebase/firestore';
 import { Button, Checkbox } from '../ui';
 import toast from 'react-hot-toast';
-import { EmailCopyButtons } from './EmailCopyButtons';
-import type { EmailTemplateType } from '../../services/scheduler/outlookEmailService';
-import requestIncomeEmail from '../../content/request-income.html?raw';
-import applicationApprovedEmail from '../../content/application-approved-email.html?raw';
-import finalStepsEmail from '../../content/final-steps-email.html?raw';
-import transferRequestEmail from '../../content/transfer-request-form.html?raw';
-import transferIncomeEmail from '../../content/transfer-income-request.html?raw';
-import transferInfoEmail from '../../content/transfer-info-update.html?raw';
-
-// Map email template keys to their HTML content
-const EMAIL_TEMPLATES: Record<string, { html: string; type: EmailTemplateType; prefix?: 'Copy' | 'Copy Request' }> = {
-    'request-income': { html: requestIncomeEmail, type: 'request-income', prefix: 'Copy' },
-    'application-approved': { html: applicationApprovedEmail, type: 'application-approved' },
-    'final-steps': { html: finalStepsEmail, type: 'final-steps' },
-    'transfer-request': { html: transferRequestEmail, type: 'transfer-request', prefix: 'Copy' },
-    'transfer-income-request': { html: transferIncomeEmail, type: 'transfer-income-request', prefix: 'Copy' },
-    'transfer-info-update': { html: transferInfoEmail, type: 'transfer-info-update', prefix: 'Copy' },
-};
+import { getEmailTemplates } from '../../firebase/firestore';
+import { onSnapshot } from 'firebase/firestore';
+import type { EmailTemplate } from '../../types/emailTemplate';
+import { TemplateCopyButton } from './TemplateCopyButton';
 
 interface QuickActionSubStepProps {
     applicant: Applicant;
@@ -33,6 +19,15 @@ export const QuickActionSubStep = ({ applicant }: QuickActionSubStepProps) => {
     const [textValue, setTextValue] = useState('');
     const [multiValues, setMultiValues] = useState<Record<string, string>>({});
     const [isCompleting, setIsCompleting] = useState(false);
+    const [emailTemplates, setEmailTemplates] = useState<EmailTemplate[]>([]);
+
+    useEffect(() => {
+        const q = getEmailTemplates();
+        const unsub = onSnapshot(q, (snap) => {
+            setEmailTemplates(snap.docs.map(d => ({ id: d.id, ...d.data() } as EmailTemplate)));
+        });
+        return unsub;
+    }, []);
 
     const tracking = applicant["2_Tracking"];
     const applicantType = applicant["1_Profile"]?.applicantType || 'new';
@@ -459,20 +454,18 @@ export const QuickActionSubStep = ({ applicant }: QuickActionSubStepProps) => {
 
     // Render email copy button if this substep has an email template
     const renderEmailButton = () => {
-        const templateKey = current.config.emailTemplate;
-        if (!templateKey) return null;
-        const template = EMAIL_TEMPLATES[templateKey];
-        if (!template) return null;
+        const substepTemplates = emailTemplates.filter(t => t.linkedSubStepIds.includes(current.config.id));
+        if (substepTemplates.length === 0) return null;
 
         return (
-            <div onClick={(e) => e.stopPropagation()}>
-                <EmailCopyButtons
-                    emailHtml={template.html}
-                    emailType={template.type}
-                    buttonPrefix={template.prefix}
-                    compact
-                    applicant={applicant}
-                />
+            <div onClick={(e) => e.stopPropagation()} className="flex items-center gap-2">
+                {substepTemplates.map(tmpl => (
+                    <TemplateCopyButton
+                        key={tmpl.id}
+                        template={tmpl}
+                        applicant={applicant}
+                    />
+                ))}
             </div>
         );
     };

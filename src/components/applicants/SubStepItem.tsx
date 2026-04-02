@@ -3,31 +3,16 @@ import { motion, AnimatePresence } from 'framer-motion';
 import type { SubStepData, Applicant } from '../../types/applicant';
 import type { SubStepConfig } from '../../lib/workflow-steps';
 import type { Timestamp } from 'firebase/firestore';
-import { EmailCopyButtons } from './EmailCopyButtons';
-import type { EmailTemplateType } from '../../services/scheduler/outlookEmailService';
+import type { EmailTemplate } from '../../types/emailTemplate';
+import { TemplateCopyButton } from './TemplateCopyButton';
 import { Checkbox } from '../ui';
-import requestIncomeEmail from '../../content/request-income.html?raw';
-import applicationApprovedEmail from '../../content/application-approved-email.html?raw';
-import finalStepsEmail from '../../content/final-steps-email.html?raw';
-import transferRequestEmail from '../../content/transfer-request-form.html?raw';
-import transferIncomeEmail from '../../content/transfer-income-request.html?raw';
-import transferInfoEmail from '../../content/transfer-info-update.html?raw';
-
-// Map email template keys to their HTML content
-const EMAIL_TEMPLATES: Record<string, { html: string; type: EmailTemplateType; prefix?: 'Copy' | 'Copy Request' }> = {
-    'request-income': { html: requestIncomeEmail, type: 'request-income', prefix: 'Copy' },
-    'application-approved': { html: applicationApprovedEmail, type: 'application-approved' },
-    'final-steps': { html: finalStepsEmail, type: 'final-steps' },
-    'transfer-request': { html: transferRequestEmail, type: 'transfer-request', prefix: 'Copy' },
-    'transfer-income-request': { html: transferIncomeEmail, type: 'transfer-income-request', prefix: 'Copy' },
-    'transfer-info-update': { html: transferInfoEmail, type: 'transfer-info-update', prefix: 'Copy' },
-};
 
 interface SubStepItemProps {
     config: SubStepConfig;
     data: SubStepData;
     applicant: Applicant;
     isEnabled: boolean;
+    emailTemplates?: EmailTemplate[];
     onUpdate: (updates: Partial<SubStepData>) => void;
     onDateChange: (date: Date | null) => void;
 }
@@ -53,6 +38,7 @@ export const SubStepItem = ({
     data,
     applicant,
     isEnabled,
+    emailTemplates = [],
     onUpdate,
     onDateChange,
 }: SubStepItemProps) => {
@@ -385,7 +371,7 @@ export const SubStepItem = ({
                         const parenMatch = config.label.match(/^(.+?)\s*(\(.*\))$/);
                         const mainLabel = parenMatch ? parenMatch[1] : config.label;
                         const hintText = parenMatch ? parenMatch[2] : null;
-                        const emailTemplate = config.emailTemplate ? EMAIL_TEMPLATES[config.emailTemplate] : null;
+                        const hasTemplates = emailTemplates.length > 0;
                         return (
                         <div className="w-full flex flex-col">
                             <div className="flex items-center gap-3 flex-wrap">
@@ -413,19 +399,18 @@ export const SubStepItem = ({
                                 </>
                             )}
                             </div>
-                            {(hintText || emailTemplate) && (
+                            {(hintText || hasTemplates) && (
                                 <div className="ml-8 mt-0.5 flex items-center gap-3 flex-wrap">
                                     {hintText && (
                                         <p className="text-[11px] text-black/40 font-mono">{hintText}</p>
                                     )}
-                                    {emailTemplate && (
-                                        <EmailCopyButtons
-                                            emailHtml={emailTemplate.html}
-                                            emailType={emailTemplate.type}
-                                            buttonPrefix={emailTemplate.prefix}
+                                    {emailTemplates.map(tmpl => (
+                                        <TemplateCopyButton
+                                            key={tmpl.id}
+                                            template={tmpl}
                                             applicant={applicant}
                                         />
-                                    )}
+                                    ))}
                                 </div>
                             )}
                         </div>

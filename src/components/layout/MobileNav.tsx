@@ -1,4 +1,4 @@
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faGauge,
@@ -28,6 +28,7 @@ const navItems: MobileNavItem[] = [
 
 export const MobileNav = () => {
   const { user, signOut } = useAuth();
+  const navigate = useNavigate();
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
@@ -81,6 +82,12 @@ export const MobileNav = () => {
                 </div>
                 <div className="mobile-user-dropdown-email">{user?.email}</div>
               </div>
+              <button
+                className="mobile-user-dropdown-item"
+                onClick={() => { navigate('/templates'); setIsUserMenuOpen(false); }}
+              >
+                Email Templates
+              </button>
               <button
                 className="mobile-user-dropdown-item"
                 onClick={() => { setIsPasswordModalOpen(true); setIsUserMenuOpen(false); }}

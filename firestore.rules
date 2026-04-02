@@ -33,6 +33,11 @@ service cloud.firestore {
       allow write: if isAuthenticated() && request.auth.uid == userId;
     }
 
+    // Email Templates Collection
+    match /emailTemplates/{templateId} {
+      allow read, write: if isAuthenticated();
+    }
+
     // Default deny all other access
     match /{document=**} {
       allow read, write: if false;

@@ -9,6 +9,8 @@ import {
   Reports,
   Scheduler,
   DataMigration,
+  TemplatesList,
+  TemplateEditor,
   // WelcomeHome,
 } from './pages';
 import { Layout, ProtectedRoute } from './components/layout';
@@ -133,6 +135,39 @@ function App() {
               <ProtectedRoute>
                 <Layout>
                   <DataMigration />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/templates"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <TemplatesList />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/templates/new"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <TemplateEditor />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/templates/:id"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <TemplateEditor />
                 </Layout>
               </ProtectedRoute>
             }

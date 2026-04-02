@@ -1,5 +1,6 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 interface UserSettingsPopoverProps {
     isOpen: boolean;
@@ -15,6 +16,7 @@ export const UserSettingsPopover = ({
     anchorRef
 }: UserSettingsPopoverProps) => {
     const popoverRef = useRef<HTMLDivElement>(null);
+    const navigate = useNavigate();
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -61,6 +63,15 @@ export const UserSettingsPopover = ({
                         <div className="p-2">
                             <button
                                 onClick={() => {
+                                    navigate('/templates');
+                                    onClose();
+                                }}
+                                className="w-full text-left px-4 py-3 rounded-neuro-md text-neuro-primary font-medium hover:bg-neuro-lavender/20 transition-all duration-200"
+                            >
+                                Email Templates
+                            </button>
+                            <button
+                                onClick={() => {
                                     onChangePassword();
                                     onClose();
                                 }}
@@ -93,3 +104,4 @@ export const UserSettingsPopover = ({
         </AnimatePresence>
     );
 };
+
