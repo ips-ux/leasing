@@ -17,7 +17,7 @@ import {
 import { db } from './config';
 import { getCurrentUser } from './auth';
 import type { Applicant, ApplicantFormData, TransferFormData, SubStepData } from '../types/applicant';
-import type { EmailTemplate, EmailTemplateFormData } from '../types/emailTemplate';
+import type { EmailTemplateFormData } from '../types/emailTemplate';
 import type { Inquiry, InquiryFormData } from '../types/inquiry';
 import type { User } from '../types/user';
 import { initializeWorkflow, isStepComplete, getApplicantTags, getWorkflowSteps, getSubStepConfig, computeTransferFeeTags } from '../lib/workflow-steps';
