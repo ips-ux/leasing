@@ -228,13 +228,30 @@ export const TemplateEditor = () => {
                 </div>
               </div>
 
-              {editorMode === 'richtext' ? (
+              <div className={`relative ${editorMode === 'html' ? 'tinymce-html-active' : ''}`}>
+                <style>{`
+                  .tinymce-html-active .tox-edit-area {
+                    display: none !important;
+                  }
+                  .tinymce-html-active .tox-statusbar {
+                    display: none !important;
+                  }
+                  .tinymce-html-active .tox-tinymce {
+                    border-bottom-left-radius: 0;
+                    border-bottom-right-radius: 0;
+                    border-bottom: none;
+                  }
+                `}</style>
                 <Editor
                   onInit={(_evt, editor) => { editorRef.current = editor; }}
+                  tinymceScriptSrc="/tinymce/tinymce.min.js"
                   initialValue={htmlContent}
+                  disabled={editorMode === 'html'}
                   onEditorChange={(content) => {
-                    setHtmlContent(content);
-                    setRawHtml(content);
+                    if (editorMode === 'richtext') {
+                      setHtmlContent(content);
+                      setRawHtml(content);
+                    }
                   }}
                   licenseKey="gpl"
                   init={{
@@ -268,15 +285,21 @@ export const TemplateEditor = () => {
                     branding: false,
                   }}
                 />
-              ) : (
-                <textarea
-                  value={rawHtml}
-                  onChange={e => setRawHtml(e.target.value)}
-                  className="w-full h-[500px] px-4 py-3 rounded-neuro-sm bg-main shadow-neuro-pressed font-mono text-sm focus:outline-none focus:ring-2 focus:ring-neuro-lavender resize-none"
-                  placeholder="Paste or edit raw HTML here…"
-                  spellCheck={false}
-                />
-              )}
+                
+                {editorMode === 'html' && (
+                  <textarea
+                    value={rawHtml}
+                    onChange={e => setRawHtml(e.target.value)}
+                    className="w-full h-[400px] px-4 py-3 bg-white font-mono text-sm focus:outline-none resize-none border border-black/20 border-t-0 rounded-b-neuro-sm"
+                    style={{ 
+                      marginTop: 0,
+                      boxShadow: 'none',
+                    }}
+                    placeholder="Paste or edit raw HTML here…"
+                    spellCheck={false}
+                  />
+                )}
+              </div>
             </div>
 
             {/* Substep Selector */}
