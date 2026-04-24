@@ -246,7 +246,7 @@ export const TemplateEditor = () => {
                       editorRef.current = editor;
                       editorMounted.current = true;
                     }}
-                    tinymceScriptSrc="/tinymce/tinymce.min.js"
+                    tinymceScriptSrc={`${import.meta.env.BASE_URL}tinymce/tinymce.min.js`}
                     initialValue={editorInitialValue.current}
                     licenseKey="gpl"
                     init={{
