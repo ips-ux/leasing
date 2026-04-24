@@ -23,7 +23,6 @@ const navItems: MobileNavItem[] = [
   { to: '/applicants', icon: faUsers,        label: 'Applicants' },
   { to: '/inquiries',  icon: faComments,     label: 'Inquiries'  },
   { to: '/scheduler',  icon: faCalendarDays, label: 'Scheduler'  },
-  { to: '/reports',    icon: faChartBar,     label: 'Reports'    },
 ];
 
 export const MobileNav = () => {
@@ -59,6 +58,17 @@ export const MobileNav = () => {
             <FontAwesomeIcon icon={icon} />
           </NavLink>
         ))}
+
+        {/* Reports — pinned before user */}
+        <NavLink
+          to="/reports"
+          title="Reports"
+          className={({ isActive }) =>
+            `mobile-nav-item${isActive ? ' mobile-nav-item--active' : ''}`
+          }
+        >
+          <FontAwesomeIcon icon={faChartBar} />
+        </NavLink>
 
         {/* User button */}
         <div ref={userMenuRef} className="mobile-nav-item mobile-nav-user-wrap">

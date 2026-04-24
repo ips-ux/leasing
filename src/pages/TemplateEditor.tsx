@@ -256,20 +256,23 @@ export const TemplateEditor = () => {
                   licenseKey="gpl"
                   init={{
                     height: 500,
-                    menubar: true,
+                    menubar: false,
                     plugins: [
                       'advlist', 'autolink', 'lists', 'link', 'image', 'charmap',
                       'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
                       'insertdatetime', 'media', 'table', 'preview', 'help', 'wordcount',
                       'emoticons',
                     ],
-                    toolbar:
-                      'undo redo | blocks fontfamily fontsize | ' +
-                      'bold italic underline strikethrough | forecolor backcolor | ' +
+                    toolbar: [
+                      'undo redo | cut copy paste pastetext | ' +
+                      'bold italic underline strikethrough subscript superscript | ' +
+                      'removeformat | forecolor backcolor',
+                      'blocks fontfamily fontsize | ' +
                       'alignleft aligncenter alignright alignjustify | ' +
-                      'bullist numlist outdent indent | ' +
+                      'bullist numlist outdent indent | blockquote | ' +
                       'link image table emoticons charmap | ' +
-                      'removeformat searchreplace code fullscreen | help',
+                      'searchreplace code fullscreen | help',
+                    ],
                     content_style: `
                       body {
                         font-family: Aptos, Calibri, Helvetica, sans-serif;
@@ -279,8 +282,6 @@ export const TemplateEditor = () => {
                         padding: 12px;
                       }
                     `,
-                    skin: false,
-                    content_css: false,
                     promotion: false,
                     branding: false,
                   }}

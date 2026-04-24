@@ -8,6 +8,7 @@ import {
   faChartBar,
   faHouseChimney,
   faParking,
+  faEnvelopeOpenText,
 } from '@fortawesome/free-solid-svg-icons';
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
 import { useAuth } from '../../hooks/useAuth';
@@ -82,10 +83,15 @@ export const Sidebar = () => {
         <NavLinkItem to="/applicants" icon={faUsers}>Applicants</NavLinkItem>
         <NavLinkItem to="/inquiries"  icon={faComments}>Inquiries</NavLinkItem>
         <NavLinkItem to="/scheduler"  icon={faCalendarDays}>Scheduler</NavLinkItem>
-        <NavLinkItem to="/reports"    icon={faChartBar}>Reports</NavLinkItem>
         <NavLinkItem to="/rentables"  icon={faParking}>Rentable Items</NavLinkItem>
+        <NavLinkItem to="/scripts"    icon={faEnvelopeOpenText}>Email Scripts</NavLinkItem>
         <NavLinkItem to="/welcome-home" icon={faHouseChimney} disabled>Welcome Home</NavLinkItem>
       </nav>
+
+      {/* Bottom-pinned nav items */}
+      <div className="px-4 pb-2 space-y-2">
+        <NavLinkItem to="/reports" icon={faChartBar}>Reports</NavLinkItem>
+      </div>
 
       {/* User Profile Section */}
       <div className="p-4 border-t border-sidebar-border bg-sidebar-bg">

@@ -11,6 +11,8 @@ import {
   DataMigration,
   TemplatesList,
   TemplateEditor,
+  EmailScriptsList,
+  EmailScriptViewer,
   RentableItems,
   // WelcomeHome,
 } from './pages';
@@ -169,6 +171,28 @@ function App() {
               <ProtectedRoute>
                 <Layout>
                   <TemplateEditor />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/scripts"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <EmailScriptsList />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/scripts/:id"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <EmailScriptViewer />
                 </Layout>
               </ProtectedRoute>
             }

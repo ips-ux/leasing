@@ -9,5 +9,7 @@ export { DataMigration } from './DataMigration';
 export { WelcomeHome } from './WelcomeHome';
 export { TemplatesList } from './TemplatesList';
 export { TemplateEditor } from './TemplateEditor';
+export { EmailScriptsList } from './EmailScriptsList';
+export { EmailScriptViewer } from './EmailScriptViewer';
 export { RentableItems } from './RentableItems';
 
