@@ -89,13 +89,6 @@ interface SeedDiffModalProps {
   onApply: (incoming: RentableItem[], removeCodes: string[]) => Promise<void>;
 }
 
-const CHANGE_TYPE_META = {
-  occupancy: { label: 'Occupancy changes',   icon: '🔄', warning: false },
-  resident:  { label: 'Resident swaps',       icon: '⚠️', warning: true  },
-  rent:      { label: 'Rent changes',         icon: '💰', warning: false },
-  lease:     { label: 'Lease date changes',   icon: '📅', warning: false },
-  other:     { label: 'Other changes',        icon: '📝', warning: false },
-} as const;
 
 const SeedDiffModal = ({ isOpen, onClose, currentItems, onApply }: SeedDiffModalProps) => {
   const [parsed, setParsed]       = useState<RentableItem[] | null>(null);
@@ -230,7 +223,7 @@ const SeedDiffModal = ({ isOpen, onClose, currentItems, onApply }: SeedDiffModal
             {/* Removed from Yardi — warning */}
             {diff.removedFromYardi.length > 0 && (
               <DiffSection
-                sectionKey="removedFromYardi"
+
                 icon="🗑️" warning
                 title={`Not in export (${diff.removedFromYardi.length}) — were in Yardi, now missing`}
                 expanded={!!expanded['removedFromYardi']}
@@ -256,7 +249,6 @@ const SeedDiffModal = ({ isOpen, onClose, currentItems, onApply }: SeedDiffModal
             {/* Manually-added items not in export */}
             {diff.removedManual.length > 0 && (
               <DiffSection
-                sectionKey="removedManual"
                 icon="📋"
                 title={`Manually-added not in export (${diff.removedManual.length})`}
                 expanded={!!expanded['removedManual']}
@@ -281,7 +273,7 @@ const SeedDiffModal = ({ isOpen, onClose, currentItems, onApply }: SeedDiffModal
             {/* Resident swaps — warning */}
             {changesByType['resident']?.length > 0 && (
               <DiffSection
-                sectionKey="resident" icon="⚠️" warning
+                icon="⚠️" warning
                 title={`Resident swaps (${changesByType['resident'].length}) — same spot, different person`}
                 expanded={!!expanded['resident']}
                 onToggle={() => toggle('resident')}
@@ -304,7 +296,7 @@ const SeedDiffModal = ({ isOpen, onClose, currentItems, onApply }: SeedDiffModal
             {/* Occupancy changes */}
             {changesByType['occupancy']?.length > 0 && (
               <DiffSection
-                sectionKey="occupancy" icon="🔄"
+                icon="🔄"
                 title={`Occupancy changes (${changesByType['occupancy'].length})`}
                 expanded={!!expanded['occupancy']}
                 onToggle={() => toggle('occupancy')}
@@ -335,7 +327,7 @@ const SeedDiffModal = ({ isOpen, onClose, currentItems, onApply }: SeedDiffModal
             {/* Rent changes */}
             {changesByType['rent']?.length > 0 && (
               <DiffSection
-                sectionKey="rent" icon="💰"
+                icon="💰"
                 title={`Rent changes (${changesByType['rent'].length})`}
                 expanded={!!expanded['rent']}
                 onToggle={() => toggle('rent')}
@@ -363,7 +355,7 @@ const SeedDiffModal = ({ isOpen, onClose, currentItems, onApply }: SeedDiffModal
             {/* Lease date changes */}
             {changesByType['lease']?.length > 0 && (
               <DiffSection
-                sectionKey="lease" icon="📅"
+                icon="📅"
                 title={`Lease date changes (${changesByType['lease'].length})`}
                 expanded={!!expanded['lease']}
                 onToggle={() => toggle('lease')}
@@ -384,7 +376,7 @@ const SeedDiffModal = ({ isOpen, onClose, currentItems, onApply }: SeedDiffModal
             {/* New items */}
             {diff.added.length > 0 && (
               <DiffSection
-                sectionKey="added" icon="🆕"
+                icon="🆕"
                 title={`New items (${diff.added.length})`}
                 expanded={!!expanded['added']}
                 onToggle={() => toggle('added')}
@@ -435,9 +427,9 @@ const SummaryPill = ({ label, value, color }: { label: string; value: number; co
 );
 
 const DiffSection = ({
-  sectionKey, icon, title, warning, expanded, onToggle, children,
+  icon, title, warning, expanded, onToggle, children,
 }: {
-  sectionKey: string; icon: string; title: string; warning?: boolean;
+  icon: string; title: string; warning?: boolean;
   expanded: boolean; onToggle: () => void; children: React.ReactNode;
 }) => (
   <div className={`rounded-lg border ${warning ? 'border-warning/30 bg-warning/5' : 'border-black/10 bg-black/2'} overflow-hidden`}>
@@ -748,7 +740,7 @@ const AssignResidentModal = ({
 interface AddWaitlistModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onAdd: (entry: Omit<WaitlistEntry, 'id'>) => Promise<void>;
+  onAdd: (entry: Omit<WaitlistEntry, 'id'>) => Promise<string | void>;
   currentUser: { uid: string; displayName?: string | null };
 }
 
