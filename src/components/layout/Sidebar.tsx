@@ -7,6 +7,7 @@ import {
   faCalendarDays,
   faChartBar,
   faHouseChimney,
+  faParking,
 } from '@fortawesome/free-solid-svg-icons';
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
 import { useAuth } from '../../hooks/useAuth';
@@ -82,6 +83,7 @@ export const Sidebar = () => {
         <NavLinkItem to="/inquiries"  icon={faComments}>Inquiries</NavLinkItem>
         <NavLinkItem to="/scheduler"  icon={faCalendarDays}>Scheduler</NavLinkItem>
         <NavLinkItem to="/reports"    icon={faChartBar}>Reports</NavLinkItem>
+        <NavLinkItem to="/rentables"  icon={faParking}>Rentable Items</NavLinkItem>
         <NavLinkItem to="/welcome-home" icon={faHouseChimney} disabled>Welcome Home</NavLinkItem>
       </nav>
 

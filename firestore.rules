@@ -38,6 +38,16 @@ service cloud.firestore {
       allow read, write: if isAuthenticated();
     }
 
+    // Rentable Items Collection (parking, storage inventory)
+    match /rentableItems/{itemId} {
+      allow read, write: if isAuthenticated();
+    }
+
+    // Rentable Items Waitlist
+    match /rentableWaitlist/{entryId} {
+      allow read, write: if isAuthenticated();
+    }
+
     // Default deny all other access
     match /{document=**} {
       allow read, write: if false;

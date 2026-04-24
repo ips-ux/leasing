@@ -11,6 +11,7 @@ import {
   DataMigration,
   TemplatesList,
   TemplateEditor,
+  RentableItems,
   // WelcomeHome,
 } from './pages';
 import { Layout, ProtectedRoute } from './components/layout';
@@ -168,6 +169,17 @@ function App() {
               <ProtectedRoute>
                 <Layout>
                   <TemplateEditor />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/rentables"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <RentableItems />
                 </Layout>
               </ProtectedRoute>
             }
