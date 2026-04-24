@@ -47,16 +47,25 @@ export const TemplateEditor = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const editorRef = useRef<any>(null);
+  // Holds the value passed to TinyMCE's initialValue — must never change after editor mounts
+  // (TinyMCE resets cursor/content whenever initialValue changes)
+  const editorInitialValue = useRef('');
+  const editorMounted = useRef(false);
+  // Mirror of rawHtml state as a ref so mode-switch effect reads the latest value
+  // without needing rawHtml in its dependency array
+  const rawHtmlRef = useRef('');
   const isNew = id === 'new';
 
   const [title, setTitle] = useState('');
   const [buttonText, setButtonText] = useState('');
-  const [htmlContent, setHtmlContent] = useState('');
+  const [rawHtml, setRawHtml] = useState('');
   const [linkedSubStepIds, setLinkedSubStepIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(!isNew);
   const [saving, setSaving] = useState(false);
   const [editorMode, setEditorMode] = useState<'richtext' | 'html'>('richtext');
-  const [rawHtml, setRawHtml] = useState('');
+  // For new templates the editor can render immediately; for existing ones we wait
+  // until the first snapshot so initialValue is set before the Editor mounts.
+  const [editorReady, setEditorReady] = useState(isNew);
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
 
   // Load existing template
@@ -68,28 +77,29 @@ export const TemplateEditor = () => {
         const data = snap.data() as Omit<EmailTemplate, 'id'>;
         setTitle(data.title);
         setButtonText(data.buttonText);
-        setHtmlContent(data.htmlContent);
+        rawHtmlRef.current = data.htmlContent;
         setRawHtml(data.htmlContent);
         setLinkedSubStepIds(data.linkedSubStepIds || []);
+        // Set the editor's initial content exactly once, before it mounts
+        if (!editorMounted.current) {
+          editorInitialValue.current = data.htmlContent;
+          setEditorReady(true);
+        }
       }
       setLoading(false);
     });
     return unsub;
   }, [id, isNew]);
 
-  // Sync raw HTML textarea with editor when toggling modes
+  // Sync content when toggling modes
   useEffect(() => {
+    if (!editorRef.current) return;
     if (editorMode === 'html') {
-      // Entering HTML mode — get current content from editor
-      if (editorRef.current) {
-        setRawHtml(editorRef.current.getContent());
-      }
+      const content = editorRef.current.getContent();
+      rawHtmlRef.current = content;
+      setRawHtml(content);
     } else {
-      // Entering Rich Text mode — push rawHtml into editor
-      if (editorRef.current) {
-        editorRef.current.setContent(rawHtml);
-      }
-      setHtmlContent(rawHtml);
+      editorRef.current.setContent(rawHtmlRef.current);
     }
   }, [editorMode]);
 
@@ -97,13 +107,9 @@ export const TemplateEditor = () => {
     if (!title.trim()) { toast.error('Title is required'); return; }
     if (!buttonText.trim()) { toast.error('Button Text is required'); return; }
 
-    // Get the latest content based on current mode
-    let finalHtml = htmlContent;
-    if (editorMode === 'html') {
-      finalHtml = rawHtml;
-    } else if (editorRef.current) {
-      finalHtml = editorRef.current.getContent();
-    }
+    const finalHtml = editorMode === 'html'
+      ? rawHtmlRef.current
+      : (editorRef.current?.getContent() ?? rawHtmlRef.current);
 
     setSaving(true);
     try {
@@ -230,72 +236,59 @@ export const TemplateEditor = () => {
 
               <div className={`relative ${editorMode === 'html' ? 'tinymce-html-active' : ''}`}>
                 <style>{`
-                  .tinymce-html-active .tox-edit-area {
-                    display: none !important;
-                  }
-                  .tinymce-html-active .tox-statusbar {
-                    display: none !important;
-                  }
                   .tinymce-html-active .tox-tinymce {
-                    border-bottom-left-radius: 0;
-                    border-bottom-right-radius: 0;
-                    border-bottom: none;
+                    display: none !important;
                   }
                 `}</style>
-                <Editor
-                  onInit={(_evt, editor) => { editorRef.current = editor; }}
-                  tinymceScriptSrc="/tinymce/tinymce.min.js"
-                  initialValue={htmlContent}
-                  disabled={editorMode === 'html'}
-                  onEditorChange={(content) => {
-                    if (editorMode === 'richtext') {
-                      setHtmlContent(content);
-                      setRawHtml(content);
-                    }
-                  }}
-                  licenseKey="gpl"
-                  init={{
-                    height: 500,
-                    menubar: false,
-                    plugins: [
-                      'advlist', 'autolink', 'lists', 'link', 'image', 'charmap',
-                      'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
-                      'insertdatetime', 'media', 'table', 'preview', 'help', 'wordcount',
-                      'emoticons',
-                    ],
-                    toolbar: [
-                      'undo redo | cut copy paste pastetext | ' +
-                      'bold italic underline strikethrough subscript superscript | ' +
-                      'removeformat | forecolor backcolor',
-                      'blocks fontfamily fontsize | ' +
-                      'alignleft aligncenter alignright alignjustify | ' +
-                      'bullist numlist outdent indent | blockquote | ' +
-                      'link image table emoticons charmap | ' +
-                      'searchreplace code fullscreen | help',
-                    ],
-                    content_style: `
-                      body {
-                        font-family: Aptos, Calibri, Helvetica, sans-serif;
-                        font-size: 12pt;
-                        line-height: 1.38;
-                        color: #000000;
-                        padding: 12px;
-                      }
-                    `,
-                    promotion: false,
-                    branding: false,
-                  }}
-                />
-                
+                {editorReady && (
+                  <Editor
+                    onInit={(_evt, editor) => {
+                      editorRef.current = editor;
+                      editorMounted.current = true;
+                    }}
+                    tinymceScriptSrc="/tinymce/tinymce.min.js"
+                    initialValue={editorInitialValue.current}
+                    licenseKey="gpl"
+                    init={{
+                      height: 500,
+                      menubar: false,
+                      plugins: [
+                        'advlist', 'autolink', 'lists', 'link', 'image', 'charmap',
+                        'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
+                        'insertdatetime', 'media', 'table', 'preview', 'help', 'wordcount',
+                        'emoticons',
+                      ],
+                      toolbar: [
+                        'undo redo | cut copy paste pastetext | ' +
+                        'bold italic underline strikethrough subscript superscript | ' +
+                        'removeformat | forecolor backcolor',
+                        'blocks fontfamily fontsize | ' +
+                        'alignleft aligncenter alignright alignjustify | ' +
+                        'bullist numlist outdent indent | blockquote | ' +
+                        'link image table emoticons charmap | ' +
+                        'searchreplace code fullscreen | help',
+                      ],
+                      content_style: `
+                        body {
+                          font-family: Aptos, Calibri, Helvetica, sans-serif;
+                          font-size: 12pt;
+                          line-height: 1.38;
+                          color: #000000;
+                          padding: 12px;
+                        }
+                      `,
+                      promotion: false,
+                      branding: false,
+                    }}
+                  />
+                )}
+
                 {editorMode === 'html' && (
                   <textarea
                     value={rawHtml}
-                    onChange={e => setRawHtml(e.target.value)}
-                    className="w-full h-[400px] px-4 py-3 bg-white font-mono text-sm focus:outline-none resize-none border border-black/20 border-t-0 rounded-b-neuro-sm"
-                    style={{ 
-                      marginTop: 0,
-                      boxShadow: 'none',
-                    }}
+                    onChange={e => { rawHtmlRef.current = e.target.value; setRawHtml(e.target.value); }}
+                    className="w-full h-[500px] px-4 py-3 bg-white font-mono text-sm focus:outline-none resize-none border border-black/20 rounded-neuro-sm"
+                    style={{ boxShadow: 'none' }}
                     placeholder="Paste or edit raw HTML here…"
                     spellCheck={false}
                   />
