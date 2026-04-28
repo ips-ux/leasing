@@ -54,7 +54,7 @@ export const TemplateEditor = () => {
   // Mirror of rawHtml state as a ref so mode-switch effect reads the latest value
   // without needing rawHtml in its dependency array
   const rawHtmlRef = useRef('');
-  const isNew = id === 'new';
+  const isNew = !id;
 
   const [title, setTitle] = useState('');
   const [buttonText, setButtonText] = useState('');
@@ -75,9 +75,9 @@ export const TemplateEditor = () => {
     const unsub = onSnapshot(docRef, (snap) => {
       if (snap.exists()) {
         const data = snap.data() as Omit<EmailTemplate, 'id'>;
-        setTitle(data.title);
-        setButtonText(data.buttonText);
-        rawHtmlRef.current = data.htmlContent;
+        setTitle(data.title ?? '');
+        setButtonText(data.buttonText ?? '');
+        rawHtmlRef.current = data.htmlContent ?? '';
         setRawHtml(data.htmlContent);
         setLinkedSubStepIds(data.linkedSubStepIds || []);
         // Set the editor's initial content exactly once, before it mounts

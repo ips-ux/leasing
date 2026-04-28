@@ -93,7 +93,7 @@ export const EmailScriptsList = () => {
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-primary truncate">{tmpl.title}</p>
                   <div className="flex items-center gap-1.5 mt-1 flex-wrap">
-                    {tmpl.linkedSubStepIds.map(sid => {
+                    {(tmpl.linkedSubStepIds ?? []).map(sid => {
                       const found = ALL_SUBSTEPS.find(ss => ss.id === sid);
                       return (
                         <span

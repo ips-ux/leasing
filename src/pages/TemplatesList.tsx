@@ -110,7 +110,7 @@ export const TemplatesList = () => {
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex flex-wrap gap-1">
-                        {tmpl.linkedSubStepIds.map(id => (
+                        {(tmpl.linkedSubStepIds ?? []).map(id => (
                           <span key={id} className="text-[11px] font-mono bg-main px-2 py-0.5 rounded text-secondary border border-tertiary/30" title={getSubStepLabel(id)}>
                             {id}
                           </span>

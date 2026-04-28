@@ -80,7 +80,7 @@ export const EmailScriptViewer = () => {
                 <span className="text-xs font-bold font-mono px-2.5 py-0.5 rounded-neuro-sm bg-neuro-lavender/30 text-primary border border-neuro-lavender/50">
                   {template.buttonText}
                 </span>
-                {template.linkedSubStepIds.map(sid => {
+                {(template.linkedSubStepIds ?? []).map(sid => {
                   const found = ALL_SUBSTEPS.find(ss => ss.id === sid);
                   return (
                     <span
