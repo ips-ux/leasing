@@ -4,9 +4,9 @@ import { onSnapshot } from 'firebase/firestore';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCopy, faCheck, faChevronRight } from '@fortawesome/free-solid-svg-icons';
-import { getEmailTemplates } from '../firebase/firestore';
+import { getEmailTemplates, getEmailTemplateCategories } from '../firebase/firestore';
 import { NEW_APPLICANT_STEPS, TRANSFER_STEPS } from '../lib/workflow-steps';
-import type { EmailTemplate } from '../types/emailTemplate';
+import type { EmailTemplate, EmailTemplateCategory } from '../types/emailTemplate';
 
 const ALL_SUBSTEPS = [...NEW_APPLICANT_STEPS, ...TRANSFER_STEPS].flatMap(step =>
   step.subSteps.map(ss => ({ id: ss.id, label: ss.label }))
@@ -18,10 +18,14 @@ const htmlToText = (html: string) => {
   return (div.textContent || div.innerText || '').replace(/\s+/g, ' ').trim();
 };
 
+type TabId = 'all' | 'uncategorized' | string;
+
 export const EmailScriptsList = () => {
   const navigate = useNavigate();
   const [templates, setTemplates] = useState<EmailTemplate[]>([]);
+  const [categories, setCategories] = useState<EmailTemplateCategory[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<TabId>('all');
   const [hoveredTemplate, setHoveredTemplate] = useState<EmailTemplate | null>(null);
   const [tooltipY, setTooltipY] = useState(0);
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -34,6 +38,27 @@ export const EmailScriptsList = () => {
       setLoading(false);
     });
   }, []);
+
+  useEffect(() => {
+    const q = getEmailTemplateCategories();
+    return onSnapshot(q, (snap) => {
+      setCategories(snap.docs.map(d => ({ id: d.id, ...d.data() } as EmailTemplateCategory)));
+    });
+  }, []);
+
+  // Reset to 'all' if the active category tab gets deleted
+  useEffect(() => {
+    if (activeTab !== 'all' && activeTab !== 'uncategorized') {
+      if (!categories.some(c => c.id === activeTab)) setActiveTab('all');
+    }
+  }, [categories, activeTab]);
+
+  const filteredTemplates =
+    activeTab === 'all'
+      ? templates
+      : activeTab === 'uncategorized'
+        ? templates.filter(t => !t.categoryIds?.length)
+        : templates.filter(t => t.categoryIds?.includes(activeTab));
 
   const showTooltip = (tmpl: EmailTemplate, e: React.MouseEvent) => {
     if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
@@ -64,21 +89,53 @@ export const EmailScriptsList = () => {
     setTimeout(() => setCopiedId(null), 1500);
   };
 
+  const Tab = ({ id, label, color }: { id: TabId; label: string; color?: string }) => {
+    const isActive = activeTab === id;
+    return (
+      <button
+        type="button"
+        onClick={() => setActiveTab(id)}
+        className={`inline-flex items-center gap-2 px-4 py-2 rounded-neuro-sm text-sm font-semibold transition-all ${
+          isActive ? 'bg-surface shadow-soft text-primary' : 'text-secondary hover:text-primary'
+        }`}
+      >
+        {color && (
+          <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: color }} />
+        )}
+        {label}
+      </button>
+    );
+  };
+
   return (
     <div className="min-h-screen p-6 md:p-8">
       <div className="max-w-4xl mx-auto">
-        <div className="mb-8">
+        <div className="mb-6">
           <h1 className="text-3xl font-bold text-primary">Email Scripts</h1>
           <p className="text-secondary mt-1">Hover to preview · Click to view full template · Copy to paste into email</p>
         </div>
 
+        {/* Category tab bar — only shown when categories exist */}
+        {categories.length > 0 && (
+          <div className="neu-flat p-1 flex items-center flex-wrap gap-1 mb-5">
+            {/* Alphabetical user categories first */}
+            {categories.map(cat => (
+              <Tab key={cat.id} id={cat.id} label={cat.name} color={cat.color} />
+            ))}
+            {/* All */}
+            <Tab id="all" label="All" />
+            {/* Uncategorized last */}
+            <Tab id="uncategorized" label="Uncategorized" />
+          </div>
+        )}
+
         {loading ? (
           <div className="neu-flat p-12 text-center text-secondary">Loading…</div>
-        ) : templates.length === 0 ? (
-          <div className="neu-flat p-12 text-center text-secondary">No templates found.</div>
+        ) : filteredTemplates.length === 0 ? (
+          <div className="neu-flat p-12 text-center text-secondary">No templates in this category.</div>
         ) : (
           <div className="space-y-2">
-            {templates.map((tmpl, i) => (
+            {filteredTemplates.map((tmpl, i) => (
               <motion.div
                 key={tmpl.id}
                 initial={{ opacity: 0, y: 6 }}
@@ -149,7 +206,6 @@ export const EmailScriptsList = () => {
             onMouseEnter={keepTooltip}
             onMouseLeave={hideTooltip}
           >
-            {/* Tooltip header */}
             <div className="px-4 pt-3.5 pb-3 border-b border-tertiary/20 flex items-start justify-between gap-2 shrink-0">
               <div className="min-w-0">
                 <p className="font-bold text-sm text-primary leading-snug truncate">{hoveredTemplate.title}</p>
@@ -167,7 +223,6 @@ export const EmailScriptsList = () => {
               </button>
             </div>
 
-            {/* Rendered HTML preview */}
             <div className="flex-1 overflow-y-auto px-4 py-3">
               <div
                 className="text-[11px] leading-relaxed text-secondary pointer-events-none"

@@ -757,6 +757,7 @@ export const createEmailTemplate = async (formData: EmailTemplateFormData): Prom
     buttonText: formData.buttonText,
     htmlContent: formData.htmlContent,
     linkedSubStepIds: formData.linkedSubStepIds,
+    categoryIds: formData.categoryIds ?? [],
     createdBy: currentUser.uid,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
@@ -794,5 +795,34 @@ export const getTemplatesForSubStep = (subStepId: string) => {
   return query(
     collection(db, 'emailTemplates'),
     where('linkedSubStepIds', 'array-contains', subStepId)
+  );
+};
+
+// ==================== EMAIL TEMPLATE CATEGORIES ====================
+
+export const createEmailTemplateCategory = async (name: string, color: string): Promise<string> => {
+  const currentUser = getCurrentUser();
+  if (!currentUser) throw new Error('User not authenticated');
+  const docRef = await addDoc(collection(db, 'emailTemplateCategories'), {
+    name,
+    color,
+    createdAt: serverTimestamp(),
+    createdBy: currentUser.uid,
+  });
+  return docRef.id;
+};
+
+export const updateEmailTemplateCategory = async (id: string, data: { name?: string; color?: string }): Promise<void> => {
+  await updateDoc(doc(db, 'emailTemplateCategories', id), data);
+};
+
+export const deleteEmailTemplateCategory = async (id: string): Promise<void> => {
+  await deleteDoc(doc(db, 'emailTemplateCategories', id));
+};
+
+export const getEmailTemplateCategories = () => {
+  return query(
+    collection(db, 'emailTemplateCategories'),
+    orderBy('name', 'asc')
   );
 };

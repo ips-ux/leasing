@@ -9,9 +9,10 @@ import {
   getEmailTemplate,
   createEmailTemplate,
   updateEmailTemplate,
+  getEmailTemplateCategories,
 } from '../firebase/firestore';
 import { NEW_APPLICANT_STEPS, TRANSFER_STEPS } from '../lib/workflow-steps';
-import type { EmailTemplate } from '../types/emailTemplate';
+import type { EmailTemplate, EmailTemplateCategory } from '../types/emailTemplate';
 import toast from 'react-hot-toast';
 
 // Build flat list of all substeps for selection
@@ -60,6 +61,8 @@ export const TemplateEditor = () => {
   const [buttonText, setButtonText] = useState('');
   const [rawHtml, setRawHtml] = useState('');
   const [linkedSubStepIds, setLinkedSubStepIds] = useState<string[]>([]);
+  const [categoryIds, setCategoryIds] = useState<string[]>([]);
+  const [categories, setCategories] = useState<EmailTemplateCategory[]>([]);
   const [loading, setLoading] = useState(!isNew);
   const [saving, setSaving] = useState(false);
   const [editorMode, setEditorMode] = useState<'richtext' | 'html'>('richtext');
@@ -67,6 +70,14 @@ export const TemplateEditor = () => {
   // until the first snapshot so initialValue is set before the Editor mounts.
   const [editorReady, setEditorReady] = useState(isNew);
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
+
+  // Load categories
+  useEffect(() => {
+    const q = getEmailTemplateCategories();
+    return onSnapshot(q, (snap) => {
+      setCategories(snap.docs.map(d => ({ id: d.id, ...d.data() } as EmailTemplateCategory)));
+    });
+  }, []);
 
   // Load existing template
   useEffect(() => {
@@ -80,6 +91,7 @@ export const TemplateEditor = () => {
         rawHtmlRef.current = data.htmlContent ?? '';
         setRawHtml(data.htmlContent);
         setLinkedSubStepIds(data.linkedSubStepIds || []);
+        setCategoryIds(data.categoryIds || []);
         // Set the editor's initial content exactly once, before it mounts
         if (!editorMounted.current) {
           editorInitialValue.current = data.htmlContent;
@@ -119,6 +131,7 @@ export const TemplateEditor = () => {
           buttonText: buttonText.trim(),
           htmlContent: finalHtml,
           linkedSubStepIds,
+          categoryIds,
         });
         toast.success('Template created!');
       } else {
@@ -127,6 +140,7 @@ export const TemplateEditor = () => {
           buttonText: buttonText.trim(),
           htmlContent: finalHtml,
           linkedSubStepIds,
+          categoryIds,
         });
         toast.success('Template updated!');
       }
@@ -141,6 +155,12 @@ export const TemplateEditor = () => {
   const toggleSubStep = (ssId: string) => {
     setLinkedSubStepIds(prev =>
       prev.includes(ssId) ? prev.filter(id => id !== ssId) : [...prev, ssId]
+    );
+  };
+
+  const toggleCategory = (catId: string) => {
+    setCategoryIds(prev =>
+      prev.includes(catId) ? prev.filter(id => id !== catId) : [...prev, catId]
     );
   };
 
@@ -203,6 +223,41 @@ export const TemplateEditor = () => {
                   className="w-full px-4 py-2.5 rounded-neuro-sm bg-main shadow-neuro-pressed font-mono font-bold focus:outline-none focus:ring-2 focus:ring-neuro-lavender"
                 />
                 <p className="text-[11px] text-secondary mt-1">This text appears on the template button in workflow substeps</p>
+              </div>
+
+              {/* Categories multi-select */}
+              <div>
+                <label className="block text-sm font-bold text-primary mb-2">Categories</label>
+                {categories.length === 0 ? (
+                  <p className="text-xs text-secondary">No categories yet — create them on the <span className="font-semibold">Templates</span> page.</p>
+                ) : (
+                  <div className="flex flex-wrap gap-2">
+                    {categories.map(cat => {
+                      const selected = categoryIds.includes(cat.id);
+                      return (
+                        <button
+                          key={cat.id}
+                          type="button"
+                          onClick={() => toggleCategory(cat.id)}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all"
+                          style={selected ? {
+                            backgroundColor: `${cat.color}28`,
+                            color: cat.color,
+                            border: `1.5px solid ${cat.color}`,
+                          } : {
+                            border: '1.5px solid rgba(210,210,215,0.5)',
+                          }}
+                        >
+                          <span
+                            className="w-2 h-2 rounded-full shrink-0 transition-colors"
+                            style={{ backgroundColor: selected ? cat.color : '#D2D2D7' }}
+                          />
+                          {cat.name}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             </div>
 
